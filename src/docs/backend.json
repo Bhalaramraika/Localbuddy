@@ -106,6 +106,19 @@
           "type": "string",
           "description": "The deadline for the task completion.",
           "format": "date-time"
+        },
+        "paymentMode": {
+            "type": "string",
+            "enum": ["online", "cash"],
+            "description": "The mode of payment for the task."
+        },
+        "duration": {
+            "type": "string",
+            "description": "Estimated time duration to complete the task."
+        },
+        "tip": {
+            "type": "number",
+            "description": "Optional tip amount for the buddy."
         }
       },
       "required": [
@@ -113,7 +126,9 @@
         "title",
         "posterId",
         "budget",
-        "status"
+        "status",
+        "paymentMode",
+        "duration"
       ]
     },
     "Chat": {

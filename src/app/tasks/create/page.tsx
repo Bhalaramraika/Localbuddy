@@ -23,6 +23,8 @@ import * as React from 'react';
 import { collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { generateDescription } from '@/ai/flows/description-flow';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
 
 const taskSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
@@ -30,6 +32,9 @@ const taskSchema = z.object({
   category: z.string({ required_error: 'Please select a category.' }),
   budget: z.coerce.number().min(1, { message: 'Budget must be at least ₹1.' }),
   location: z.string().min(3, { message: 'Location is required.' }),
+  paymentMode: z.enum(['online', 'cash'], { required_error: 'Please select a payment mode.' }),
+  duration: z.string().min(3, { message: 'Please enter an estimated duration.' }),
+  tip: z.number().optional(),
 });
 
 export default function CreateTaskPage() {
@@ -39,6 +44,7 @@ export default function CreateTaskPage() {
     const firestore = useFirestore();
     const [isLoading, setIsLoading] = React.useState(false);
     const [isGenerating, setIsGenerating] = React.useState(false);
+    const [tipValue, setTipValue] = React.useState([0]);
 
     const form = useForm<z.infer<typeof taskSchema>>({
         resolver: zodResolver(taskSchema),
@@ -47,6 +53,8 @@ export default function CreateTaskPage() {
             description: '',
             budget: 0,
             location: '',
+            duration: '',
+            tip: 0,
         },
     });
 
@@ -92,6 +100,7 @@ export default function CreateTaskPage() {
             const tasksCol = collection(firestore, 'tasks');
             await addDocumentNonBlocking(tasksCol, {
                 ...values,
+                tip: tipValue[0],
                 posterId: user.uid,
                 status: 'Open',
                 createdAt: new Date().toISOString(),
@@ -217,6 +226,75 @@ export default function CreateTaskPage() {
                                 />
                             </div>
 
+                             <FormField
+                                control={form.control}
+                                name="duration"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Time Duration</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="e.g., 2 hours" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="paymentMode"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-3">
+                                    <FormLabel>Payment Mode</FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                        className="flex gap-4"
+                                        >
+                                        <FormItem className="flex items-center space-x-3 space-y-0">
+                                            <FormControl>
+                                            <RadioGroupItem value="online" />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                            Online
+                                            </FormLabel>
+                                        </FormItem>
+                                        <FormItem className="flex items-center space-x-3 space-y-0">
+                                            <FormControl>
+                                            <RadioGroupItem value="cash" />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                            Cash
+                                            </FormLabel>
+                                        </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                             <FormField
+                                control={form.control}
+                                name="tip"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Extra Tip (₹{tipValue[0]})</FormLabel>
+                                        <FormControl>
+                                            <Slider
+                                                defaultValue={[0]}
+                                                max={100}
+                                                step={10}
+                                                onValueChange={setTipValue}
+                                                className="py-2"
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+
+
                             <Button type="submit" className="w-full h-14 text-lg font-bold cyan-glow-button" disabled={isLoading}>
                                 {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
                                 Post Task
@@ -228,3 +306,5 @@ export default function CreateTaskPage() {
         </div>
     );
 }
+
+    

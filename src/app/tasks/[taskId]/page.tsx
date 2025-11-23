@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { doc, DocumentReference, collection, serverTimestamp } from 'firebase/firestore';
-import { ArrowLeft, Loader, User, MapPin, Calendar, Tag, IndianRupee, Shield, MessageSquare, Zap } from 'lucide-react';
+import { ArrowLeft, Loader, User, MapPin, Calendar, Tag, IndianRupee, Shield, MessageSquare, Zap, Clock, Wallet } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { formatCurrency, timeAgo } from '@/lib/utils';
@@ -16,8 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 const getImage = (id: string) => PlaceHolderImages.find((img) => img.id === id);
 
 const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | React.ReactNode }) => (
-    <div className="flex items-center gap-4">
-        <div className="text-main-accent">{icon}</div>
+    <div className="flex items-start gap-4">
+        <div className="text-main-accent mt-1">{icon}</div>
         <div>
             <p className="text-sm text-gray-500">{label}</p>
             <p className="font-semibold text-foreground">{value}</p>
@@ -107,6 +107,8 @@ export default function TaskDetailPage() {
     const isMyTask = taskData.posterId === user?.uid;
     const isAssigned = taskData.status === 'assigned';
     const isAssignedToMe = isAssigned && taskData.buddyId === user?.uid;
+    
+    const totalEarning = (taskData.budget || 0) + (taskData.tip || 0);
 
     return (
         <div className="w-full flex flex-col gap-6 text-foreground">
@@ -131,10 +133,21 @@ export default function TaskDetailPage() {
                 </div>
 
                 <div className="glass-card p-6 grid grid-cols-2 gap-x-4 gap-y-6">
-                    <DetailItem icon={<IndianRupee />} label="Budget" value={formatCurrency(taskData.budget)} />
+                    <DetailItem 
+                        icon={<IndianRupee />} 
+                        label="Total Earning" 
+                        value={
+                            <span>
+                                {formatCurrency(totalEarning)}
+                                {taskData.tip > 0 && <span className="text-xs text-green-500 ml-1">(incl. ₹{taskData.tip} tip)</span>}
+                            </span>
+                        } 
+                    />
                     <DetailItem icon={<Tag />} label="Category" value={taskData.category} />
                     <DetailItem icon={<MapPin />} label="Location" value={taskData.location} />
                     <DetailItem icon={<Calendar />} label="Posted" value={taskData.createdAt ? timeAgo(new Date(taskData.createdAt)) : 'Recently'} />
+                    <DetailItem icon={<Clock />} label="Est. Duration" value={taskData.duration} />
+                    <DetailItem icon={<Wallet />} label="Payment Mode" value={taskData.paymentMode} />
                 </div>
 
                 <div className="glass-card p-6">
@@ -180,3 +193,5 @@ export default function TaskDetailPage() {
         </div>
     );
 }
+
+    
