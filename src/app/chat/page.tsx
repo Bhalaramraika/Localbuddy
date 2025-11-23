@@ -1,21 +1,21 @@
 
 'use client';
 import Image from 'next/image';
-import { Phone, Mic, MoreVertical, Paperclip, Send, Camera, Play, Pause, Trash2, FileText, MapPin, Loader, IndianRupee } from 'lucide-react';
+import { Phone, Mic, MoreVertical, Paperclip, Send, Camera, Play, Pause, Trash2, FileText, MapPin, Loader, IndianRupee, MessageCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn, timeAgo } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking, useCollection } from '@/firebase';
 import { doc, collection, writeBatch, runTransaction, getDoc, increment, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
-const UserAvatar = ({ imageUrl, alt, borderColor }: { imageUrl: string; alt: string; borderColor: string }) => (
-    <Image src={imageUrl} alt={alt} width={32} height={32} className={cn("rounded-full border-2", borderColor)} />
+const UserAvatar = ({ imageUrl, alt, borderColor }: { imageUrl: string; alt: string; borderColor?: string }) => (
+    <Image src={imageUrl} alt={alt} width={32} height={32} className={cn("rounded-full border-2", borderColor ? borderColor : 'border-transparent')} />
 );
 
 const MessageBubble = ({ children, isOutgoing }: { children: React.ReactNode, isOutgoing: boolean }) => (
@@ -53,59 +53,6 @@ const ChatMessage = ({ text, isOutgoing, time, senderDetails, currentUserDetails
         </div>
     );
 };
-
-const VoiceNote = ({ duration, progress: initialProgress }: { duration: string; initialProgress: number }) => {
-    const [isPlaying, setIsPlaying] = React.useState(false);
-    const [progress, setProgress] = React.useState(initialProgress);
-
-    React.useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isPlaying) {
-            interval = setInterval(() => {
-                setProgress(p => {
-                    if (p >= 100) {
-                        setIsPlaying(false);
-                        return 100;
-                    }
-                    return p + 5;
-                });
-            }, 200);
-        }
-        return () => clearInterval(interval);
-    }, [isPlaying]);
-
-    const togglePlay = () => {
-        if (progress >= 100) setProgress(0);
-        setIsPlaying(!isPlaying);
-    };
-
-    return (
-        <div className={cn("flex items-center gap-3 w-52")}>
-            <button onClick={togglePlay}>
-                {isPlaying ? <Pause className="w-6 h-6 text-main-accent cursor-pointer" /> : <Play className="w-6 h-6 text-main-accent cursor-pointer" />}
-            </button>
-            <div className="w-full h-1 bg-gray-500/50 rounded-full relative">
-                <div className="absolute top-0 left-0 h-full bg-main-accent" style={{ width: `${progress}%` }}></div>
-                <div className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-foreground rounded-full" style={{ left: `calc(${progress}% - 6px)`}}></div>
-            </div>
-            <span className="text-xs text-gray-400">{duration}</span>
-        </div>
-    );
-};
-
-const ImageAttachment = ({ imageUrl }: { imageUrl: string }) => (
-    <Image src={imageUrl} width={200} height={150} alt="attachment" className="rounded-lg border border-gray-200 transition-transform duration-300 hover:scale-105 cursor-pointer" />
-);
-
-const LocationAttachment = () => (
-    <div className="flex items-center gap-2 text-main-accent p-2 glass-pill rounded-lg cursor-pointer hover:bg-main-accent/20">
-        <MapPin className="w-6 h-6" />
-        <div>
-            <p className="font-bold text-sm text-foreground">Location Shared</p>
-            <p className="text-xs">Click to view map</p>
-        </div>
-    </div>
-);
 
 
 const ChatHeader = ({ taskData, isLoading, otherParticipant }: { taskData: any, isLoading: boolean, otherParticipant: any }) => {
@@ -184,7 +131,6 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
     };
 
     const handleAttachmentSelect = (type: string) => {
-        // This is a placeholder for future functionality
         setShowAttachments(false);
     };
 
@@ -210,13 +156,9 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
                     throw "User not found";
                 }
     
-                // 1. Increment buddy's balance
-                transaction.update(buddyRef, { walletBalance: increment(budget), xp: increment(10) }); // Also add XP
-    
-                // 2. Update task status to 'paid'
+                transaction.update(buddyRef, { walletBalance: increment(budget), xp: increment(10) }); 
                 transaction.update(taskRef, { status: 'paid' });
     
-                // 3. Create transaction record for buddy (income)
                 const buddyTransaction = {
                     userId: buddyId,
                     taskId,
@@ -227,11 +169,10 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
                 };
                 transaction.set(doc(collection(firestore, 'transactions')), buddyTransaction);
 
-                 // 4. Create transaction record for poster (outcome)
                  const posterTransaction = {
                     userId: posterId,
                     taskId,
-                    type: 'withdraw', // This is an outcome for the poster
+                    type: 'withdraw',
                     amount: budget,
                     status: 'success',
                     timestamp: serverTimestamp(),
@@ -241,7 +182,6 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
     
         } catch (error) {
             console.error("Payment release failed:", error);
-            // Here you would emit a proper error
         }
     };
     
@@ -311,139 +251,237 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
     );
 };
 
-
-function ChatPageContent() {
-  const searchParams = useSearchParams();
-  const taskId = searchParams.get('taskId');
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const [messages, setMessages] = React.useState<any[]>([]);
-  const [participants, setParticipants] = React.useState<any>({});
-
-  const taskDocRef = useMemoFirebase(() => {
-    if (!firestore || !taskId) return null;
-    return doc(firestore, 'tasks', taskId);
-  }, [firestore, taskId]);
-
-  const { data: taskData, isLoading: isTaskLoading } = useDoc(taskDocRef);
-
-  const chatQuery = useMemoFirebase(() => {
-      if (!firestore || !taskId || !user) return null;
-      return query(collection(firestore, 'chats'), where('taskId', '==', taskId), where('participantIds', 'array-contains', user.uid));
-  }, [firestore, taskId, user]);
-
-  const { data: chatData, error: chatError } = useCollection(chatQuery);
-  const chatId = chatData && chatData.length > 0 ? chatData[0].id : null;
+function ChatWindow({ taskId }: { taskId: string }) {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [messages, setMessages] = React.useState<any[]>([]);
+    const [participants, setParticipants] = React.useState<any>({});
   
-  const participantIds = taskData ? [taskData.posterId, taskData.buddyId].filter(Boolean) : [];
-  const otherParticipantId = participantIds.find(id => id !== user?.uid);
+    const taskDocRef = useMemoFirebase(() => {
+      if (!firestore || !taskId) return null;
+      return doc(firestore, 'tasks', taskId);
+    }, [firestore, taskId]);
   
-  const otherParticipantRef = useMemoFirebase(() => {
-    if (!firestore || !otherParticipantId) return null;
-    return doc(firestore, 'users', otherParticipantId);
-  }, [firestore, otherParticipantId]);
-
-  const { data: otherParticipantData } = useDoc(otherParticipantRef);
-
-  const messagesQuery = useMemoFirebase(() => {
-      if (!firestore || !chatId) return null;
-      return query(collection(firestore, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
-  }, [firestore, chatId]);
-
-  const { data: liveMessages } = useCollection(messagesQuery);
-
+    const { data: taskData, isLoading: isTaskLoading } = useDoc(taskDocRef);
+  
+    const chatQuery = useMemoFirebase(() => {
+        if (!firestore || !taskId || !user) return null;
+        return query(collection(firestore, 'chats'), where('taskId', '==', taskId));
+    }, [firestore, taskId, user]);
+  
+    const { data: chatData } = useCollection(chatQuery);
+    const chatId = chatData && chatData.length > 0 ? chatData[0].id : null;
+    
+    const participantIds = taskData ? [taskData.posterId, taskData.buddyId].filter(Boolean) : [];
+    const otherParticipantId = participantIds.find(id => id !== user?.uid);
+    
+    const otherParticipantRef = useMemoFirebase(() => {
+      if (!firestore || !otherParticipantId) return null;
+      return doc(firestore, 'users', otherParticipantId);
+    }, [firestore, otherParticipantId]);
+  
+    const { data: otherParticipantData } = useDoc(otherParticipantRef);
+  
+    const messagesQuery = useMemoFirebase(() => {
+        if (!firestore || !chatId) return null;
+        return query(collection(firestore, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
+    }, [firestore, chatId]);
+  
+    const { data: liveMessages } = useCollection(messagesQuery);
+  
+      React.useEffect(() => {
+          if (liveMessages && firestore && user) {
+              const participantIds = [...new Set(liveMessages.map(msg => msg.senderId))];
+              
+              const fetchParticipants = async () => {
+                  const usersData: any = {};
+                  const idsToFetch = participantIds.filter(id => !participants[id]);
+                  
+                  if (idsToFetch.length > 0) {
+                      for (const id of idsToFetch) {
+                          const userDoc = await getDoc(doc(firestore, 'users', id));
+                          if (userDoc.exists()) {
+                              usersData[id] = userDoc.data();
+                          }
+                      }
+                      setParticipants(prev => ({ ...prev, ...usersData }));
+                  }
+              };
+  
+              fetchParticipants();
+              setMessages(liveMessages);
+          }
+      }, [liveMessages, firestore, user, participants]);
+  
+    const userDocRef = useMemoFirebase(() => {
+      if (!firestore || !user) return null;
+      return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+    
+    const { data: userData } = useDoc(userDocRef);
+  
+    const handleSend = (newMessage: any) => {
+        // This is now handled by the ChatFooter component directly
+    };
+  
+    const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  
     React.useEffect(() => {
-        if (liveMessages && firestore && user) {
-            const participantIds = [...new Set(liveMessages.map(msg => msg.senderId))];
-            
-            const fetchParticipants = async () => {
-                const usersData: any = {};
-                // Only fetch users that are not already in the participants state
-                const idsToFetch = participantIds.filter(id => !participants[id]);
-                
-                if (idsToFetch.length > 0) {
-                    for (const id of idsToFetch) {
-                        const userDoc = await getDoc(doc(firestore, 'users', id));
-                        if (userDoc.exists()) {
-                            usersData[id] = userDoc.data();
-                        }
-                    }
-                    setParticipants(prev => ({ ...prev, ...usersData }));
-                }
-            };
-
-            fetchParticipants();
-            setMessages(liveMessages);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [liveMessages, firestore, user]);
-
-
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
+      if (scrollAreaRef.current) {
+          const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+          if(viewport) {
+              viewport.scrollTop = viewport.scrollHeight;
+          }
+      }
+    }, [messages]);
   
-  const { data: userData } = useDoc(userDocRef);
-
-  const handleSend = (newMessage: any) => {
-      // This is now handled by the ChatFooter component directly
-  };
-
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-        if(viewport) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
+    // Create chat if it doesn't exist
+    React.useEffect(() => {
+      if (firestore && taskId && taskData && user && chatData && chatData.length === 0 && (user.uid === taskData.posterId || user.uid === taskData.buddyId)) {
+          const chatCol = collection(firestore, 'chats');
+          addDocumentNonBlocking(chatCol, {
+              taskId: taskId,
+              participantIds: [taskData.posterId, taskData.buddyId].filter(Boolean),
+              lastMessage: { text: "Chat created", timestamp: serverTimestamp() },
+          });
+      }
+    }, [firestore, taskId, taskData, user, chatData]);
+  
+  
+    if (isTaskLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader className="w-12 h-12 animate-spin text-main-accent" />
+            </div>
+        );
     }
-  }, [messages]);
-
-  // Create chat if it doesn't exist
-  React.useEffect(() => {
-    if (firestore && taskId && taskData && user && chatData && chatData.length === 0 && (user.uid === taskData.posterId || user.uid === taskData.buddyId)) {
-        const chatCol = collection(firestore, 'chats');
-        addDocumentNonBlocking(chatCol, {
-            taskId: taskId,
-            participantIds: [taskData.posterId, taskData.buddyId].filter(Boolean)
-        });
-    }
-  }, [firestore, taskId, taskData, user, chatData]);
-
-
-  if (!taskId) {
-      return (
-          <div className="flex items-center justify-center h-full text-gray-500">
-              <p>Please select a task to start chatting.</p>
+  
+    return (
+      <div className="w-full h-[calc(100vh-150px)] flex flex-col">
+        <ChatHeader taskData={taskData} isLoading={isTaskLoading} otherParticipant={otherParticipantData} />
+        <ScrollArea className="flex-grow my-4 -mx-4" ref={scrollAreaRef}>
+          <div className="p-4 space-y-6">
+              {messages.map((msg, index) => (
+                  <div key={index}>
+                      <ChatMessage 
+                          text={<p className="text-sm">{msg.text}</p>} 
+                          isOutgoing={msg.senderId === user?.uid} 
+                          time={msg.timestamp ? new Date(msg.timestamp?.toDate()).toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' }) : 'sending...'} 
+                          senderDetails={participants[msg.senderId]}
+                          currentUserDetails={userData} 
+                      />
+                  </div>
+              ))}
           </div>
-      );
+        </ScrollArea>
+        <ChatFooter onSend={handleSend} taskData={taskData} user={user} chatId={chatId} />
+      </div>
+    );
   }
 
-  return (
-    <div className="w-full h-[calc(100vh-150px)] flex flex-col">
-      <ChatHeader taskData={taskData} isLoading={isTaskLoading} otherParticipant={otherParticipantData} />
-      <ScrollArea className="flex-grow my-4 -mx-4" ref={scrollAreaRef}>
-        <div className="p-4 space-y-6">
-            {messages.map((msg, index) => (
-                <div key={index}>
-                    <ChatMessage 
-                        text={<p className="text-sm">{msg.text}</p>} 
-                        isOutgoing={msg.senderId === user?.uid} 
-                        time={new Date(msg.timestamp?.toDate()).toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' })} 
-                        senderDetails={participants[msg.senderId]}
-                        currentUserDetails={userData} 
-                    />
-                </div>
-            ))}
-        </div>
-      </ScrollArea>
-      <ChatFooter onSend={handleSend} taskData={taskData} user={user} chatId={chatId} />
-    </div>
-  );
+function ChatList({ activeTaskId }: { activeTaskId: string | null }) {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const router = useRouter();
+
+    const allChatsQuery = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return query(collection(firestore, 'chats'), where('participantIds', 'array-contains', user.uid), orderBy('lastMessage.timestamp', 'desc'));
+    }, [firestore, user]);
+
+    const { data: chats, isLoading } = useCollection(allChatsQuery);
+
+    const taskIds = useMemoFirebase(() => chats ? chats.map(c => c.taskId) : [], [chats]);
+    const taskDocsQuery = useMemoFirebase(() => {
+        if (!firestore || !taskIds || taskIds.length === 0) return null;
+        return query(collection(firestore, 'tasks'), where('id', 'in', taskIds));
+    }, [firestore, taskIds]);
+    
+    // This is a limitation of react-firebase-hooks that we can't easily query for documents with a list of IDs.
+    // A proper implementation might need a custom hook or fetching them manually.
+    // For now we will fetch tasks individually. This is inefficient.
+    
+    if (isLoading) {
+        return <div className="h-full flex items-center justify-center"><Loader className="w-8 h-8 animate-spin"/></div>
+    }
+
+    return (
+        <ScrollArea className="h-full">
+            <div className="p-2 space-y-2">
+                {chats && chats.map(chat => (
+                    <ChatItem key={chat.id} chat={chat} isActive={chat.taskId === activeTaskId} />
+                ))}
+            </div>
+        </ScrollArea>
+    )
 }
+
+function ChatItem({ chat, isActive }: { chat: any, isActive: boolean}) {
+    const firestore = useFirestore();
+    const router = useRouter();
+    const { user } = useUser();
+
+    const taskDocRef = useMemoFirebase(() => {
+        if (!firestore || !chat.taskId) return null;
+        return doc(firestore, 'tasks', chat.taskId);
+    }, [firestore, chat.taskId]);
+    const { data: taskData } = useDoc(taskDocRef);
+
+    const otherParticipantId = chat.participantIds.find((id: string) => id !== user?.uid);
+    const otherParticipantRef = useMemoFirebase(() => {
+        if (!firestore || !otherParticipantId) return null;
+        return doc(firestore, 'users', otherParticipantId);
+    }, [firestore, otherParticipantId]);
+    const { data: otherParticipantData } = useDoc(otherParticipantRef);
+
+    const handleClick = () => {
+        router.push(`/chat?taskId=${chat.taskId}`);
+    };
+
+    const avatarUrl = otherParticipantData?.photoUrl || getImage('user2')?.imageUrl;
+
+    return (
+        <div onClick={handleClick} className={cn("flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors", isActive ? "glass-card bg-main-accent/10" : "hover:bg-gray-100/50")}>
+            {avatarUrl && <UserAvatar imageUrl={avatarUrl} alt={otherParticipantData?.name || 'User'} />}
+            <div className="flex-1 overflow-hidden">
+                <p className="font-bold truncate">{taskData?.title || 'Loading task...'}</p>
+                <p className="text-sm text-gray-500 truncate">{chat.lastMessage?.text || 'No messages yet'}</p>
+            </div>
+            <div className="text-xs text-gray-400 self-start">
+                {chat.lastMessage?.timestamp && timeAgo(chat.lastMessage.timestamp.toDate())}
+            </div>
+        </div>
+    )
+}
+
+
+function ChatPageContent() {
+    const searchParams = useSearchParams();
+    const taskId = searchParams.get('taskId');
+  
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full h-[calc(100vh-150px)]">
+            <div className="col-span-1 glass-card p-2 hidden md:flex flex-col">
+                <h2 className="text-xl font-bold p-3">Messages</h2>
+                <ChatList activeTaskId={taskId} />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+                {taskId ? (
+                    <ChatWindow taskId={taskId} />
+                ) : (
+                    <div className="h-full flex-col gap-4 flex items-center justify-center text-center text-gray-500">
+                        <MessageCircle className="w-24 h-24 text-gray-300"/>
+                        <h2 className="text-xl font-bold">Select a chat</h2>
+                        <p>Choose from your existing conversations on the left, or start a new one by accepting a task.</p>
+                        <div className="md:hidden mt-4 w-full max-w-sm">
+                            <ChatList activeTaskId={taskId} />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+  }
 
 
 export default function ChatPage() {

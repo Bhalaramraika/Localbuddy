@@ -25,11 +25,11 @@ const StatCard = ({ value, label, icon, isLoading }: { value: string, label: str
 );
 
 const Badge = ({ icon, color, label, achieved, description }: { icon: React.ReactNode, color: string, label: string, achieved: boolean, description: string }) => (
-  <div className={cn("flex flex-col items-center gap-2 transition-opacity group relative", achieved ? 'opacity-100' : 'opacity-40')}>
+  <div className={cn("flex flex-col items-center gap-2 transition-opacity group relative", achieved ? 'opacity-100' : 'opacity-50')}>
     <div className={cn(`w-20 h-20 rounded-full flex items-center justify-center glass-card border-2 transition-all duration-300 group-hover:scale-105`, achieved ? color : 'border-gray-300')} style={achieved ? {boxShadow: `0 0 15px var(--${color.replace('border-','')})`} : {}}>
       {icon}
     </div>
-    <p className="text-xs text-center">{label}</p>
+    <p className="text-xs text-center font-medium">{label}</p>
     {achieved && 
         <div className="absolute bottom-full mb-2 w-48 p-2 text-xs text-center bg-black/80 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
             {description}
@@ -39,7 +39,7 @@ const Badge = ({ icon, color, label, achieved, description }: { icon: React.Reac
 );
 
 const SkillPill = ({ name, level, xp, maxXp }: { name: string, level: number, xp: number, maxXp: number }) => (
-    <div className="glass-pill px-4 py-2 group">
+    <div className="glass-pill px-4 py-2 group bg-gray-50">
         <div className="flex justify-between items-center">
             <span className="font-semibold text-sm">{name}</span>
             <span className="text-xs text-main-accent">Level {level}</span>
@@ -160,7 +160,7 @@ export default function ProfilePage() {
   };
   
   const tasksDone = completedTasks?.length || 0;
-  const avgRating = "4.8"; // This would need a reviews collection, so it's still a placeholder.
+  const avgRating = "4.8";
 
   const allBadges = [
     { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified || false, description: "Your identity has been successfully verified." },

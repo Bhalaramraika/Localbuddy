@@ -68,7 +68,6 @@ const TaskCardButton = ({ task, user, onAccept }: { task: any, user: User | null
         if (!user || isAiGenerated || !task.id) return;
         setIsLoading(true);
         await onAccept(task.id, task.posterId);
-        // We don't set loading to false, as the parent component will handle the re-render.
         router.push(`/chat?taskId=${task.id}`);
     };
 
@@ -81,7 +80,7 @@ const TaskCardButton = ({ task, user, onAccept }: { task: any, user: User | null
     }
     
     if (isAcceptedByMe) {
-        return <Button disabled className="w-full h-12 text-base font-bold bg-green-500 text-white">Task Accepted</Button>;
+        return <Button disabled className="w-full h-12 text-base font-bold bg-green-600 text-white">Task Accepted</Button>;
     }
 
     return (
@@ -110,7 +109,6 @@ const TaskCard = ({ task, user, onAccept }: { task: any, user: User | null, onAc
     </div>
   )
 
-  // AI generated cards are not clickable
   if (task.posterId === 'ai_generated' || !task.id) {
     return content;
   }
@@ -310,29 +308,14 @@ export default function HomePage() {
 
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    let baseQuery = collection(firestore, 'tasks');
     
-    let queries = [];
-    // Query for open tasks
-    queries.push(query(baseQuery, where('status', '==', 'Open')));
-    
-    // Query for tasks assigned to the current user
-    if (user) {
-        queries.push(query(baseQuery, where('buddyId', '==', user.uid)));
-    }
+    const queryConstraints = [where('status', 'in', ['Open', 'assigned'])];
 
     if (activeFilter !== 'All') {
-        queries = queries.map(q => query(q, where('category', '==', activeFilter)));
+        queryConstraints.push(where('category', '==', activeFilter));
     }
     
-    // For this hook, we can only use one query. So we'll fetch all tasks and filter client-side.
-    // This is not ideal for performance but works for this scenario.
-    // A more complex implementation would involve multiple `useCollection` calls and merging the results.
-    const allTasksQuery = activeFilter === 'All'
-        ? query(collection(firestore, 'tasks'), where('status', 'in', ['Open', 'assigned']))
-        : query(collection(firestore, 'tasks'), where('status', 'in', ['Open', 'assigned']), where('category', '==', activeFilter));
-
-    return allTasksQuery;
+    return query(collection(firestore, 'tasks'), ...queryConstraints);
 
   }, [firestore, activeFilter, user]);
 
@@ -351,15 +334,14 @@ export default function HomePage() {
         const myAcceptedTasks = firestoreTasks.filter(t => t.buddyId === user.uid);
         const openTasks = firestoreTasks.filter(t => t.status === 'Open' && t.buddyId !== user.uid);
         
-        // Keep AI-generated tasks and combine with sorted firestore tasks
         setTasks(prevTasks => {
             const aiTasks = prevTasks.filter(t => t.posterId === 'ai_generated');
             const combined = [...myAcceptedTasks, ...openTasks, ...aiTasks];
-            const uniqueTasks = Array.from(new Map(combined.map(item => [item.id, item])).values());
+            const uniqueTasks = Array.from(new Map(combined.map(item => [item.id || `ai_${Math.random()}`, item])).values());
             return uniqueTasks;
         });
     } else if (firestoreTasks) {
-         setTasks(firestoreTasks);
+         setTasks(firestoreTasks.filter(t => t.status === 'Open'));
     }
   }, [firestoreTasks, user]);
 
@@ -388,13 +370,11 @@ export default function HomePage() {
         const taskRef = doc(firestore, 'tasks', taskId);
         const taskDoc = tasks.find(t => t.id === taskId);
         
-        // 1. Update task status and add buddyId
         updateDocumentNonBlocking(taskRef, {
             status: 'assigned',
             buddyId: user.uid,
         });
 
-        // 2. Create a notification for the poster
         const notificationRef = collection(firestore, `users/${posterId}/notifications`);
         addDocumentNonBlocking(notificationRef, {
             userId: posterId,
@@ -420,7 +400,7 @@ export default function HomePage() {
     setIsGenerating(true);
     try {
         const input: TaskSuggestionInput = {
-            userSkills: userData.skills || ["General Help", "Driving"], // Use real skills or default
+            userSkills: userData.skills || ["General Help", "Driving"],
             currentLocation: userData.location || "Not specified",
             taskHistory: completedTasks?.map(task => ({
                 title: task.title,
@@ -496,5 +476,3 @@ export default function HomePage() {
     </>
   );
 }
-
-    

@@ -83,13 +83,13 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.1)" />
                     <XAxis
                     dataKey="month"
-                    stroke="#888888"
+                    stroke="#666"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     />
                     <YAxis
-                    stroke="#888888"
+                    stroke="#666"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
