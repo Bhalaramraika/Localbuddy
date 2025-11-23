@@ -5,9 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader } from 'lucide-react';
 import * as React from 'react';
+import { ProfileSetupDialog } from '@/components/ProfileSetupDialog';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
 
 export default function MainAppLayout({
   children,
@@ -17,6 +21,17 @@ export default function MainAppLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+
+  const [isProfileSetupOpen, setIsProfileSetupOpen] = useState(false);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userData, isLoading: isUserDataLoading } = useDoc(userDocRef);
+
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
@@ -55,7 +70,7 @@ export default function MainAppLayout({
   }
 
   // If we are on a main app page, but the user is still loading or not yet available, show a loader.
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || isUserDataLoading) {
     return (
       <div className="w-full h-screen flex flex-col items-center justify-center">
         <Loader className="w-12 h-12 animate-spin text-main-accent" />
@@ -64,14 +79,15 @@ export default function MainAppLayout({
     );
   }
 
-  const showNav = mainAppRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route)));
-
+  const showNav = mainAppRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route))) && !isProfileSetupOpen;
+  const showProfileDialog = user && !isUserDataLoading && userData && !userData.profileCompleted;
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground pb-28">
+       {showProfileDialog && <ProfileSetupDialog onOpenChange={setIsProfileSetupOpen} />}
       {children}
       {showNav && (
-        <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
+        <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-full max-w-[340px] z-50">
           <nav className="glass-card flex items-center justify-around p-2.5 rounded-full">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -80,7 +96,7 @@ export default function MainAppLayout({
                 return (
                   <Link href={item.href} key={item.label}>
                     <div className={cn(
-                      'w-16 h-16 bg-main-accent rounded-full flex items-center justify-center cursor-pointer transition-transform duration-300 hover:scale-110 shadow-lg shadow-black/30 -translate-y-6',
+                      'w-14 h-14 bg-main-accent rounded-full flex items-center justify-center cursor-pointer transition-transform duration-300 hover:scale-110 shadow-lg shadow-black/30',
                       isActive ? 'ring-4 ring-white/50' : ''
                     )}>
                       <item.icon className="w-8 h-8 text-white" />

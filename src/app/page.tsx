@@ -24,7 +24,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, query, where, limit, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { ProfileSetupDialog } from '@/components/ProfileSetupDialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const getImage = (id: string) =>
@@ -247,9 +246,9 @@ const MainHeader = ({ user, userData, isUserLoading }: { user: User | null, user
 const QuickActionCard = ({ icon, title, bgColor, href }: { icon: React.ReactNode, title: string, bgColor: string, href: string }) => {
     return (
         <Link href={href} key={title}>
-            <div className="flex-shrink-0 w-36 h-36 flex flex-col items-center justify-center gap-3 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
-                <div className={cn("p-4 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
-                    {icon}
+            <div className="flex-shrink-0 w-32 h-32 flex flex-col items-center justify-center gap-2 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
+                <div className={cn("p-3 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
+                    {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6 text-white' })}
                 </div>
                 <p className="font-bold text-sm text-center text-foreground">{title}</p>
             </div>
@@ -259,11 +258,11 @@ const QuickActionCard = ({ icon, title, bgColor, href }: { icon: React.ReactNode
 
 const QuickActionsSection = () => {
     const actions = [
-        { title: 'Create Task', icon: <Plus className="w-7 h-7 text-white" />, bgColor: 'bg-main-accent', href: '/tasks/create' },
-        { title: 'Leaderboard', icon: <Trophy className="w-7 h-7 text-white" />, bgColor: 'bg-yellow-500', href: '/leaderboard' },
-        { title: 'Verify ID', icon: <Shield className="w-7 h-7 text-white" />, bgColor: 'bg-green-500', href: '/profile/verify' },
-        { title: 'SOS Alerts', icon: <Siren className="w-7 h-7 text-white" />, bgColor: 'bg-destructive-accent', href: '/sos' },
-        { title: 'Refer a Buddy', icon: <Users className="w-7 h-7 text-white" />, bgColor: 'bg-blue-500', href: '/refer' },
+        { title: 'Create Task', icon: <Plus />, bgColor: 'bg-main-accent', href: '/tasks/create' },
+        { title: 'Leaderboard', icon: <Trophy />, bgColor: 'bg-yellow-500', href: '/leaderboard' },
+        { title: 'Verify ID', icon: <Shield />, bgColor: 'bg-green-500', href: '/profile/verify' },
+        { title: 'SOS Alerts', icon: <Siren />, bgColor: 'bg-destructive-accent', href: '/sos' },
+        { title: 'Refer a Buddy', icon: <Users />, bgColor: 'bg-blue-500', href: '/refer' },
     ];
     return (
         <section className="w-full">
@@ -412,7 +411,6 @@ export default function HomePage() {
 
   return (
     <>
-      {user && !isUserLoading && userData && !userData.profileCompleted && <ProfileSetupDialog />}
       <MainHeader user={user} userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
       <QuickActionsSection />
       <TaskFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />

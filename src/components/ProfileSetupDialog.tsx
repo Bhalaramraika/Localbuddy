@@ -39,7 +39,11 @@ const StepVariants = {
   }),
 };
 
-export function ProfileSetupDialog() {
+type ProfileSetupDialogProps = {
+  onOpenChange: (isOpen: boolean) => void;
+};
+
+export function ProfileSetupDialog({ onOpenChange }: ProfileSetupDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [step, setStep] = React.useState(0);
   const [direction, setDirection] = React.useState(1);
@@ -100,6 +104,10 @@ export function ProfileSetupDialog() {
     return () => clearTimeout(timer);
   }, []);
 
+  React.useEffect(() => {
+    onOpenChange(isOpen);
+  }, [isOpen, onOpenChange]);
+
   return (
     <>
       <AnimatePresence>
@@ -140,7 +148,7 @@ export function ProfileSetupDialog() {
                           render={({ field }) => (
                             <FormItem className="w-full">
                               <FormControl>
-                                <Input {...field} placeholder="Enter your name" className="h-12 text-center" />
+                                <Input {...field} placeholder="Enter your name" className="h-12 text-center glass-card" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
