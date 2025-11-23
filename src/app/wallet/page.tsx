@@ -153,7 +153,9 @@ export default function WalletPage() {
 
   const availableBalance = userData?.walletBalance ?? 0;
   
-  const lockedBalance = (transactions?.filter(t => t.type === 'lock' && t.status === 'success').reduce((acc, t) => acc + t.amount, 0) ?? 0);
+  const lockedBalance = transactions
+    ?.filter(t => t.type === 'lock' && t.status === 'success')
+    .reduce((acc, t) => acc + t.amount, 0) ?? 0;
 
   return (
     <>
@@ -251,5 +253,3 @@ export default function WalletPage() {
     </>
   );
 }
-
-    

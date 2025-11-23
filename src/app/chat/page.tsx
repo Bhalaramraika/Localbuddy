@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSearchParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, writeBatch } from 'firebase/firestore';
+import { doc, collection, writeBatch, runTransaction, getDoc, increment } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -194,38 +194,42 @@ const ChatFooter = ({ onSend, taskData, user }: { onSend: (message: any) => void
     const handleReleasePayment = async () => {
         if (!firestore || !taskData || !user) return;
         const { id: taskId, budget, posterId, buddyId } = taskData;
-
-        const posterRef = doc(firestore, 'users', posterId);
-        const buddyRef = doc(firestore, 'users', buddyId);
-        const taskRef = doc(firestore, 'tasks', taskId);
-        const transactionRef = collection(firestore, 'transactions');
-        
+    
         try {
-            const batch = writeBatch(firestore);
-
-            // 1. Decrement poster's balance
-            batch.update(posterRef, { walletBalance: -budget });
-
-            // 2. Increment buddy's balance
-            batch.update(buddyRef, { walletBalance: budget });
-
-            // 3. Update task status to 'paid'
-            batch.update(taskRef, { status: 'paid' });
-
-            // 4. Create transaction record
-            const newTransaction = {
-                userId: posterId,
-                taskId,
-                type: 'release',
-                amount: budget,
-                status: 'success',
-                timestamp: new Date(),
-            };
-            const newTransactionRef = doc(transactionRef);
-            batch.set(newTransactionRef, newTransaction);
-            
-            await batch.commit();
-
+            await runTransaction(firestore, async (transaction) => {
+                const posterRef = doc(firestore, "users", posterId);
+                const buddyRef = doc(firestore, "users", buddyId);
+                const taskRef = doc(firestore, "tasks", taskId);
+                const transactionRef = doc(collection(firestore, 'transactions'));
+    
+                const posterDoc = await transaction.get(posterRef);
+                const buddyDoc = await transaction.get(buddyRef);
+    
+                if (!posterDoc.exists() || !buddyDoc.exists()) {
+                    throw "User not found";
+                }
+    
+                // 1. Decrement poster's balance
+                transaction.update(posterRef, { walletBalance: increment(-budget) });
+    
+                // 2. Increment buddy's balance
+                transaction.update(buddyRef, { walletBalance: increment(budget) });
+    
+                // 3. Update task status to 'paid'
+                transaction.update(taskRef, { status: 'paid' });
+    
+                // 4. Create transaction record
+                const newTransaction = {
+                    userId: posterId,
+                    taskId,
+                    type: 'release',
+                    amount: budget,
+                    status: 'success',
+                    timestamp: new Date(),
+                };
+                transaction.set(transactionRef, newTransaction);
+            });
+    
         } catch (error) {
             console.error("Payment release failed:", error);
             // Here you would emit a proper error
@@ -312,7 +316,12 @@ function ChatPageContent() {
 
   const { data: taskData, isLoading: isTaskLoading } = useDoc(taskDocRef);
 
-  const { data: userData } = useDoc(user ? doc(firestore, 'users', user.uid) : null);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userData } = useDoc(userDocRef);
 
   const [messages, setMessages] = React.useState([
       { type: 'text', content: "Hi, are you on your way? I'm waiting at the location.", isOutgoing: false, time: '10:30 AM' },
@@ -375,5 +384,3 @@ export default function ChatPage() {
         </React.Suspense>
     )
 }
-
-    
