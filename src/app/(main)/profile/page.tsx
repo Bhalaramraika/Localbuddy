@@ -5,7 +5,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { CheckCircle, Star, Award, Edit, Settings, Check } from "lucide-react";
 
 const ProfileHeader = () => (
-  <div className="flex flex-col items-center pt-10 pb-6 px-4">
+  <div className="flex flex-col items-center pt-10 pb-6 px-4 glass-card">
     <div className="relative">
       <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
         <AvatarImage src={PlaceHolderImages.find(p => p.id === "user2")?.imageUrl} alt="Rahul Smith" />
@@ -16,7 +16,7 @@ const ProfileHeader = () => (
       </div>
     </div>
     <h1 className="text-2xl font-bold text-center text-white mt-4">Rahul Smith</h1>
-    <p className="text-muted-foreground">Level 2: Pro</p>
+    <p className="text-white/70">Level 2: Pro</p>
   </div>
 );
 
@@ -40,15 +40,15 @@ const Stats = () => (
         <div className="grid grid-cols-3 gap-4 text-center">
             <div>
                 <p className="text-2xl font-bold text-white">₹12,500</p>
-                <p className="text-xs text-muted-foreground">Total Earnings</p>
+                <p className="text-xs text-white/70">Total Earnings</p>
             </div>
             <div>
                 <p className="text-2xl font-bold text-white">25</p>
-                <p className="text-xs text-muted-foreground">Tasks</p>
+                <p className="text-xs text-white/70">Tasks</p>
             </div>
              <div>
                 <p className="text-2xl font-bold text-white flex items-center justify-center gap-1">4.8 <Star className="h-4 w-4 text-secondary"/></p>
-                <p className="text-xs text-muted-foreground">Rating</p>
+                <p className="text-xs text-white/70">Rating</p>
             </div>
         </div>
     </div>
@@ -86,7 +86,7 @@ export default function ProfilePage() {
             <Stats />
             <Badges />
             <div className="mx-4">
-                <Button variant="ghost" className="w-full justify-center text-lg h-14 glass-card text-white hover:bg-white/10">
+                <Button variant="ghost" className="w-full justify-center text-lg h-14 glass-card text-white hover:bg-white/20">
                     <Settings className="mr-4 h-6 w-6"/> Settings
                 </Button>
             </div>

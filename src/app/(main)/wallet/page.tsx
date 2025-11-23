@@ -9,21 +9,21 @@ const WalletSummary = () => (
                 <WalletIcon className="h-8 w-8 text-success" />
             </div>
             <p className="text-5xl font-bold font-headline mt-4 text-white">₹2,500</p>
-            <p className="text-sm text-muted-foreground mt-1">Available Balance</p>
+            <p className="text-sm text-white/70 mt-1">Available Balance</p>
         </div>
         <div className="glass-card overflow-hidden relative p-6 gold-glow">
              <div className="flex items-start justify-between">
                 <Lock className="h-8 w-8 text-secondary" />
             </div>
             <p className="text-5xl font-bold font-headline mt-4 text-white">₹500</p>
-            <p className="text-sm text-muted-foreground mt-1">Locked in Escrow</p>
+            <p className="text-sm text-white/70 mt-1">Locked in Escrow</p>
         </div>
     </div>
 );
 
 const WalletActions = () => (
-    <div className="space-y-4 text-center">
-        <Button size="lg" className="w-[90%] h-14 glass-card text-base font-semibold justify-center hover:bg-white/10 text-white">
+    <div className="space-y-4 text-center glass-card p-4">
+        <Button size="lg" className="w-full h-14 glass-card text-base font-semibold justify-center bg-white/10 hover:bg-white/20 text-white">
             Withdraw Money
         </Button>
         <div className="flex items-center justify-center gap-2 p-2 text-secondary">
@@ -40,8 +40,8 @@ const transactions = [
 ]
 
 const TransactionHistory = () => (
-    <div>
-        <h2 className="text-xl font-bold text-white mb-4">Transaction History</h2>
+    <div className="glass-card p-4">
+        <h2 className="text-xl font-bold text-white mb-4 px-2">Transaction History</h2>
         <div className="glass-card p-2">
              <div className="divide-y divide-white/10">
                 {transactions.map(tx => (
@@ -52,7 +52,7 @@ const TransactionHistory = () => (
                             </div>
                             <div>
                                 <p className="font-semibold text-white">{tx.title}</p>
-                                <p className="text-sm text-muted-foreground">{tx.date}</p>
+                                <p className="text-sm text-white/70">{tx.date}</p>
                             </div>
                         </div>
                         <p className={cn("font-bold text-lg", tx.color)}>{tx.amount}</p>

@@ -7,14 +7,14 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 
 const HomeHeader = () => (
-  <div className="flex items-center justify-between p-4">
+  <div className="flex items-center justify-between p-4 glass-card mx-4 mt-4">
     <Avatar className="h-12 w-12 border-2 border-primary">
       <AvatarImage src={PlaceHolderImages.find(img => img.id === "user1")?.imageUrl} alt={"Sarah Williams"} />
       <AvatarFallback>S</AvatarFallback>
     </Avatar>
     <div className="flex items-center gap-4">
        <div className="relative glass-card h-12 w-12 flex items-center justify-center rounded-full">
-        <Bell className="h-7 w-7 text-muted-foreground" />
+        <Bell className="h-7 w-7 text-white/80" />
         <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse border-2 border-background"></span>
       </div>
       <div className="pill-chip glass-card">
@@ -31,14 +31,14 @@ const stories = [
 ];
 
 const Stories = () => (
-  <div className="pl-4 mt-4">
+  <div className="pl-4 mt-6">
     <ScrollArea className="w-full whitespace-nowrap">
       <div className="flex w-max space-x-6 pb-4">
         {stories.map((story) => (
           <div key={story.id} className="flex flex-col items-center gap-2.5 text-center w-20 shrink-0">
              <div className={cn(
-                 "p-0.5 rounded-full",
-                 story.icon ? `${story.ringColor} ring-2 ring-offset-4 ring-offset-background bg-transparent` : 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500'
+                 "p-0.5 rounded-full glass-card",
+                 story.icon ? `${story.ringColor} ring-2 ring-offset-4 ring-offset-background` : 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500'
              )}>
               <Avatar className={cn(
                   "h-16 w-16 border-2",
@@ -60,15 +60,15 @@ const Stories = () => (
 const FilterChips = () => {
     const categories = ["All", "Household", "Tech", "Cleaning"];
     return (
-        <div className="px-4 mt-4">
+        <div className="px-4 mt-2">
             <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex w-max space-x-3 pb-2">
                 {categories.map((category, index) => (
                 <div 
                     key={category} 
                     className={cn(
-                        "pill-chip glass-card text-white",
-                         index === 0 && "bg-primary/20 border-primary/30"
+                        "pill-chip glass-card text-white/90",
+                         index === 0 && "bg-primary/20 border-primary/30 text-white"
                     )}
                 >
                     {category}

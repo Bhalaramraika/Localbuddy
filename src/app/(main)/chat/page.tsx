@@ -24,7 +24,7 @@ const ChatHeader = () => (
             <h1 className="text-xl font-bold text-white">Rahul</h1>
         </div>
         <div className="flex items-center gap-4">
-            <Phone className="h-6 w-6 text-muted-foreground"/>
+            <Phone className="h-6 w-6 text-white/70"/>
             <Button className="h-11 px-5 glass-card bg-destructive/50 text-white font-bold text-sm rounded-full shadow-[0_0_15px] shadow-destructive/70">
                 SOS
             </Button>
@@ -36,7 +36,7 @@ const MessageBubble = ({ message, isCurrentUser }: { message: { content: string 
     <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in-up`}>
         <div className={cn(
             'max-w-xs lg:max-w-md px-5 py-3 rounded-2xl glass-card',
-            isCurrentUser ? 'bg-white/10 rounded-br-lg' : 'bg-blue-500/20 border-blue-400/20 rounded-bl-lg'
+            isCurrentUser ? 'bg-white/20 rounded-br-lg' : 'bg-blue-500/20 border-blue-400/20 rounded-bl-lg'
         )}>
             <p className="text-white">{message.content}</p>
         </div>
@@ -51,7 +51,7 @@ const VoiceMessageBubble = () => (
             </Button>
             <div className="flex items-center gap-0.5 h-6">
                 {[...Array(15)].map((_, i) => (
-                    <span key={i} style={{height: `${Math.random() * 70 + 20}%`}} className="w-0.5 bg-muted-foreground rounded-full"></span>
+                    <span key={i} style={{height: `${Math.random() * 70 + 20}%`}} className="w-0.5 bg-white/70 rounded-full"></span>
                 ))}
             </div>
         </div>
@@ -59,14 +59,14 @@ const VoiceMessageBubble = () => (
 )
 
 const ActionHub = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-30 p-3 md:p-5">
+    <div className="fixed bottom-24 left-0 right-0 z-30 p-3 md:p-5 md:bottom-5">
         <div className="glass-card p-4 space-y-4">
             <h3 className="text-lg font-bold text-white px-2">Action Hub</h3>
             <div className="relative">
-                <Input placeholder="Your text here..." className="glass-card border-none rounded-full h-12 pl-5 pr-12 text-white" />
+                <Input placeholder="Your text here..." className="glass-card border-none rounded-full h-12 pl-5 pr-12 text-white placeholder:text-white/60" />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full glass-card">
-                        <Mic className="h-5 w-5 text-muted-foreground" />
+                        <Mic className="h-5 w-5 text-white/70" />
                     </Button>
                 </div>
             </div>
