@@ -42,6 +42,9 @@ export function isEmpty(value: any): boolean {
 }
 
 export function formatCurrency(amount: number, currency: string = 'INR', locale: string = 'en-IN'): string {
+    if (typeof amount !== 'number') {
+        return String(amount);
+    }
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
@@ -290,3 +293,5 @@ export function animateValue(obj: HTMLElement, start: number, end: number, durat
   };
   window.requestAnimationFrame(step);
 }
+
+    
