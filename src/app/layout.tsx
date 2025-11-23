@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import MainAppLayout from './(main)/layout';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -29,10 +30,12 @@ export default function RootLayout({
           poppins.variable
         )}
       >
-        <main className="relative flex flex-col items-center p-4 sm:p-6 md:p-8">
-          <MainAppLayout>{children}</MainAppLayout>
-        </main>
-        <Toaster />
+        <FirebaseClientProvider>
+          <main className="relative flex flex-col items-center p-4 sm:p-6 md:p-8">
+            <MainAppLayout>{children}</MainAppLayout>
+          </main>
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );

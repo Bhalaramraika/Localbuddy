@@ -8,8 +8,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user.",
-          "format": "uuid"
+          "description": "Unique identifier for the user (matches auth.uid)."
         },
         "name": {
           "type": "string",
@@ -56,7 +55,8 @@
       },
       "required": [
         "id",
-        "name"
+        "name",
+        "walletBalance"
       ]
     },
     "Task": {
@@ -67,8 +67,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the task.",
-          "format": "uuid"
+          "description": "Unique identifier for the task."
         },
         "title": {
           "type": "string",
@@ -96,11 +95,11 @@
         },
         "posterId": {
           "type": "string",
-          "description": "Reference to User who posted the task. (Relationship: User 1:N Task)"
+          "description": "Reference to User who posted the task."
         },
         "buddyId": {
           "type": "string",
-          "description": "Reference to User who is assigned to the task. (Relationship: User 1:N Task)"
+          "description": "Reference to User who is assigned to the task."
         },
         "deadline": {
           "type": "string",
@@ -124,24 +123,36 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the chat session.",
-          "format": "uuid"
+          "description": "Unique identifier for the chat session."
         },
         "taskId": {
           "type": "string",
-          "description": "Reference to Task that this chat is associated with. (Relationship: Task 1:1 Chat)"
+          "description": "Reference to Task that this chat is associated with."
+        },
+        "participantIds": {
+          "type": "array",
+          "description": "Array of user IDs participating in the chat.",
+          "items": {
+            "type": "string"
+          }
         },
         "messages": {
           "type": "array",
           "description": "Array of messages in the chat session.",
           "items": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "senderId": { "type": "string" },
+              "text": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
           }
         }
       },
       "required": [
         "id",
-        "taskId"
+        "taskId",
+        "participantIds"
       ]
     },
     "Transaction": {
@@ -152,16 +163,15 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the transaction.",
-          "format": "uuid"
+          "description": "Unique identifier for the transaction."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User that initiated the transaction. (Relationship: User 1:N Transaction)"
+          "description": "Reference to User that initiated the transaction."
         },
         "taskId": {
           "type": "string",
-          "description": "Reference to Task that the transaction is for (if applicable). (Relationship: Task 1:N Transaction)"
+          "description": "Reference to Task that the transaction is for (if applicable)."
         },
         "type": {
           "type": "string",
@@ -198,72 +208,31 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Uses path-based ownership for private user data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
+    "paths": {
+      "/users/{userId}": {
+        "schema": {
+          "$ref": "#/entities/User"
+        },
+        "description": "Stores user profiles. Uses path-based ownership for private user data."
       },
-      {
-        "path": "/tasks/{taskId}",
-        "definition": {
-          "entityName": "Task",
-          "schema": {
-            "$ref": "#/backend/entities/Task"
-          },
-          "description": "Stores tasks posted on the platform. Includes 'posterId' to associate the task with the user who posted it, as well as 'buddyId' to save the user assigned to the task.",
-          "params": [
-            {
-              "name": "taskId",
-              "description": "The unique identifier for the task."
-            }
-          ]
-        }
+      "/tasks/{taskId}": {
+        "schema": {
+          "$ref": "#/entities/Task"
+        },
+        "description": "Stores tasks posted on the platform. Includes 'posterId' to associate the task with the user who posted it, as well as 'buddyId' to save the user assigned to the task."
       },
-      {
-        "path": "/chats/{chatId}",
-        "definition": {
-          "entityName": "Chat",
-          "schema": {
-            "$ref": "#/backend/entities/Chat"
-          },
-          "description": "Stores chat sessions between users for specific tasks. Includes 'taskId' to associate the chat with a specific task.",
-          "params": [
-            {
-              "name": "chatId",
-              "description": "The unique identifier for the chat session."
-            }
-          ]
-        }
+      "/chats/{chatId}": {
+        "schema": {
+          "$ref": "#/entities/Chat"
+        },
+        "description": "Stores chat sessions between users for specific tasks. Includes 'taskId' and a list of participantIds to secure the chat."
       },
-      {
-        "path": "/transactions/{transactionId}",
-        "definition": {
-          "entityName": "Transaction",
-          "schema": {
-            "$ref": "#/backend/entities/Transaction"
-          },
-          "description": "Stores transaction records related to wallet operations. Includes 'userId' and 'taskId' to track user and task associations.",
-          "params": [
-            {
-              "name": "transactionId",
-              "description": "The unique identifier for the transaction."
-            }
-          ]
-        }
+      "/transactions/{transactionId}": {
+        "schema": {
+          "$ref": "#/entities/Transaction"
+        },
+        "description": "Stores transaction records related to wallet operations. Includes 'userId' and 'taskId' to track user and task associations."
       }
-    ],
-    "reasoning": "The Firestore structure is designed to ensure security, scalability, and debuggability, adhering to the core principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization. For example, tasks include the `posterId` so that the system can independently authorize task access without needing to fetch user data. The Membership Map model is not applicable in this case but the tasks structure uses user-owned data to provide further clarity and ensure the QAPs. Segregation is used to enforce a homogeneous security posture, ensuring all documents in a collection share the same security requirements. The database structure also makes explicit state modeling by using a single `status` field, rather than inferring state from multiple booleans or timestamps, simplifying the logic for the security rules."
+    }
   }
 }

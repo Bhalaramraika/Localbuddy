@@ -80,7 +80,7 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn() && request.resource.data.posterId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.posterId) && request.resource.data.posterId == resource.data.posterId;
+      allow update: if isSignedIn() && (isOwner(resource.data.posterId) || (resource.data.buddyId != null && isOwner(resource.data.buddyId)));
       allow delete: if isExistingOwner(resource.data.posterId);
     }
 
@@ -108,10 +108,11 @@ service cloud.firestore {
      */
     match /transactions/{transactionId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if false;
+      allow list: if false; // Users can only see their own transactions, not list all.
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(resource.data.userId);
+      // updates and deletes are disallowed for transaction records to maintain audit trail
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
