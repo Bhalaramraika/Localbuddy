@@ -44,23 +44,6 @@ const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price:
     </div>
 );
 
-const TaskCardCountdown = ({ countdown }: { countdown: string }) => {
-    const [remaining, setRemaining] = React.useState(countdown);
-
-    React.useEffect(() => {
-        const interval = setInterval(() => {
-            setRemaining(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    return (
-        <div className="glass-card border-red-500/50 rounded-lg p-2 text-center transition-all duration-300 group-hover:border-destructive-accent/50 group-hover:scale-105">
-            <p className="text-sm text-red-500 group-hover:text-destructive-accent">Countdown: {remaining}</p>
-        </div>
-    );
-};
-
 const TaskCardButton = () => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [isAccepted, setIsAccepted] = React.useState(false);
@@ -87,12 +70,11 @@ const TaskCardButton = () => {
     );
 };
 
-const TaskCard = ({ title, price, tag, countdown, imageUrl }: { title: string, price: string, tag: string, countdown: string, imageUrl?: string }) => {
+const TaskCard = ({ title, price, tag, imageUrl }: { title: string, price: string, tag: string, imageUrl?: string }) => {
   return (
     <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-gray-300 hover:-translate-y-1">
       {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={tag} />}
       <TaskCardHeader title={title} price={price} tag={tag} hasImage={!!imageUrl} />
-      <TaskCardCountdown countdown={countdown} />
       <TaskCardButton />
     </div>
   );
@@ -182,7 +164,7 @@ const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.
         >
             <div
                 className={cn(
-                    `relative w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-offset-4 ring-offset-transparent bg-gray-100 glass-pill transition-all duration-300 group-hover:ring-4 overflow-hidden`,
+                    `relative w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-offset-4 ring-offset-background bg-gray-100 glass-pill transition-all duration-300 group-hover:ring-4 overflow-hidden`,
                     story.ringColor
                 )}
             >
@@ -282,9 +264,9 @@ export default function HomePage() {
   ];
 
   const tasks = [
-    { title: "Need Plumber ASAP", price: "₹500", tag: "Urgent", countdown: "00:02:35:34", imageUrl: undefined },
-    { title: "Fix My Laptop", price: "₹1200", tag: "Tech", countdown: "00:10:15:02", imageUrl: getImage('task_tech')?.imageUrl },
-    { title: "House Deep Cleaning", price: "₹2500", tag: "Household", countdown: "01:05:22:18", imageUrl: getImage('task_cleaning')?.imageUrl }
+    { title: "Need Plumber ASAP", price: "₹500", tag: "Urgent", imageUrl: undefined },
+    { title: "Fix My Laptop", price: "₹1200", tag: "Tech", imageUrl: getImage('task_tech')?.imageUrl },
+    { title: "House Deep Cleaning", price: "₹2500", tag: "Household", imageUrl: getImage('task_cleaning')?.imageUrl }
   ];
 
   return (
@@ -293,14 +275,13 @@ export default function HomePage() {
       <StoriesSection />
       <TaskFilters />
 
-      <section className="w-full grid grid-cols-1 gap-6">
+      <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
         {tasks.map((task, index) => (
             <TaskCard 
               key={index}
               title={task.title}
               price={task.price}
               tag={task.tag}
-              countdown={task.countdown}
               imageUrl={task.imageUrl}
             />
         ))}

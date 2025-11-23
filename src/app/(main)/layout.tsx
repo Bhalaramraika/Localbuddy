@@ -36,7 +36,7 @@ export default function MainAppLayout({
                   isActive ? 'text-main-accent' : 'text-gray-500 hover:text-main-accent'
                 )}
               >
-                <div className={cn('p-2 rounded-full', isActive ? 'bg-main-accent/20' : '')}>
+                <div className={cn('p-2 rounded-full transition-all duration-300', isActive ? 'bg-main-accent/20' : '')}>
                   <item.icon className="w-6 h-6" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--main-accent))' } : {}} />
                 </div>
               </Link>
