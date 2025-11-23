@@ -121,7 +121,7 @@ export default function ProfilePage() {
   const overallProgress = 72;
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col gap-8 text-white pb-28">
+    <>
       <ProfileHeader />
 
       <section className="glass-card w-full p-4">
@@ -177,6 +177,6 @@ export default function ProfilePage() {
             Logout
         </Button>
       </footer>
-    </div>
+    </>
   );
 }

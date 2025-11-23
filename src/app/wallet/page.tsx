@@ -82,7 +82,7 @@ export default function WalletPage() {
   );
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col gap-8 text-white pb-28">
+    <>
        <header className="glass-card p-4 text-center">
         <h1 className="text-3xl font-bold">Wallet & Finance</h1>
         <p className="text-gray-400 text-sm mt-1">Manage your funds and transactions securely</p>
@@ -168,6 +168,6 @@ export default function WalletPage() {
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }

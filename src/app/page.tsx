@@ -321,7 +321,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col gap-8 text-white pb-28">
+    <>
       <MainHeader />
       <StoriesSection />
       <TaskFilters />
@@ -342,25 +342,6 @@ export default function HomePage() {
           <h3 className="font-bold text-lg mb-3 px-2">Priority Hub</h3>
           {advancedListItems.map(item => <AdvancedListItem key={item.title} {...item} />)}
       </section>
-
-      <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
-        <nav className="glass-card flex items-center justify-around p-3 rounded-full">
-          <Link href="/" className="flex flex-col items-center gap-1 text-neon-cyan">
-             <div className="p-2 bg-neon-cyan/20 rounded-full">
-                <Home className="w-6 h-6" style={{ filter: 'drop-shadow(0 0 5px var(--neon-cyan))' }} />
-             </div>
-          </Link>
-          <Link href="/wallet" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
-            <Wallet className="w-6 h-6" />
-          </Link>
-          <Link href="/chat" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
-            <MessageSquare className="w-6 h-6" />
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
-            <User className="w-6 h-6" />
-          </Link>
-        </nav>
-      </footer>
-    </div>
+    </>
   );
 }

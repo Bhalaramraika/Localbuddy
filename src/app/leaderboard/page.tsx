@@ -70,7 +70,7 @@ const LeaderboardRow = ({ user }: { user: LeaderboardUser }) => {
 
 export default function LeaderboardPage() {
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-8 text-white pb-28">
+    <>
       <header className="glass-card p-6 text-center">
         <div className="flex justify-center items-center gap-4">
             <Trophy className="w-10 h-10 text-neon-gold" style={{ filter: 'drop-shadow(0 0 10px var(--neon-gold))' }}/>
@@ -100,6 +100,6 @@ export default function LeaderboardPage() {
              <p>All-Time leaderboards are coming soon!</p>
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   );
 }

@@ -106,7 +106,7 @@ const LocationAttachment = () => (
 const ChatHeader = () => {
     const userAvatar = getImage('user2');
     return (
-        <header className="glass-card flex items-center justify-between p-3 mb-4">
+        <header className="glass-card flex items-center justify-between p-3">
             <div className="flex items-center gap-3">
                 {userAvatar && (
                     <Image
@@ -137,7 +137,7 @@ const ChatHeader = () => {
 };
 
 const AttachmentMenu = ({ onSelect }: { onSelect: (type: string) => void }) => (
-    <div className="absolute bottom-14 left-4 w-48 glass-card p-2 rounded-lg shadow-lg">
+    <div className="absolute bottom-32 left-4 w-48 glass-card p-2 rounded-lg shadow-lg">
         <div className="flex flex-col gap-1">
             <button onClick={() => onSelect('camera')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><Camera className="w-5 h-5 text-neon-cyan"/> Photo/Video</button>
             <button onClick={() => onSelect('document')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><FileText className="w-5 h-5 text-neon-gold"/> Document</button>
@@ -165,34 +165,36 @@ const ChatFooter = ({ onSend }: { onSend: (message: any) => void }) => {
     };
 
     return (
-        <footer className="glass-card p-4">
+        <div className="mt-auto">
             {showAttachments && <AttachmentMenu onSelect={handleAttachmentSelect} />}
-            <div className="relative flex items-center w-full mb-4">
-                <button onClick={() => setShowAttachments(!showAttachments)} className="absolute left-4 z-10">
-                    <Paperclip className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
-                </button>
-                <Input
-                    type="text"
-                    placeholder="Your text here..."
-                    className="glass-card w-full h-12 px-12 rounded-full border-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                />
-                <div className="absolute right-4 flex items-center gap-3">
-                    <Camera className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
-                    <Mic className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
+            <div className="glass-card p-4">
+                <div className="relative flex items-center w-full mb-4">
+                    <button onClick={() => setShowAttachments(!showAttachments)} className="absolute left-4 z-10">
+                        <Paperclip className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
+                    </button>
+                    <Input
+                        type="text"
+                        placeholder="Your text here..."
+                        className="glass-card w-full h-12 px-12 rounded-full border-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                    />
+                    <div className="absolute right-4 flex items-center gap-3">
+                        <Camera className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
+                        <Mic className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <Button variant="outline" className="flex-1 h-14 text-lg font-bold rounded-full glass-card border-neon-gold/50 text-neon-gold hover:bg-neon-gold/10 hover:text-neon-gold">
+                    Request Payment
+                    </Button>
+                    <Button onClick={handleSend} className="flex-1 h-14 text-lg font-bold rounded-full" style={{ background: 'linear-gradient(90deg, var(--neon-gold), #ffc107)', color: '#000', boxShadow: '0 0 20px var(--neon-gold)'}}>
+                    <Send className="w-5 h-5 mr-2" /> Send
+                    </Button>
                 </div>
             </div>
-            <div className="flex items-center gap-4">
-                <Button variant="outline" className="flex-1 h-14 text-lg font-bold rounded-full glass-card border-neon-gold/50 text-neon-gold hover:bg-neon-gold/10 hover:text-neon-gold">
-                  Request Payment
-                </Button>
-                <Button onClick={handleSend} className="flex-1 h-14 text-lg font-bold rounded-full" style={{ background: 'linear-gradient(90deg, var(--neon-gold), #ffc107)', color: '#000', boxShadow: '0 0 20px var(--neon-gold)'}}>
-                  <Send className="w-5 h-5 mr-2" /> Send
-                </Button>
-            </div>
-        </footer>
+        </div>
     );
 };
 
@@ -223,9 +225,9 @@ export default function ChatPage() {
   }, [messages]);
 
   return (
-    <div className="w-full max-w-md h-[calc(100vh-4rem)] mx-auto flex flex-col text-white">
+    <div className="w-full h-full flex flex-col">
       <ChatHeader />
-      <ScrollArea className="flex-grow space-y-6 -mx-4 glass-card mb-4" ref={scrollAreaRef}>
+      <ScrollArea className="flex-grow my-4 -mx-4 glass-card" ref={scrollAreaRef}>
         <div className="p-4">
             {messages.map((msg, index) => (
                 <div key={index} className="mb-6">
