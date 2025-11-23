@@ -10,7 +10,9 @@ import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from './ui/form';
+import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 const profileSchema = z.object({
   name: z.string().min(3, { message: 'Name must be at least 3 characters.' }),
@@ -52,7 +54,6 @@ export function ProfileSetupDialog() {
   const {
     handleSubmit,
     trigger,
-    getValues,
     setValue,
     watch,
     control,
@@ -145,9 +146,9 @@ export function ProfileSetupDialog() {
                             </FormItem>
                           )}
                         />
-                        <button type="button" onClick={nextStep} className="cyan-glow-button mt-6 w-full h-12 text-lg">
+                        <Button type="button" onClick={nextStep} className="cyan-glow-button mt-6 w-full h-12 text-lg">
                           Next
-                        </button>
+                        </Button>
                       </motion.div>
                     )}
 
@@ -173,11 +174,11 @@ export function ProfileSetupDialog() {
                             <FormItem className="w-full">
                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                  <SelectTrigger className="h-12 text-center">
+                                  <SelectTrigger className="h-12 text-center glass-card">
                                     <SelectValue placeholder="Select your birth year" />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent>
+                                <SelectContent className="glass-card">
                                     {years.map((year) => (
                                     <SelectItem key={year} value={year}>{year}</SelectItem>
                                     ))}
@@ -188,8 +189,8 @@ export function ProfileSetupDialog() {
                           )}
                         />
                         <div className="flex gap-4 w-full mt-6">
-                          <button type="button" onClick={prevStep} className="glass-card w-full h-12 text-lg">Back</button>
-                          <button type="button" onClick={nextStep} className="cyan-glow-button w-full h-12 text-lg">Next</button>
+                          <Button type="button" onClick={prevStep} className="glass-card w-full h-12 text-lg" variant="outline">Back</Button>
+                          <Button type="button" onClick={nextStep} className="cyan-glow-button w-full h-12 text-lg">Next</Button>
                         </div>
                       </motion.div>
                     )}
@@ -212,22 +213,22 @@ export function ProfileSetupDialog() {
                         <div className="w-full space-y-3">
                            <div 
                             onClick={() => setValue('appLanguage', 'english')} 
-                            className={`glass-card p-4 rounded-lg cursor-pointer border-2 transition-all ${appLanguage === 'english' ? 'border-main-accent' : 'border-transparent'}`}
+                            className={cn('glass-card p-4 rounded-lg cursor-pointer border-2 transition-all', appLanguage === 'english' ? 'border-main-accent' : 'border-transparent')}
                           >
                             <p className="text-lg font-bold">English</p>
                           </div>
                           <div 
                             onClick={() => setValue('appLanguage', 'hindi')}
-                            className={`glass-card p-4 rounded-lg cursor-pointer border-2 transition-all ${appLanguage === 'hindi' ? 'border-main-accent' : 'border-transparent'}`}
+                            className={cn('glass-card p-4 rounded-lg cursor-pointer border-2 transition-all', appLanguage === 'hindi' ? 'border-main-accent' : 'border-transparent')}
                           >
                              <p className="text-lg font-bold">हिंदी (Hindi)</p>
                           </div>
                         </div>
                          <div className="flex gap-4 w-full mt-6">
-                          <button type="button" onClick={prevStep} className="glass-card w-full h-12 text-lg">Back</button>
-                          <button type="submit" className="cyan-glow-button w-full h-12 text-lg flex items-center justify-center gap-2">
+                          <Button type="button" onClick={prevStep} className="glass-card w-full h-12 text-lg" variant="outline">Back</Button>
+                          <Button type="submit" className="cyan-glow-button w-full h-12 text-lg flex items-center justify-center gap-2">
                             Finish <ArrowRight className="w-5 h-5"/>
-                          </button>
+                          </Button>
                         </div>
                       </motion.div>
                     )}
