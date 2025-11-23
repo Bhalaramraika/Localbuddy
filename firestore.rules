@@ -3,85 +3,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check ownership
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-
-    // Users can read public parts of any profile, but only write to their own.
-    match /users/{userId} {
-      // Allow reading by any authenticated user (you might restrict this further later)
-      allow read: if request.auth != null;
-      // Allow full write access only to the owner. This includes create, update, delete.
-      allow write: if isOwner(userId);
-    }
-
-    // Tasks can be read by anyone, but mutations are restricted.
-    match /tasks/{taskId} {
-      allow read;
-      
-      // Allow create for any authenticated user with valid data.
-      allow create: if request.auth != null 
-                    && request.resource.data.posterId == request.auth.uid
-                    && request.resource.data.status == 'Open'
-                    && request.resource.data.title is string
-                    && request.resource.data.budget > 0;
-      
-      // Poster can delete if task is still open.
-      allow delete: if resource.data.status == 'Open' && isOwner(resource.data.posterId);
-
-      // Rules for updating a task
-      allow update: if 
-        // 1. Poster can update their own task if it is still open.
-        (isOwner(resource.data.posterId) && resource.data.status == 'Open') ||
-        // 2. Any authenticated user can accept an open task by setting themselves as the buddy.
-        (request.auth != null && resource.data.status == 'Open' && request.resource.data.buddyId == request.auth.uid) ||
-        // 3. The assigned buddy can update the task (e.g., to mark as completed).
-        (isOwner(resource.data.buddyId) && request.resource.data.buddyId == resource.data.buddyId) ||
-        // 4. The poster can update the task to mark it as paid.
-        (isOwner(resource.data.posterId) && request.resource.data.status == 'paid');
-    }
-
-    // Chat is restricted to participants.
-    match /chats/{chatId} {
-      // Allow list (query) only if the query explicitly looks for chats where the user is a participant.
-      // This is crucial for security. The client MUST use a where('participantIds', 'array-contains', request.auth.uid) clause.
-      allow list: if request.auth != null && request.query.resource.data.participantIds.hasAny([request.auth.uid]);
-
-      // Allow direct get, create, and update only for participants.
-      allow get, create, update: if request.auth != null && request.auth.uid in resource.data.participantIds;
-      allow delete: if false; // Chats cannot be deleted by users.
-
-      // Messages sub-collection rules
-      match /messages/{messageId} {
-         // Allow read and create for participants of the parent chat document.
-      	 allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
-         // Messages are immutable once created.
-         allow update, delete: if false; 
-      }
-    }
-    
-    // Transactions can only be accessed by the user involved.
-    match /transactions/{transactionId} {
-      // User can only get their own transaction.
-    	allow get: if isOwner(resource.data.userId);
-      // User can only list their own transactions by querying on their userId.
-      allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
-      // User can only create transactions for themselves.
-      allow create: if isOwner(request.resource.data.userId);
-      // Transactions are immutable.
-      allow update, delete: if false;
-    }
-
-    // Notifications are private to each user, stored in a sub-collection.
-    match /users/{userId}/notifications/{notificationId} {
-      allow read, write: if isOwner(userId);
-    }
-    
-    // Default deny all other access to prevent unintended data exposure.
+    // WARNING: This rule is for development only and is insecure.
+    // It allows any authenticated user to read and write to the entire database.
+    // You should secure your database before going to production.
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
   }
 }
