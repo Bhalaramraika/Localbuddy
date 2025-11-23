@@ -59,19 +59,20 @@ export default function MobileAuthForm() {
 
   React.useEffect(() => {
     if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
-      const verifier = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
+      recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
         'size': 'compact',
         'callback': () => {
           setRecaptchaResolved(true);
         },
         'expired-callback': () => {
           setRecaptchaResolved(false);
+          toast({ variant: 'destructive', title: 'reCAPTCHA expired. Please try again.' });
         },
       });
-      recaptchaVerifierRef.current = verifier;
-      verifier.render();
+      recaptchaVerifierRef.current.render();
     }
-  }, [auth]);
+  }, [auth, toast]);
+
 
   React.useEffect(() => {
     if (!isUserLoading && user) {
@@ -98,14 +99,16 @@ export default function MobileAuthForm() {
         title: 'Failed to Send OTP',
         description: error.message || 'An unknown error occurred.',
       });
-      // Reset reCAPTCHA if it fails
-      recaptchaVerifierRef.current.render().then(widgetId => {
+       // Important: Reset reCAPTCHA on failure
+      if (recaptchaVerifierRef.current) {
+        const widgetId = recaptchaVerifierRef.current.widgetId;
         // @ts-ignore
-        if (window.grecaptcha) {
+        if (window.grecaptcha && typeof window.grecaptcha.reset === 'function') {
+            // @ts-ignore
             window.grecaptcha.reset(widgetId);
         }
-        setRecaptchaResolved(false);
-      });
+      }
+      setRecaptchaResolved(false);
     } finally {
       setIsLoading(false);
     }
