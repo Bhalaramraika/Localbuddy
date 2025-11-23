@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSearchParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking, useCollection } from '@/firebase';
-import { doc, collection, writeBatch, runTransaction, getDoc, increment, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { doc, collection, writeBatch, runTransaction, getDoc, increment, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -177,7 +177,7 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
             addDocumentNonBlocking(messagesCol, {
                 text: message,
                 senderId: user.uid,
-                timestamp: new Date()
+                timestamp: serverTimestamp()
             });
             setMessage('');
         }
@@ -223,7 +223,7 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
                     type: 'release',
                     amount: budget,
                     status: 'success',
-                    timestamp: new Date(),
+                    timestamp: serverTimestamp(),
                 };
                 transaction.set(doc(collection(firestore, 'transactions')), buddyTransaction);
 
@@ -234,7 +234,7 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
                     type: 'withdraw', // This is an outcome for the poster
                     amount: budget,
                     status: 'success',
-                    timestamp: new Date(),
+                    timestamp: serverTimestamp(),
                 };
                 transaction.set(doc(collection(firestore, 'transactions')), posterTransaction);
             });
@@ -358,18 +358,16 @@ function ChatPageContent() {
             
             const fetchParticipants = async () => {
                 const usersData: any = {};
-                const currentParticipants = participants;
-                let needsUpdate = false;
-                for (const id of participantIds) {
-                    if (!currentParticipants[id]) { // Fetch only if not already fetched
+                // Only fetch users that are not already in the participants state
+                const idsToFetch = participantIds.filter(id => !participants[id]);
+                
+                if (idsToFetch.length > 0) {
+                    for (const id of idsToFetch) {
                         const userDoc = await getDoc(doc(firestore, 'users', id));
                         if (userDoc.exists()) {
                             usersData[id] = userDoc.data();
-                            needsUpdate = true;
                         }
                     }
-                }
-                if (needsUpdate) {
                     setParticipants(prev => ({ ...prev, ...usersData }));
                 }
             };
@@ -377,6 +375,7 @@ function ChatPageContent() {
             fetchParticipants();
             setMessages(liveMessages);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [liveMessages, firestore, user]);
 
 

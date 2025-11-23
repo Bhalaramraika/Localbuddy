@@ -14,6 +14,7 @@ export default function VerifyIdPage() {
     const [file, setFile] = React.useState<File | null>(null);
     const [isUploading, setIsUploading] = React.useState(false);
     const [isVerified, setIsVerified] = React.useState(false);
+    const [isPending, setIsPending] = React.useState(false);
     const { toast } = useToast();
     const { user } = useUser();
     const firestore = useFirestore();
@@ -35,20 +36,36 @@ export default function VerifyIdPage() {
         }
 
         setIsUploading(true);
-        // Simulate upload and verification process
+        // In a real app, you'd upload the file to Firebase Storage here.
+        // For this simulation, we'll just update the user's status to 'pending'.
         setTimeout(() => {
             if (user && firestore) {
                  const userRef = doc(firestore, 'users', user.uid);
-                 updateDocumentNonBlocking(userRef, { aadharVerified: true });
+                 // The 'aadharVerified' is now controlled by an admin panel.
+                 // We just mark the status as 'pending' for review.
+                 updateDocumentNonBlocking(userRef, { verificationStatus: 'pending' });
             }
             setIsUploading(false);
-            setIsVerified(true);
+            setIsPending(true); // Show pending message
             toast({
-                title: 'Verification Successful!',
-                description: 'Your ID has been verified. You now have access to higher limits.',
+                title: 'ID Submitted for Verification!',
+                description: 'Your ID has been submitted and is pending review. This may take 24-48 hours.',
             });
-        }, 3000);
+        }, 2000);
     };
+
+    if (isPending) {
+        return (
+            <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground items-center justify-center h-[calc(100vh-10rem)]">
+                <Loader className="w-24 h-24 text-yellow-500 animate-spin" />
+                <h1 className="text-3xl font-bold text-center">Verification Pending</h1>
+                <p className="text-gray-500 text-center">Your document has been submitted for review. We will notify you once the process is complete.</p>
+                <Link href="/profile" className="w-full">
+                    <Button className="w-full h-12 text-lg cyan-glow-button">Back to Profile</Button>
+                </Link>
+            </div>
+        )
+    }
 
     if (isVerified) {
         return (
@@ -113,9 +130,9 @@ export default function VerifyIdPage() {
                             {isUploading ? (
                                 <>
                                     <Loader className="w-6 h-6 animate-spin mr-2"/>
-                                    Verifying...
+                                    Submitting...
                                 </>
-                            ) : "Verify Now"}
+                            ) : "Submit for Verification"}
                         </Button>
                     </CardContent>
                 </Card>
