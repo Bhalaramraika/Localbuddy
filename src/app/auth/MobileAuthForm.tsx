@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,8 @@ import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { RecaptchaVerifier as FirebaseRecaptchaVerifier } from 'firebase/auth';
 
 const phoneSchema = z.object({
-  phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Please enter a valid phone number with country code (e.g., +919876543210).'),
+  countryCode: z.string().startsWith('+', "Country code must start with '+'").min(2),
+  phone: z.string().length(10, 'Please enter a valid 10-digit phone number.'),
 });
 
 const otpSchema = z.object({
@@ -42,13 +43,15 @@ export default function MobileAuthForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [step, setStep] = React.useState<'phone' | 'otp'>('phone');
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
+  const [fullPhoneNumber, setFullPhoneNumber] = React.useState('');
   const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
-  const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
+  const recaptchaContainerRef = React.useRef<HTMLDivElement>(null);
 
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
     defaultValues: {
+      countryCode: '+91',
       phone: '',
     },
   });
@@ -62,17 +65,32 @@ export default function MobileAuthForm() {
 
 
   React.useEffect(() => {
-    if (!auth) return;
-
-    // Create the verifier once and associate it with the button
-    if (!recaptchaVerifierRef.current && sendOtpButtonRef.current) {
-        recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(
-            auth,
-            sendOtpButtonRef.current, 
-            { 'size': 'invisible' }
-        );
+    if (!auth || !recaptchaContainerRef.current || step !== 'phone') return;
+    
+    // Cleanup previous instance if it exists
+    if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = null;
     }
-  }, [auth]);
+    
+    // Create and render the verifier
+    const verifier = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        size: 'compact', // Use 'compact' for a smaller widget
+        callback: (response) => {
+            // reCAPTCHA solved, allow user to submit
+        },
+        'expired-callback': () => {
+            // Response expired. Ask user to solve reCAPTCHA again.
+        }
+    });
+
+    recaptchaVerifierRef.current = verifier;
+    
+    // Render it
+    verifier.render();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, step]);
 
 
   React.useEffect(() => {
@@ -88,12 +106,15 @@ export default function MobileAuthForm() {
       setIsLoading(false);
       return;
     }
+    
+    const phoneNumber = `${values.countryCode}${values.phone}`;
+    setFullPhoneNumber(phoneNumber);
 
     try {
-      const confirmation = await initiatePhoneNumberSignIn(auth, values.phone, recaptchaVerifierRef.current);
+      const confirmation = await initiatePhoneNumberSignIn(auth, phoneNumber, recaptchaVerifierRef.current);
       setConfirmationResult(confirmation);
       setStep('otp');
-      toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${values.phone}.` });
+      toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${phoneNumber}.` });
     } catch (error: any) {
       console.error("OTP Send Error:", error);
       toast({
@@ -145,21 +166,42 @@ export default function MobileAuthForm() {
       {step === 'phone' ? (
         <Form {...phoneForm}>
           <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-6">
-            <FormField
-              control={phoneForm.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+919876543210" {...field} className="glass-card" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             <FormItem>
+                <FormLabel>Mobile Number</FormLabel>
+                <div className="flex items-center gap-2">
+                    <FormField
+                        control={phoneForm.control}
+                        name="countryCode"
+                        render={({ field }) => (
+                            <FormControl>
+                                <Input {...field} className="glass-card w-20" />
+                            </FormControl>
+                        )}
+                    />
+                    <FormField
+                        control={phoneForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                            <FormControl>
+                                <Input
+                                    placeholder="98765 43210"
+                                    {...field}
+                                    className="glass-card flex-1"
+                                    type="tel"
+                                    inputMode="numeric"
+                                    maxLength={10}
+                                />
+                            </FormControl>
+                        )}
+                    />
+                </div>
+                <FormMessage>{phoneForm.formState.errors.phone?.message || phoneForm.formState.errors.countryCode?.message}</FormMessage>
+             </FormItem>
+            
+            {/* reCAPTCHA container */}
+            <div ref={recaptchaContainerRef} className="flex justify-center my-4"></div>
+
             <Button 
-                ref={sendOtpButtonRef}
                 type="submit" 
                 className="w-full h-12 text-lg font-bold cyan-glow-button" 
                 disabled={isLoading}
@@ -172,6 +214,9 @@ export default function MobileAuthForm() {
       ) : (
         <Form {...otpForm}>
           <form onSubmit={otpForm.handleSubmit(onOtpSubmit)} className="space-y-6">
+             <p className="text-center text-sm text-gray-500">
+                Enter the OTP sent to {fullPhoneNumber}
+             </p>
             <FormField
               control={otpForm.control}
               name="otp"
@@ -179,7 +224,14 @@ export default function MobileAuthForm() {
                 <FormItem>
                   <FormLabel>Enter OTP</FormLabel>
                   <FormControl>
-                    <Input placeholder="123456" {...field} className="glass-card text-center tracking-[1rem]" maxLength={6} />
+                    <Input 
+                      placeholder="123456" 
+                      {...field} 
+                      className="glass-card text-center tracking-[1rem]" 
+                      maxLength={6} 
+                      type="tel"
+                      inputMode="numeric"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -189,6 +241,9 @@ export default function MobileAuthForm() {
               {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
               Verify OTP
             </Button>
+             <Button variant="link" size="sm" onClick={() => setStep('phone')} className="w-full">
+                Change Number
+             </Button>
           </form>
         </Form>
       )}
