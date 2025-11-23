@@ -183,11 +183,11 @@ const QuickActionCard = ({ icon, title, bgColor }: { icon: React.ReactNode, titl
 
 const QuickActionsSection = () => {
     const actions = [
-        { title: 'Create Task', icon: <Plus className="w-7 h-7 text-white" />, bgColor: 'bg-main-accent', href: '#' },
+        { title: 'Create Task', icon: <Plus className="w-7 h-7 text-white" />, bgColor: 'bg-main-accent', href: '/tasks/create' },
         { title: 'Leaderboard', icon: <Trophy className="w-7 h-7 text-white" />, bgColor: 'bg-yellow-500', href: '/leaderboard' },
-        { title: 'Verify ID', icon: <Shield className="w-7 h-7 text-white" />, bgColor: 'bg-green-500', href: '#' },
-        { title: 'SOS Alerts', icon: <Siren className="w-7 h-7 text-white" />, bgColor: 'bg-destructive-accent', href: '#' },
-        { title: 'Refer a Buddy', icon: <Users className="w-7 h-7 text-white" />, bgColor: 'bg-blue-500', href: '#' },
+        { title: 'Verify ID', icon: <Shield className="w-7 h-7 text-white" />, bgColor: 'bg-green-500', href: '/profile/verify' },
+        { title: 'SOS Alerts', icon: <Siren className="w-7 h-7 text-white" />, bgColor: 'bg-destructive-accent', href: '/sos' },
+        { title: 'Refer a Buddy', icon: <Users className="w-7 h-7 text-white" />, bgColor: 'bg-blue-500', href: '/refer' },
     ];
     return (
         <section className="w-full">
