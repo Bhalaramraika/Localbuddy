@@ -1,6 +1,6 @@
 
 'use client';
-import { ArrowLeft, Loader } from 'lucide-react';
+import { ArrowLeft, Loader, Wand2 } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +22,7 @@ import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import * as React from 'react';
 import { collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { generateDescription } from '@/ai/flows/description-flow';
 
 const taskSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
@@ -37,6 +38,7 @@ export default function CreateTaskPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const [isLoading, setIsLoading] = React.useState(false);
+    const [isGenerating, setIsGenerating] = React.useState(false);
 
     const form = useForm<z.infer<typeof taskSchema>>({
         resolver: zodResolver(taskSchema),
@@ -47,6 +49,38 @@ export default function CreateTaskPage() {
             location: '',
         },
     });
+
+    const handleGenerateDescription = async () => {
+        const title = form.getValues('title');
+        if (!title || title.length < 5) {
+            toast({
+                variant: 'destructive',
+                title: 'Title is too short',
+                description: 'Please enter a descriptive title first (at least 5 characters).',
+            });
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const result = await generateDescription({ title });
+            form.setValue('description', result.description, { shouldValidate: true });
+            toast({
+                title: 'Description Generated!',
+                description: 'The AI has crafted a description for you.',
+            });
+        } catch (error) {
+            console.error("Failed to generate description", error);
+            toast({
+                variant: "destructive",
+                title: "AI Error",
+                description: "Could not generate description. Please try again.",
+            });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
 
     const onSubmit = async (values: z.infer<typeof taskSchema>) => {
         if (!user || !firestore) {
@@ -112,7 +146,18 @@ export default function CreateTaskPage() {
                                 <FormItem>
                                     <FormLabel>Task Description</FormLabel>
                                     <FormControl>
-                                    <Textarea placeholder="Describe the task in detail..." {...field} />
+                                    <div className="relative">
+                                        <Textarea placeholder="Describe the task in detail, or click the magic wand to generate one!" {...field} />
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateDescription}
+                                            className="absolute bottom-3 right-3 p-2 rounded-full bg-main-accent/20 hover:bg-main-accent/30 transition-colors"
+                                            disabled={isGenerating}
+                                            title="Generate with AI"
+                                        >
+                                            <Wand2 className={`w-5 h-5 text-main-accent ${isGenerating ? 'animate-spin' : ''}`} />
+                                        </button>
+                                    </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
