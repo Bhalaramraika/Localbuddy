@@ -74,7 +74,7 @@ export default function WalletPage() {
   const transactionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     
-    const baseQuery = query(
+    let q = query(
         collection(firestore, 'transactions'),
         where('userId', '==', user.uid),
         orderBy('timestamp', 'desc')
@@ -92,10 +92,10 @@ export default function WalletPage() {
             typeFilter = 'lock';
             break;
         default:
-             return baseQuery;
+             return q;
     }
 
-    return query(baseQuery, where('type', '==', typeFilter));
+    return query(q, where('type', '==', typeFilter));
 
   }, [firestore, user, filter]);
 
