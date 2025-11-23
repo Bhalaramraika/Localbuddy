@@ -21,7 +21,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
+import { collection, doc, query, where, limit } from 'firebase/firestore';
 import Link from 'next/link';
 import { ProfileSetupDialog } from '@/components/ProfileSetupDialog';
 
@@ -55,20 +55,26 @@ const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price:
 const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const isAccepted = task.status === 'assigned' && task.buddyId === user?.uid;
     const isMyTask = task.posterId === user?.uid;
     const isUnavailable = task.status !== 'Open';
     const isAiGenerated = task.posterId === 'ai_generated';
 
-    const handleClick = async () => {
-        if (!firestore || !user || isAiGenerated) return;
+    const handleClick = async (e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent link navigation
+        if (!firestore || !user || isAiGenerated || !task.id) return;
         setIsLoading(true);
         const taskRef = doc(firestore, 'tasks', task.id);
         updateDocumentNonBlocking(taskRef, {
             status: 'assigned',
             buddyId: user.uid
         });
+        toast({
+            title: "Task Accepted!",
+            description: "You can find this task in your chat to coordinate."
+        })
         // No need to set is loading to false, UI will update reactively
     };
 
@@ -100,14 +106,22 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
 const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
   const { title, budget, category, reasoning } = task;
   const imageUrl = getImage(`task_${category?.toLowerCase()}`)?.imageUrl;
-  return (
-    <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-gray-300 hover:-translate-y-1">
+  
+  const content = (
+     <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-gray-300 hover:-translate-y-1">
       {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={category} />}
       <TaskCardHeader title={title} price={budget} tag={category} hasImage={!!imageUrl} />
       {reasoning && <p className="text-sm text-gray-600 border-l-2 border-gray-300 pl-3">{reasoning}</p>}
       <TaskCardButton task={task} user={user} />
     </div>
-  );
+  )
+
+  // AI generated cards are not clickable
+  if (task.posterId === 'ai_generated' || !task.id) {
+    return content;
+  }
+  
+  return <Link href={`/tasks/${task.id}`}>{content}</Link>;
 };
 
 const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor, href }: { icon: React.ReactNode, title: string, subtitle: string, tag: string, tagColor: string, href?: string }) => {
@@ -216,9 +230,8 @@ const QuickActionsSection = () => {
     );
 };
 
-const TaskFilters = () => {
+const TaskFilters = ({ activeFilter, setActiveFilter }: { activeFilter: string, setActiveFilter: (filter: string) => void }) => {
     const filters = ['All', 'Household', 'Tech', 'Cleaning', 'Delivery', 'Tutoring', 'Other'];
-    const [activeFilter, setActiveFilter] = React.useState('All');
     return (
         <section className="w-full">
             <div className="flex items-center gap-3 overflow-x-auto pb-2 -ml-4 pl-4">
@@ -248,6 +261,8 @@ export default function HomePage() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [tasks, setTasks] = React.useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = React.useState('All');
+
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -257,27 +272,33 @@ export default function HomePage() {
   const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
 
   const tasksQuery = useMemoFirebase(() => {
-      if (!firestore) return null;
-      return query(collection(firestore, 'tasks'), where('status', '==', 'Open'));
-  }, [firestore]);
+    if (!firestore) return null;
+    const baseQuery = query(collection(firestore, 'tasks'), where('status', '==', 'Open'));
+    if (activeFilter === 'All') {
+        return baseQuery;
+    }
+    return query(baseQuery, where('category', '==', activeFilter));
+  }, [firestore, activeFilter]);
 
   const { data: firestoreTasks, isLoading: areTasksLoading } = useCollection(tasksQuery);
+  
+  const completedTasksQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'tasks'), where('buddyId', '==', user.uid), where('status', '==', 'paid'), limit(5));
+  }, [firestore, user]);
+
+  const { data: completedTasks } = useCollection(completedTasksQuery);
+
 
   React.useEffect(() => {
-      if (firestoreTasks) {
-          setTasks(firestoreTasks);
-      }
+      // Keep AI-generated tasks, but replace firestore tasks
+      setTasks(prevTasks => {
+          const aiTasks = prevTasks.filter(t => t.posterId === 'ai_generated');
+          return [...aiTasks, ...(firestoreTasks || [])];
+      });
   }, [firestoreTasks]);
 
   const advancedListItems = [
-      {
-          icon: <Zap className="w-6 h-6 text-yellow-500" />,
-          title: "Flash Task: Data Entry",
-          subtitle: "Complete within 30 mins",
-          tag: "New",
-          tagColor: "bg-blue-100 text-blue-800",
-          href: "#",
-      },
       {
           icon: <Shield className="w-6 h-6 text-green-500" />,
           title: "Verify Your ID",
@@ -287,39 +308,44 @@ export default function HomePage() {
           href: "/profile/verify"
       },
       {
-          icon: <Users className="w-6 h-6 text-red-500" />,
-          title: "Team Up for a Project",
-          subtitle: "A big cleaning gig is available",
-          tag: "High Pay",
-          tagColor: "bg-red-100 text-red-800",
-          href: "#",
+          icon: <Users className="w-6 h-6 text-blue-500" />,
+          title: "Refer a Buddy",
+          subtitle: "Earn rewards for inviting friends",
+          tag: "New",
+          tagColor: "bg-blue-100 text-blue-800",
+          href: "/refer"
       }
   ];
 
   const handleGenerateSuggestions = async () => {
+    if (!user || !userData) {
+        toast({ variant: 'destructive', title: 'Please complete your profile first.' });
+        return;
+    }
     setIsGenerating(true);
     try {
         const input: TaskSuggestionInput = {
-            userSkills: ["Plumbing", "Tech Repair", "Driving"],
-            currentLocation: "Mumbai",
-            taskHistory: [
-                { title: "Fix My Laptop", category: "Tech", completed: true },
-                { title: "Deliver a package", category: "Delivery", completed: false },
-            ]
+            userSkills: userData.skills || ["General Help", "Driving"], // Use real skills or default
+            currentLocation: userData.location || "Not specified",
+            taskHistory: completedTasks?.map(task => ({
+                title: task.title,
+                category: task.category,
+                completed: true,
+            })) || []
         };
         const result = await getTaskSuggestions(input);
         const newTasks = result.suggestions.map(s => ({
-            ...s, // Spread suggestion properties
-            id: `ai_${Date.now()}_${Math.random()}`, // Create a temporary unique ID
+            ...s, 
+            id: `ai_${Date.now()}_${Math.random()}`, 
             budget: s.estimatedEarning,
             reasoning: s.reasoning,
             status: 'Open',
             posterId: 'ai_generated'
         }));
-        setTasks(prev => [...newTasks, ...prev]);
+        setTasks(prev => [...newTasks, ...prev.filter(t => t.posterId !== 'ai_generated')]);
         toast({
             title: "New Tasks Suggested!",
-            description: "We've found some new tasks for you.",
+            description: "We've found some new tasks for you based on your profile.",
         });
     } catch (error) {
         console.error("Failed to get task suggestions", error);
@@ -335,10 +361,10 @@ export default function HomePage() {
 
   return (
     <>
-      {user && !userData?.profileCompleted && <ProfileSetupDialog />}
+      {user && !isUserLoading && userData && !userData.profileCompleted && <ProfileSetupDialog />}
       <MainHeader userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
       <QuickActionsSection />
-      <TaskFilters />
+      <TaskFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
 
       <section className="w-full">
         <Button onClick={handleGenerateSuggestions} disabled={isGenerating} className="w-full h-14 mb-6 text-lg font-bold bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
@@ -359,17 +385,12 @@ export default function HomePage() {
                 <Loader className="w-12 h-12 animate-spin text-main-accent" />
             </div>
         ) : tasks && tasks.length > 0 ? (
-            tasks.map((task, index) => {
-                const isAi = task.posterId === 'ai_generated';
-                const card = <TaskCard key={task.id || index} task={task} user={user} />;
-                if (isAi) {
-                    return card;
-                }
-                return <Link href={`/tasks/${task.id}`} key={task.id}>{card}</Link>;
-            })
+            tasks.map((task, index) => (
+                <TaskCard key={task.id || index} task={task} user={user} />
+            ))
         ) : (
             <div className="col-span-full text-center text-gray-500 py-10 glass-card">
-                <p>No open tasks available right now. Check back later!</p>
+                <p>No open tasks for this category. Try another filter!</p>
             </div>
         )}
       </section>

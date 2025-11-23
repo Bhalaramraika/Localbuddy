@@ -8,8 +8,8 @@ import { Progress, CircleProgress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth, useCollection } from '@/firebase';
+import { doc, collection, query, where } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -82,7 +82,7 @@ const ProfileHeader = ({ userData, isLoading }: { userData: any, isLoading: bool
           <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
               <Camera className="w-8 h-8 text-white" />
           </div>
-          {userData?.mobileVerified && (
+          {userData?.aadharVerified && (
             <div className="absolute bottom-1 right-1 bg-green-500 rounded-full p-1 border-2 border-white">
                 <Check className="w-4 h-4 text-white" />
             </div>
@@ -134,6 +134,14 @@ export default function ProfilePage() {
 
   const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
 
+  const completedTasksQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'tasks'), where('buddyId', '==', user.uid), where('status', 'in', ['completed', 'paid']));
+  }, [firestore, user]);
+
+  const { data: completedTasks, isLoading: isTasksLoading } = useCollection(completedTasksQuery);
+
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -142,16 +150,23 @@ export default function ProfilePage() {
       console.error("Error signing out: ", error);
     }
   };
+  
+  const tasksDone = completedTasks?.length || 0;
+  const avgRating = "4.8"; // This would need a reviews collection
 
   const allBadges = [
     { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified || false, description: "Your identity has been successfully verified." },
-    { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: false, description: "Completed 10+ tasks before deadline." },
+    { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: tasksDone >= 10, description: "Completed 10+ tasks before deadline." },
     { icon: <Award className="w-10 h-10 text-yellow-500" />, color: "border-yellow-500", label: "5-Star Hero", achieved: false, description: "Maintained a 5-star rating over 20 tasks." },
     { icon: <Star className="w-10 h-10 text-gray-400" />, color: "border-gray-400", label: "Top Earner", achieved: false, description: "Become one of the top 1% earners on the platform." },
   ];
   
-  const skills = [
-  ];
+  const skills = userData?.skills?.map((skill: string) => ({
+      name: skill,
+      level: 1,
+      xp: 50,
+      maxXp: 100
+  })) || [];
 
   const overallProgress = (userData?.xp / 500) * 100 || 0;
 
@@ -162,8 +177,8 @@ export default function ProfilePage() {
       <section className="glass-card w-full p-4">
         <div className="flex justify-around gap-4">
           <StatCard value={`₹${(userData?.walletBalance) || 0}`} label="Earnings" icon={<Wallet className="w-6 h-6"/>} isLoading={isUserLoading} />
-          <StatCard value="0" label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} />
-          <StatCard value="N/A" label="Avg. Rating" icon={<Star className="w-6 h-6"/>} />
+          <StatCard value={String(tasksDone)} label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} isLoading={isTasksLoading}/>
+          <StatCard value={tasksDone > 0 ? avgRating : 'N/A'} label="Avg. Rating" icon={<Star className="w-6 h-6"/>} isLoading={isTasksLoading}/>
         </div>
       </section>
 
@@ -196,8 +211,8 @@ export default function ProfilePage() {
              <section className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold px-2">Skill Set</h2>
                 <div className="glass-card p-4 flex flex-col gap-3">
-                    {skills.length > 0 ? skills.map(skill => <SkillPill key={skill.name} {...skill} />) : (
-                      <p className="text-center text-gray-500 py-4">You haven't added any skills yet.</p>
+                    {skills.length > 0 ? skills.map((skill: any) => <SkillPill key={skill.name} {...skill} />) : (
+                      <p className="text-center text-gray-500 py-4">You haven't added any skills yet. Go to settings to add them.</p>
                     )}
                 </div>
             </section>

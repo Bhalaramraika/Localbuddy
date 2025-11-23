@@ -85,3 +85,23 @@
     transition: all 0.3s ease;
   }
 }
+
+/* Custom toast variant */
+.toast[data-variant="blur-blue"] {
+  background-color: rgba(29, 78, 216, 0.8) !important; /* bg-blue-700/80 */
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  color: white !important;
+  border-color: rgba(59, 130, 246, 0.5) !important; /* border-blue-400/50 */
+}
+
+.toast[data-variant="blur-blue"] [data-description] {
+  color: rgba(219, 234, 254, 1) !important; /* text-blue-100 */
+}
+
+.toast[data-variant="blur-blue"] [data-close-button] {
+  color: rgba(191, 219, 254, 1) !important; /* text-blue-200 */
+}
+.toast[data-variant="blur-blue"] [data-close-button]:hover {
+  color: white !important;
+}

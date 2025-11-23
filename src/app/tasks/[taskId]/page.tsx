@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useParams } from 'next/navigation';
-import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useParams, useRouter } from 'next/navigation';
+import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
 import { doc, DocumentReference } from 'firebase/firestore';
 import { ArrowLeft, Loader, User, MapPin, Calendar, Tag, IndianRupee, Shield, MessageSquare, Zap } from 'lucide-react';
 import Image from 'next/image';
@@ -10,6 +10,8 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { formatCurrency, timeAgo } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import * as React from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const getImage = (id: string) => PlaceHolderImages.find((img) => img.id === id);
 
@@ -26,9 +28,12 @@ const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: stri
 
 export default function TaskDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const taskId = params.taskId as string;
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isAccepting, setIsAccepting] = React.useState(false);
 
     const taskDocRef = useMemoFirebase(() => {
         if (!firestore || !taskId) return null;
@@ -43,6 +48,24 @@ export default function TaskDetailPage() {
     }, [firestore, taskData?.posterId]);
     
     const { data: posterData, isLoading: isPosterLoading } = useDoc(posterDocRef);
+
+    const handleAcceptTask = () => {
+        if (!user || !firestore) {
+            toast({ variant: 'destructive', title: "You must be logged in to accept tasks." });
+            return;
+        }
+        setIsAccepting(true);
+        updateDocumentNonBlocking(taskDocRef!, {
+            status: 'assigned',
+            buddyId: user.uid,
+        });
+        toast({
+            title: "Task Accepted!",
+            description: "The task poster has been notified. You can start a chat now.",
+        });
+        // Optimistically navigate or update UI
+        router.push(`/chat?taskId=${taskId}`);
+    };
 
     if (isTaskLoading || isPosterLoading) {
         return (
@@ -67,6 +90,9 @@ export default function TaskDetailPage() {
     const taskImage = getImage(`task_${taskData.category?.toLowerCase()}`) || getImage('task_other');
     const posterImage = posterData?.photoUrl || getImage('user5')?.imageUrl;
 
+    const isMyTask = taskData.posterId === user?.uid;
+    const isAssigned = taskData.status === 'assigned';
+    const isAssignedToMe = isAssigned && taskData.buddyId === user?.uid;
 
     return (
         <div className="w-full flex flex-col gap-6 text-foreground">
@@ -94,7 +120,7 @@ export default function TaskDetailPage() {
                     <DetailItem icon={<IndianRupee />} label="Budget" value={formatCurrency(taskData.budget)} />
                     <DetailItem icon={<Tag />} label="Category" value={taskData.category} />
                     <DetailItem icon={<MapPin />} label="Location" value={taskData.location} />
-                    <DetailItem icon={<Calendar />} label="Posted" value={timeAgo(taskData.createdAt)} />
+                    <DetailItem icon={<Calendar />} label="Posted" value={timeAgo(new Date(taskData.createdAt))} />
                 </div>
 
                 <div className="glass-card p-6">
@@ -104,23 +130,35 @@ export default function TaskDetailPage() {
                             {posterImage && <Image src={posterImage} alt={posterData?.name || 'Poster'} width={48} height={48} className="rounded-full border-2 border-secondary-accent" />}
                             <div>
                                 <p className="font-bold text-lg">{posterData?.name || 'Loading...'}</p>
-                                <div className="flex items-center gap-2 text-sm text-yellow-500">
-                                    <Shield size={14} />
-                                    <span>Identity Verified</span>
-                                </div>
+                                {posterData?.aadharVerified && (
+                                    <div className="flex items-center gap-2 text-sm text-yellow-500">
+                                        <Shield size={14} />
+                                        <span>Identity Verified</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        <Button variant="ghost" size="icon">
-                            <MessageSquare className="w-6 h-6 text-main-accent" />
-                        </Button>
+                        <Link href={`/chat?taskId=${taskId}`}>
+                            <Button variant="ghost" size="icon">
+                                <MessageSquare className="w-6 h-6 text-main-accent" />
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 
                 <div className="mt-4">
-                    <Button className="w-full h-14 text-lg font-bold cyan-glow-button">
-                        <Zap className="w-5 h-5 mr-2" />
-                        Accept Task
-                    </Button>
+                    {isMyTask ? (
+                         <Button disabled className="w-full h-14 text-lg font-bold" variant="outline">This is Your Task</Button>
+                    ) : isAssignedToMe ? (
+                         <Button disabled className="w-full h-14 text-lg font-bold bg-green-500 text-white">Already Accepted</Button>
+                    ) : isAssigned ? (
+                         <Button disabled className="w-full h-14 text-lg font-bold" variant="destructive">Task Already Taken</Button>
+                    ) : (
+                        <Button onClick={handleAcceptTask} disabled={isAccepting} className="w-full h-14 text-lg font-bold cyan-glow-button">
+                           {isAccepting ? <Loader className="w-5 h-5 animate-spin mr-2" /> : <Zap className="w-5 h-5 mr-2" /> }
+                           {isAccepting ? "Accepting..." : "Accept Task"}
+                        </Button>
+                    )}
                 </div>
             </main>
         </div>

@@ -36,13 +36,13 @@ const MessageTimestamp = ({ time, isOutgoing }: { time: string; isOutgoing: bool
     <span className={cn("text-xs text-gray-500 mt-1", isOutgoing ? 'text-right' : 'text-left')}>{time}</span>
 );
 
-const ChatMessage = ({ text, isOutgoing, time, userDetails }: { text: React.ReactNode; isOutgoing: boolean; time: string, userDetails?: any }) => {
-    const avatarUrl = isOutgoing ? userDetails?.photoUrl : getImage('user2')?.imageUrl;
+const ChatMessage = ({ text, isOutgoing, time, senderDetails, currentUserDetails }: { text: React.ReactNode; isOutgoing: boolean; time: string, senderDetails?: any, currentUserDetails?: any }) => {
+    const avatarUrl = isOutgoing ? currentUserDetails?.photoUrl : senderDetails?.photoUrl;
     const borderColor = isOutgoing ? "border-secondary-accent" : "border-main-accent";
     
     return (
         <div className={cn("flex items-end gap-2", isOutgoing ? "justify-end" : "justify-start")}>
-            {!isOutgoing && <UserAvatar imageUrl={avatarUrl || ''} alt="User" borderColor={borderColor} />}
+            {!isOutgoing && <UserAvatar imageUrl={avatarUrl || getImage('user2')?.imageUrl || ''} alt={senderDetails?.name || 'User'} borderColor={borderColor} />}
             <div className="flex flex-col">
                 <MessageBubble isOutgoing={isOutgoing}>
                     {text}
@@ -108,8 +108,8 @@ const LocationAttachment = () => (
 );
 
 
-const ChatHeader = ({ taskData, isLoading }: { taskData: any, isLoading: boolean }) => {
-    const userAvatar = getImage('user2');
+const ChatHeader = ({ taskData, isLoading, otherParticipant }: { taskData: any, isLoading: boolean, otherParticipant: any }) => {
+    const userAvatar = otherParticipant?.photoUrl || getImage('user2')?.imageUrl;
 
     if (isLoading || !taskData) {
         return (
@@ -124,8 +124,8 @@ const ChatHeader = ({ taskData, isLoading }: { taskData: any, isLoading: boolean
             <div className="flex items-center gap-3">
                 {userAvatar && (
                     <Image
-                        src={userAvatar.imageUrl}
-                        alt="Rahul's Avatar"
+                        src={userAvatar}
+                        alt={otherParticipant?.name || "Participant's Avatar"}
                         width={40}
                         height={40}
                         className="rounded-full border-2 border-main-accent"
@@ -214,7 +214,7 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
     
                 // 1. Decrement poster's balance (not needed, balance is virtual)
                 // 2. Increment buddy's balance
-                transaction.update(buddyRef, { walletBalance: increment(budget) });
+                transaction.update(buddyRef, { walletBalance: increment(budget), xp: increment(10) }); // Also add XP
     
                 // 3. Update task status to 'paid'
                 transaction.update(taskRef, { status: 'paid' });
@@ -337,6 +337,15 @@ function ChatPageContent() {
   const { data: chatData } = useCollection(chatQuery);
   const chatId = chatData && chatData.length > 0 ? chatData[0].id : null;
 
+  const otherParticipantId = taskData && user ? taskData.participantIds?.find((id: string) => id !== user.uid) : null;
+  
+  const otherParticipantRef = useMemoFirebase(() => {
+      if (!firestore || !otherParticipantId) return null;
+      return doc(firestore, 'users', otherParticipantId);
+  }, [firestore, otherParticipantId]);
+
+  const { data: otherParticipantData } = useDoc(otherParticipantRef);
+
   const messagesQuery = useMemoFirebase(() => {
       if (!firestore || !chatId) return null;
       return query(collection(firestore, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
@@ -344,11 +353,31 @@ function ChatPageContent() {
 
   const { data: liveMessages } = useCollection(messagesQuery);
 
-  React.useEffect(() => {
-    if (liveMessages) {
-        setMessages(liveMessages);
-    }
-  }, [liveMessages])
+    // Create a map of senderId to user details
+    const [participants, setParticipants] = React.useState<any>({});
+
+    React.useEffect(() => {
+        if (liveMessages && firestore && user) {
+            const participantIds = [...new Set(liveMessages.map(msg => msg.senderId))];
+            
+            const fetchParticipants = async () => {
+                const usersData: any = {};
+                for (const id of participantIds) {
+                    if (!participants[id]) { // Fetch only if not already fetched
+                        const userDoc = await getDoc(doc(firestore, 'users', id));
+                        if (userDoc.exists()) {
+                            usersData[id] = userDoc.data();
+                        }
+                    }
+                }
+                setParticipants(prev => ({ ...prev, ...usersData }));
+            };
+
+            fetchParticipants();
+            setMessages(liveMessages);
+        }
+    }, [liveMessages, firestore, participants, user]);
+
 
 
   const userDocRef = useMemoFirebase(() => {
@@ -395,7 +424,7 @@ function ChatPageContent() {
 
   return (
     <div className="w-full h-[calc(100vh-150px)] flex flex-col">
-      <ChatHeader taskData={taskData} isLoading={isTaskLoading} />
+      <ChatHeader taskData={taskData} isLoading={isTaskLoading} otherParticipant={otherParticipantData} />
       <ScrollArea className="flex-grow my-4 -mx-4" ref={scrollAreaRef}>
         <div className="p-4 space-y-6">
             {messages.map((msg, index) => (
@@ -404,7 +433,8 @@ function ChatPageContent() {
                         text={<p className="text-sm">{msg.text}</p>} 
                         isOutgoing={msg.senderId === user?.uid} 
                         time={new Date(msg.timestamp?.toDate()).toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' })} 
-                        userDetails={userData} 
+                        senderDetails={participants[msg.senderId]}
+                        currentUserDetails={userData} 
                     />
                 </div>
             ))}
