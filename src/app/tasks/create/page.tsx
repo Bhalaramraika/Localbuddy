@@ -1,9 +1,84 @@
 
 'use client';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader } from 'lucide-react';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import * as React from 'react';
+import { collection } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+
+const taskSchema = z.object({
+  title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
+  description: z.string().min(20, { message: 'Description must be at least 20 characters.' }),
+  category: z.string({ required_error: 'Please select a category.' }),
+  budget: z.coerce.number().min(1, { message: 'Budget must be at least ₹1.' }),
+  location: z.string().min(3, { message: 'Location is required.' }),
+});
 
 export default function CreateTaskPage() {
+    const { toast } = useToast();
+    const router = useRouter();
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [isLoading, setIsLoading] = React.useState(false);
+
+    const form = useForm<z.infer<typeof taskSchema>>({
+        resolver: zodResolver(taskSchema),
+        defaultValues: {
+            title: '',
+            description: '',
+            budget: 0,
+            location: '',
+        },
+    });
+
+    const onSubmit = async (values: z.infer<typeof taskSchema>) => {
+        if (!user || !firestore) {
+            toast({ variant: 'destructive', title: 'You must be logged in to create a task.' });
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const tasksCol = collection(firestore, 'tasks');
+            await addDocumentNonBlocking(tasksCol, {
+                ...values,
+                posterId: user.uid,
+                status: 'Open',
+                createdAt: new Date().toISOString(),
+            });
+            
+            toast({
+                title: 'Task Created!',
+                description: 'Your task has been posted successfully.',
+            });
+            router.push('/');
+
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Failed to Create Task',
+                description: error.message || 'An unknown error occurred.',
+            });
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground">
             <header className="flex items-center gap-4 p-4">
@@ -14,8 +89,95 @@ export default function CreateTaskPage() {
             </header>
 
             <main className="flex flex-col gap-4 px-4">
-                <div className="glass-card p-6 text-center">
-                    <p className="text-gray-500">Task creation form will be here.</p>
+                <div className="glass-card p-6">
+                     <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <FormField
+                                control={form.control}
+                                name="title"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Task Title</FormLabel>
+                                    <FormControl>
+                                    <Input placeholder="e.g., Fix a leaking pipe" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Task Description</FormLabel>
+                                    <FormControl>
+                                    <Textarea placeholder="Describe the task in detail..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="category"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                        <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Household">Household</SelectItem>
+                                        <SelectItem value="Tech">Tech</SelectItem>
+                                        <SelectItem value="Cleaning">Cleaning</SelectItem>
+                                        <SelectItem value="Delivery">Delivery</SelectItem>
+                                        <SelectItem value="Tutoring">Tutoring</SelectItem>
+                                        <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="budget"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Budget (₹)</FormLabel>
+                                        <FormControl>
+                                        <Input type="number" placeholder="e.g., 500" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="location"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Location</FormLabel>
+                                        <FormControl>
+                                        <Input placeholder="e.g., Mumbai" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <Button type="submit" className="w-full h-14 text-lg font-bold cyan-glow-button" disabled={isLoading}>
+                                {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
+                                Post Task
+                            </Button>
+                        </form>
+                    </Form>
                 </div>
             </main>
         </div>

@@ -59,9 +59,10 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const isAccepted = task.status === 'assigned' && task.buddyId === user?.uid;
     const isMyTask = task.posterId === user?.uid;
     const isUnavailable = task.status !== 'Open';
+    const isAiGenerated = task.posterId === 'ai_generated';
 
     const handleClick = async () => {
-        if (!firestore || !user) return;
+        if (!firestore || !user || isAiGenerated) return;
         setIsLoading(true);
         const taskRef = doc(firestore, 'tasks', task.id);
         updateDocumentNonBlocking(taskRef, {
@@ -71,6 +72,10 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
         // No need to set is loading to false, UI will update reactively
     };
 
+    if (isAiGenerated) {
+        return <Button disabled className="w-full h-12 text-base font-bold" variant="outline">AI Suggestion</Button>;
+    }
+    
     if (isMyTask) {
          return <Button disabled className="w-full h-12 text-base font-bold" variant="outline">Your Task</Button>;
     }
