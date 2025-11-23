@@ -74,6 +74,12 @@ export default function WalletPage() {
   const transactionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     
+    const baseQuery = query(
+        collection(firestore, 'transactions'),
+        where('userId', '==', user.uid),
+        orderBy('timestamp', 'desc')
+    );
+
     let typeFilter;
     switch(filter) {
         case 'Income':
@@ -86,19 +92,11 @@ export default function WalletPage() {
             typeFilter = 'lock';
             break;
         default:
-             typeFilter = null;
+             return baseQuery;
     }
 
-    const baseQuery = query(
-      collection(firestore, 'transactions'),
-      where('userId', '==', user.uid),
-      orderBy('timestamp', 'desc')
-    );
+    return query(baseQuery, where('type', '==', typeFilter));
 
-    if (typeFilter) {
-      return query(baseQuery, where('type', '==', typeFilter));
-    }
-    return baseQuery;
   }, [firestore, user, filter]);
 
   const { data: transactions, isLoading: isTransactionsLoading } = useCollection(transactionsQuery);
