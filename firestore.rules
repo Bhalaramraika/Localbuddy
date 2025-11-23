@@ -3,66 +3,8 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    function isParticipant(chatId) {
-      return request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
-    }
-
-    function hasAllRequiredUserFieldsOnCreate() {
-      let requiredKeys = ['id', 'name', 'photoUrl', 'walletBalance', 'xp', 'level', 'joinDate', 'profileCompleted'];
-      return request.resource.data.keys().hasAll(requiredKeys);
-    }
-    
-    function canUpdateUserFields() {
-        let allowedFields = ['name', 'photoUrl', 'location', 'birthYear', 'profileCompleted', 'aadharVerified', 'mobileVerified'];
-        return request.resource.data.keys().hasOnly(allowedFields);
-    }
-
-    // USERS collection
-    match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && hasAllRequiredUserFieldsOnCreate();
-      allow update: if isOwner(userId) && canUpdateUserFields();
-      allow delete: if false; // Users should not be able to delete their own accounts directly
-    }
-
-    // TASKS collection
-    match /tasks/{taskId} {
-      allow read: if request.auth != null; // Any authenticated user can read tasks
-      allow create: if request.auth.uid == request.resource.data.posterId;
-      allow update: if request.auth.uid == resource.data.posterId || request.auth.uid == resource.data.buddyId;
-      allow delete: if request.auth.uid == resource.data.posterId;
-    }
-    
-    // CHATS collection and MESSAGES sub-collection
-    match /chats/{chatId} {
-      allow read, create: if request.auth.uid in request.resource.data.participantIds;
-      allow update: if isParticipant(chatId);
-
-      match /messages/{messageId} {
-        allow read, create: if isParticipant(chatId);
-        allow update, delete: if isParticipant(chatId) && request.auth.uid == resource.data.senderId;
-      }
-    }
-    
-    // TRANSACTIONS collection
-    match /transactions/{transactionId} {
-      // Users can only query for their own transactions using a where clause.
-      // They cannot list all transactions or get a transaction that isn't theirs.
-      allow list: if request.auth != null && request.query.get('userId') == request.auth.uid;
-      allow get: if request.auth.uid == resource.data.userId;
-
-      // Transactions are created server-side (via chat payment release) or could be via a function for adding funds.
-      // Direct client creation should be restricted. For now, allow if owner.
-      allow create: if request.auth.uid == request.resource.data.userId;
-      
-      // Transactions should be immutable
-      allow update, delete: if false;
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
