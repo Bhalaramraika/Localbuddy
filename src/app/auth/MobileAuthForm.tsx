@@ -93,7 +93,7 @@ export default function MobileAuthForm() {
     }
   }, [user, isUserLoading, router]);
 
-  const onPhoneSubmit = async (values: z.infer<typeof phoneSchema>) => {
+  const onPhoneSubmit = (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
     if (!recaptchaVerifierRef.current) {
       toast({ variant: 'destructive', title: 'reCAPTCHA not ready. Please wait a moment and try again.' });
@@ -104,24 +104,24 @@ export default function MobileAuthForm() {
     const phoneNumber = `${values.countryCode}${values.phone}`;
     setFullPhoneNumber(phoneNumber);
 
-    try {
-      const confirmation = await initiatePhoneNumberSignIn(auth, phoneNumber, recaptchaVerifierRef.current);
-      setConfirmationResult(confirmation);
-      setStep('otp');
-      toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${phoneNumber}.` });
-    } catch (error: any) {
-      console.error("OTP Send Error:", error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to Send OTP',
-        description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
+    initiatePhoneNumberSignIn(auth, phoneNumber, recaptchaVerifierRef.current)
+      .then(confirmation => {
+        setConfirmationResult(confirmation);
+        setStep('otp');
+        toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${phoneNumber}.` });
+      })
+      .catch((error: any) => {
+        console.error("OTP Send Error:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to Send OTP',
+          description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
+        });
+        recaptchaVerifierRef.current?.clear();
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-      // In case of error, reset the verifier if it exists
-      recaptchaVerifierRef.current?.clear();
-
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const onOtpSubmit = async (values: z.infer<typeof otpSchema>) => {
