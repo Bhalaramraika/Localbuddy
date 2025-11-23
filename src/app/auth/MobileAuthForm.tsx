@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -107,10 +108,14 @@ export default function MobileAuthForm() {
         toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${phoneNumber}.` });
     } catch (error: any) {
         console.error("OTP Send Error:", error);
+        let description = error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.';
+        if (error.code === 'auth/billing-not-enabled') {
+            description = 'The free quota for this project has been exceeded. Please enable billing in your Firebase project to continue.';
+        }
         toast({
             variant: 'destructive',
             title: 'Failed to Send OTP',
-            description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
+            description: description,
         });
         // In case of error, you might need to reset reCAPTCHA
         recaptchaVerifierRef.current.render().then((widgetId) => {
