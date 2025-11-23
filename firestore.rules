@@ -11,10 +11,10 @@ service cloud.firestore {
 
     // Users can read public parts of any profile, but only write to their own.
     match /users/{userId} {
-      // Allow reading basic public info by any authenticated user
+      // Allow reading by any authenticated user (you might restrict this further later)
       allow read: if request.auth != null;
-      // Allow full get/write access only to the owner
-      allow get, write: if isOwner(userId);
+      // Allow full write access only to the owner. This includes create, update, delete.
+      allow write: if isOwner(userId);
     }
 
     // Tasks can be read by anyone, but mutations are restricted.
@@ -33,47 +33,53 @@ service cloud.firestore {
 
       // Rules for updating a task
       allow update: if 
-        // 1. Poster can update if the task is still open.
-        (resource.data.status == 'Open' && isOwner(resource.data.posterId)) ||
-        // 2. Any authenticated user can become the buddy if the task is open.
+        // 1. Poster can update their own task if it is still open.
+        (isOwner(resource.data.posterId) && resource.data.status == 'Open') ||
+        // 2. Any authenticated user can accept an open task by setting themselves as the buddy.
         (request.auth != null && resource.data.status == 'Open' && request.resource.data.buddyId == request.auth.uid) ||
-        // 3. The assigned buddy can update it (e.g., to mark as completed).
+        // 3. The assigned buddy can update the task (e.g., to mark as completed).
         (isOwner(resource.data.buddyId) && request.resource.data.buddyId == resource.data.buddyId) ||
-        // 4. The poster can update it to mark as paid.
+        // 4. The poster can update the task to mark it as paid.
         (isOwner(resource.data.posterId) && request.resource.data.status == 'paid');
     }
 
     // Chat is restricted to participants.
     match /chats/{chatId} {
-      // Allow list (query) if the user is a participant in the queried chats.
-      allow list: if request.auth != null && request.auth.uid in resource.data.participantIds;
-      // Allow get, write, update for individual chat documents.
-      allow get, write, update: if request.auth != null && request.auth.uid in resource.data.participantIds;
-      
+      // Allow list (query) only if the query explicitly looks for chats where the user is a participant.
+      // This is crucial for security. The client MUST use a where('participantIds', 'array-contains', request.auth.uid) clause.
+      allow list: if request.auth != null && request.query.resource.data.participantIds.hasAny([request.auth.uid]);
+
+      // Allow direct get, create, and update only for participants.
+      allow get, create, update: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      allow delete: if false; // Chats cannot be deleted by users.
+
+      // Messages sub-collection rules
       match /messages/{messageId} {
+         // Allow read and create for participants of the parent chat document.
       	 allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
-         allow update, delete: if false; // Messages are immutable
+         // Messages are immutable once created.
+         allow update, delete: if false; 
       }
     }
     
     // Transactions can only be accessed by the user involved.
     match /transactions/{transactionId} {
-      // User can only get their own transaction
+      // User can only get their own transaction.
     	allow get: if isOwner(resource.data.userId);
-      // User can only list their own transactions by querying on their userId
+      // User can only list their own transactions by querying on their userId.
       allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
-      // User can only create transactions for themselves
+      // User can only create transactions for themselves.
       allow create: if isOwner(request.resource.data.userId);
-      // Transactions are immutable
+      // Transactions are immutable.
       allow update, delete: if false;
     }
 
-    // Notifications are private to each user.
+    // Notifications are private to each user, stored in a sub-collection.
     match /users/{userId}/notifications/{notificationId} {
       allow read, write: if isOwner(userId);
     }
     
-    // Default deny: Block all other access.
+    // Default deny all other access to prevent unintended data exposure.
     match /{document=**} {
       allow read, write: if false;
     }
