@@ -21,11 +21,10 @@ import * as React from 'react';
 import { cn, formatCurrency, timeAgo } from '@/lib/utils';
 import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, where, limit, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { acceptTask } from '@/app/actions/tasks';
 import { useRouter } from 'next/navigation';
 
 const getImage = (id: string) =>
@@ -59,6 +58,7 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const { toast } = useToast();
     const router = useRouter();
+    const firestore = useFirestore();
 
     const isAccepted = task.status === 'assigned' && task.buddyId === user?.uid;
     const isMyTask = task.posterId === user?.uid;
@@ -67,20 +67,24 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault(); 
-        if (!user || isAiGenerated || !task.id) return;
+        if (!user || isAiGenerated || !task.id || !firestore) return;
         setIsLoading(true);
 
+        const taskRef = doc(firestore, 'tasks', task.id);
+        
         try {
-            const result = await acceptTask(task.id);
-            if (result.success) {
-                 toast({
-                    title: "Task Accepted!",
-                    description: "You can find this task in your chat to coordinate."
-                });
-                router.push(`/chat?taskId=${task.id}`);
-            } else {
-                throw new Error(result.error || 'An unknown error occurred');
-            }
+            // Optimistically update UI while non-blocking update happens in the background
+            updateDocumentNonBlocking(taskRef, {
+                status: 'assigned',
+                buddyId: user.uid,
+            });
+
+            toast({
+                title: "Task Accepted!",
+                description: "You can find this task in your chat to coordinate."
+            });
+            router.push(`/chat?taskId=${task.id}`);
+            
         } catch (error: any) {
              toast({
                 variant: "destructive",

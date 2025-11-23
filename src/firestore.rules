@@ -31,10 +31,15 @@ service cloud.firestore {
       // Poster can delete if task is still open.
       allow delete: if resource.data.status == 'Open' && isOwner(resource.data.posterId);
 
-      // Allow update only by poster (if open) or assigned buddy.
-      // The complex logic of *becoming* a buddy is now handled by a server action.
-      allow update: if (isOwner(resource.data.posterId) && resource.data.status == 'Open') ||
-                       (isOwner(resource.data.buddyId));
+      // Allow a user to accept an open task, or the buddy/poster to update it.
+      allow update: if request.auth != null && (
+          // A user can accept an open task by setting themselves as the buddy
+          (resource.data.status == 'Open' && request.resource.data.buddyId == request.auth.uid && request.resource.data.status == 'assigned') ||
+          // The assigned buddy can update it (e.g. to 'completed')
+          (isOwner(resource.data.buddyId) && request.resource.data.buddyId == resource.data.buddyId) ||
+          // The poster can update it (e.g. to 'paid')
+          (isOwner(resource.data.posterId))
+      );
     }
 
     // Chat is restricted to participants.
@@ -61,7 +66,7 @@ service cloud.firestore {
       // User can only get their own transaction.
     	allow get: if isOwner(resource.data.userId);
       // User can only list their own transactions by querying on their userId.
-      allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
+      allow list: if request.auth != null && request.query.where.field == 'userId' && request.query.where.op == '==' && request.query.where.value == request.auth.uid;
       // User can only create transactions for themselves.
       allow create: if isOwner(request.resource.data.userId);
       // Transactions are immutable.
