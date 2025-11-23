@@ -1,6 +1,6 @@
 
 'use client';
-import { Home, Wallet, MessageSquare, User as UserIcon, Trophy } from 'lucide-react';
+import { Home, Wallet, MessageSquare, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,6 @@ export default function MainAppLayout({
     { href: '/', icon: Home, label: 'Home' },
     { href: '/wallet', icon: Wallet, label: 'Wallet' },
     { href: '/chat', icon: MessageSquare, label: 'Chat' },
-    { href: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
     { href: '/profile', icon: UserIcon, label: 'Profile' },
   ];
 
@@ -46,7 +45,7 @@ export default function MainAppLayout({
     );
   }
 
-  const showNav = navItems.some(item => item.href === pathname);
+  const showNav = navItems.some(item => pathname === '/' || pathname.startsWith(item.href) && item.href !== '/');
 
 
   return (
@@ -54,7 +53,7 @@ export default function MainAppLayout({
       {children}
       {showNav && (
         <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
-          <nav className="glass-card flex items-center justify-around p-3 rounded-full">
+          <nav className="glass-card flex items-center justify-around p-2.5 rounded-full">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -67,7 +66,7 @@ export default function MainAppLayout({
                   )}
                 >
                   <div className={cn('p-2 rounded-full transition-all duration-300', isActive ? 'bg-main-accent/20' : '')}>
-                    <item.icon className="w-6 h-6" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--main-accent))' } : {}} />
+                    <item.icon className="w-5 h-5" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--main-accent))' } : {}} />
                   </div>
                 </Link>
               );

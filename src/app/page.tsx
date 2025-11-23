@@ -12,6 +12,7 @@ import {
   Zap,
   User,
   Loader,
+  Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -21,6 +22,7 @@ import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-f
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
+import Link from 'next/link';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
@@ -167,21 +169,29 @@ const MainHeader = ({ userData, isUserLoading }: { userData: any, isUserLoading:
     );
 };
 
-const QuickActionCard = ({ icon, title, bgColor }: { icon: React.ReactNode, title: string, bgColor: string }) => (
-    <div className="flex-shrink-0 w-36 h-36 flex flex-col items-center justify-center gap-3 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
-        <div className={cn("p-4 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
-            {icon}
+const QuickActionCard = ({ icon, title, bgColor, href }: { icon: React.ReactNode, title: string, bgColor: string, href?: string }) => {
+    const CardContent = () => (
+        <div className="flex-shrink-0 w-36 h-36 flex flex-col items-center justify-center gap-3 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
+            <div className={cn("p-4 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
+                {icon}
+            </div>
+            <p className="font-bold text-sm text-center text-foreground">{title}</p>
         </div>
-        <p className="font-bold text-sm text-center text-foreground">{title}</p>
-    </div>
-);
+    );
+
+    if (href) {
+        return <Link href={href}><CardContent /></Link>
+    }
+    return <CardContent />;
+};
 
 const QuickActionsSection = () => {
     const actions = [
-        { title: 'Create Task', icon: <Plus className="w-7 h-7 text-white" />, bgColor: 'bg-main-accent' },
-        { title: 'Verify ID', icon: <Shield className="w-7 h-7 text-white" />, bgColor: 'bg-green-500' },
-        { title: 'SOS Alerts', icon: <Siren className="w-7 h-7 text-white" />, bgColor: 'bg-destructive-accent' },
-        { title: 'Refer a Buddy', icon: <Users className="w-7 h-7 text-white" />, bgColor: 'bg-blue-500' },
+        { title: 'Create Task', icon: <Plus className="w-7 h-7 text-white" />, bgColor: 'bg-main-accent', href: '#' },
+        { title: 'Leaderboard', icon: <Trophy className="w-7 h-7 text-white" />, bgColor: 'bg-yellow-500', href: '/leaderboard' },
+        { title: 'Verify ID', icon: <Shield className="w-7 h-7 text-white" />, bgColor: 'bg-green-500', href: '#' },
+        { title: 'SOS Alerts', icon: <Siren className="w-7 h-7 text-white" />, bgColor: 'bg-destructive-accent', href: '#' },
+        { title: 'Refer a Buddy', icon: <Users className="w-7 h-7 text-white" />, bgColor: 'bg-blue-500', href: '#' },
     ];
     return (
         <section className="w-full">
