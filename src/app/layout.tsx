@@ -1,17 +1,18 @@
-import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next';
+import { Poppins } from 'next/font/google';
+import './globals.css';
+import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/toaster';
 
-const poppins = Poppins({ 
-  subsets: ["latin"], 
-  weight: ['400', '500', '600', '700', '800'],
-  variable: "--font-sans" 
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-sans',
 });
 
 export const metadata: Metadata = {
-  title: "Local Buddy Pro",
-  description: "Your friendly neighborhood task app.",
+  title: 'Cyberpunk Task App',
+  description: 'A dark mode glassmorphism and neon cyberpunk UI',
 };
 
 export default function RootLayout({
@@ -20,14 +21,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" style={{colorScheme: 'dark'}} suppressHydrationWarning>
-       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className={`${poppins.variable} font-sans antialiased`}>
-        {children}
+    <html lang="en" className="dark">
+      <body
+        className={cn(
+          'min-h-screen bg-background font-sans antialiased',
+          poppins.variable
+        )}
+      >
+        <main className="relative flex flex-col items-center p-4 sm:p-6 md:p-8">
+          {children}
+        </main>
         <Toaster />
       </body>
     </html>
