@@ -1,47 +1,82 @@
 'use client';
 import {
-  Auth, // Import Auth type for type hinting
+  Auth,
   GoogleAuthProvider,
   signInAnonymously,
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** Initiate email/password sign-up (non-blocking). */
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
   createUserWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
   signInWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** Initiate Google sign-in with a popup (non-blocking). */
 export function initiateGoogleSignIn(authInstance: Auth): void {
   const provider = new GoogleAuthProvider();
-  // CRITICAL: Call signInWithPopup directly. Do NOT use 'await signInWithPopup(...)'.
   signInWithPopup(authInstance, provider).catch(error => {
-    // This is a common and expected error when the user closes the popup.
-    // We catch it here to prevent it from bubbling up as an unhandled promise rejection.
     if (error.code !== 'auth/popup-closed-by-user') {
       console.error('Google Sign-In Error:', error);
     } else {
       console.info('Google Sign-In popup closed by user.');
     }
   });
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+}
+
+/**
+ * Sets up the reCAPTCHA verifier for phone number authentication.
+ * @param authInstance The Firebase Auth instance.
+ * @param containerId The ID of the HTML element where the reCAPTCHA should be rendered.
+ * @returns A RecaptchaVerifier instance.
+ */
+export function setupRecaptcha(authInstance: Auth, containerId: string): RecaptchaVerifier {
+  // It's important that this is only called once per page load.
+  // Ensure the container is visible.
+  return new RecaptchaVerifier(authInstance, containerId, {
+    size: 'invisible',
+  });
+}
+
+/**
+ * Initiates phone number sign-in.
+ * @param authInstance The Firebase Auth instance.
+ * @param phoneNumber The user's phone number in E.164 format.
+ * @param appVerifier The RecaptchaVerifier instance.
+ * @returns A Promise that resolves with a ConfirmationResult object.
+ */
+export async function initiatePhoneNumberSignIn(
+  authInstance: Auth,
+  phoneNumber: string,
+  appVerifier: RecaptchaVerifier
+): Promise<ConfirmationResult> {
+  return signInWithPhoneNumber(authInstance, phoneNumber, appVerifier);
+}
+
+/**
+ * Confirms the OTP code sent to the user's phone.
+ * @param confirmationResult The ConfirmationResult object from initiatePhoneNumberSignIn.
+ * @param otpCode The 6-digit OTP code entered by the user.
+ * @returns A Promise that resolves with the UserCredential on successful sign-in.
+ */
+export async function confirmOtpCode(
+  confirmationResult: ConfirmationResult,
+  otpCode: string
+) {
+  // Do not await this. Let the onAuthStateChanged listener handle the redirect.
+  confirmationResult.confirm(otpCode);
 }

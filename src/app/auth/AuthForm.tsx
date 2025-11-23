@@ -14,14 +14,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useFirestore, useUser } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import {
   initiateEmailSignUp,
   initiateEmailSignIn,
   initiateGoogleSignIn,
 } from '@/firebase/non-blocking-login';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
 import * as React from 'react';
 import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +39,6 @@ type AuthFormProps = {
 export default function AuthForm({ mode }: AuthFormProps) {
   const { toast } = useToast();
   const auth = useAuth();
-  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -57,7 +54,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   React.useEffect(() => {
     if (!isUserLoading && user) {
-      router.push('/');
+      router.replace('/');
     }
   }, [user, isUserLoading, router]);
 
