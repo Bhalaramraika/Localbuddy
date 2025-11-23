@@ -18,11 +18,13 @@ export default function MainAppLayout({
   const { user, isUserLoading } = useUser();
 
   const navItems = [
-    { href: '/', icon: Home, label: 'Home' },
-    { href: '/wallet', icon: Wallet, label: 'Wallet' },
-    { href: '/chat', icon: MessageSquare, label: 'Chat' },
-    { href: '/profile', icon: UserIcon, label: 'Profile' },
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/wallet', label: 'Wallet', icon: Wallet },
+    { href: '/chat', label: 'Chat', icon: MessageSquare },
+    { href: '/profile', label: 'Profile', icon: UserIcon },
   ];
+
+  const mainAppRoutes = ['/', '/wallet', '/chat', '/profile', '/leaderboard', '/tasks'];
 
   const isAuthPage = pathname.startsWith('/auth');
 
@@ -45,7 +47,8 @@ export default function MainAppLayout({
     );
   }
 
-  const showNav = navItems.some(item => pathname === '/' || pathname.startsWith(item.href) && item.href !== '/');
+  // Show nav if the current path is one of the main app routes or starts with one of them (for dynamic routes like /tasks/[id])
+  const showNav = mainAppRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route)));
 
 
   return (

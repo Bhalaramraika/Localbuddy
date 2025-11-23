@@ -110,21 +110,29 @@ const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
   );
 };
 
-const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor }: { icon: React.ReactNode, title: string, subtitle: string, tag: string, tagColor: string }) => (
-    <div className="flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-gray-100/80 rounded-lg cursor-pointer group">
-        <div className="p-3 bg-gray-100 rounded-full transition-all duration-300 group-hover:bg-black/10 group-hover:scale-110">
-            {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6 transition-colors duration-300 group-hover:text-black' })}
+const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor, href }: { icon: React.ReactNode, title: string, subtitle: string, tag: string, tagColor: string, href?: string }) => {
+    const content = (
+        <div className="flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-gray-100/80 rounded-lg cursor-pointer group">
+            <div className="p-3 bg-gray-100 rounded-full transition-all duration-300 group-hover:bg-black/10 group-hover:scale-110">
+                {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6 transition-colors duration-300 group-hover:text-black' })}
+            </div>
+            <div className="flex-grow">
+                <p className="font-bold text-foreground">{title}</p>
+                <p className="text-sm text-gray-500 group-hover:text-gray-600">{subtitle}</p>
+            </div>
+            <div className="flex items-center gap-2">
+               <span className={`text-xs font-semibold px-2 py-1 rounded-full ${tagColor}`}>{tag}</span>
+               <ChevronRight className="w-5 h-5 text-gray-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-black" />
+            </div>
         </div>
-        <div className="flex-grow">
-            <p className="font-bold text-foreground">{title}</p>
-            <p className="text-sm text-gray-500 group-hover:text-gray-600">{subtitle}</p>
-        </div>
-        <div className="flex items-center gap-2">
-           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${tagColor}`}>{tag}</span>
-           <ChevronRight className="w-5 h-5 text-gray-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-black" />
-        </div>
-    </div>
-);
+    );
+    
+    if (href) {
+        return <Link href={href}>{content}</Link>;
+    }
+
+    return content;
+};
 
 const HeaderWalletBalance = ({ balance, isLoading }: { balance: number, isLoading: boolean }) => {
     return (
@@ -267,21 +275,24 @@ export default function HomePage() {
           title: "Flash Task: Data Entry",
           subtitle: "Complete within 30 mins",
           tag: "New",
-          tagColor: "bg-blue-100 text-blue-800"
+          tagColor: "bg-blue-100 text-blue-800",
+          href: "#",
       },
       {
           icon: <Shield className="w-6 h-6 text-green-500" />,
           title: "Verify Your ID",
           subtitle: "Enhanced account security",
           tag: "Recommended",
-          tagColor: "bg-green-100 text-green-800"
+          tagColor: "bg-green-100 text-green-800",
+          href: "/profile/verify"
       },
       {
           icon: <Users className="w-6 h-6 text-red-500" />,
           title: "Team Up for a Project",
           subtitle: "A big cleaning gig is available",
           tag: "High Pay",
-          tagColor: "bg-red-100 text-red-800"
+          tagColor: "bg-red-100 text-red-800",
+          href: "#",
       }
   ];
 
@@ -348,13 +359,14 @@ export default function HomePage() {
                 <Loader className="w-12 h-12 animate-spin text-main-accent" />
             </div>
         ) : tasks && tasks.length > 0 ? (
-            tasks.map((task, index) => (
-                <TaskCard 
-                  key={task.id || index}
-                  task={task}
-                  user={user}
-                />
-            ))
+            tasks.map((task, index) => {
+                const isAi = task.posterId === 'ai_generated';
+                const card = <TaskCard key={task.id || index} task={task} user={user} />;
+                if (isAi) {
+                    return card;
+                }
+                return <Link href={`/tasks/${task.id}`} key={task.id}>{card}</Link>;
+            })
         ) : (
             <div className="col-span-full text-center text-gray-500 py-10 glass-card">
                 <p>No open tasks available right now. Check back later!</p>
