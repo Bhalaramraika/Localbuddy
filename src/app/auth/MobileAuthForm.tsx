@@ -65,17 +65,11 @@ export default function MobileAuthForm() {
 
 
   React.useEffect(() => {
-    if (!auth || !recaptchaContainerRef.current || step !== 'phone') return;
-    
-    // Cleanup previous instance if it exists
-    if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
-        recaptchaVerifierRef.current = null;
-    }
+    if (!auth || !recaptchaContainerRef.current || recaptchaVerifierRef.current) return;
     
     // Create and render the verifier
     const verifier = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        size: 'compact', // Use 'compact' for a smaller widget
+        size: 'compact',
         callback: (response) => {
             // reCAPTCHA solved, allow user to submit
         },
