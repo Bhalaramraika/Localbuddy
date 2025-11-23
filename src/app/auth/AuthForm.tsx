@@ -66,7 +66,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     // Non-blocking, user creation will be handled by the auth state change listener.
   }
 
-  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
       if (mode === 'signup') {
