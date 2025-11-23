@@ -4,34 +4,33 @@ import { Icons } from '@/components/icons';
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-background">
-        <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
-      </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden p-4">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
       
       <div className="w-full max-w-md mx-auto p-8 animate-fade-in-up">
-        <div className="bg-card/60 dark:bg-card/40 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-8 text-center">
+        <div className="glass-card p-8 text-center shadow-2xl">
           <div className="flex justify-center mb-6">
-            <Icons.logo className="h-16 w-16 text-primary" />
+            <div className="p-4 bg-primary/20 rounded-full inline-block">
+                <Icons.logo className="h-16 w-16 text-primary" />
+            </div>
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-2 font-headline">
             Local Buddy Pro
           </h1>
           <p className="text-muted-foreground mb-8">
             Your friendly neighborhood task app.
-          </p>
+          셔</p>
 
           <div className="space-y-4">
             <Button
-              className="w-full h-12 text-lg animate-breathing bg-primary hover:bg-primary/90"
+              className="w-full h-14 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
               asChild
             >
               <Link href="/home">
-                <Icons.google className="mr-2 h-6 w-6" />
-                Login with Google
+                Login
               </Link>
             </Button>
-            <Button variant="ghost" className="w-full h-12 text-lg" asChild>
+            <Button variant="ghost" className="w-full h-14 text-lg font-semibold text-muted-foreground" asChild>
               <Link href="/home">Continue as Guest</Link>
             </Button>
           </div>

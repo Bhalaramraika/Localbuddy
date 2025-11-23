@@ -3,102 +3,100 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { currentUser, badges } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Award, CheckCircle2, DollarSign, ListChecks, Settings, Star } from "lucide-react";
+import { CheckCircle, Settings, Star } from "lucide-react";
 import Image from "next/image";
 
 const GlassCard = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={`bg-card/60 dark:bg-card/40 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg rounded-2xl ${className}`}>
+  <div className={`glass-card ${className}`}>
     {children}
   </div>
 );
 
 const ProfileHeader = () => (
-  <div className="relative h-48 rounded-b-3xl overflow-hidden -mx-4 -mt-4">
-    <Image 
-      src={PlaceHolderImages.find(p => p.id === 'profile_hero')?.imageUrl ?? ''} 
-      alt="Profile background"
-      fill
-      className="object-cover"
-      data-ai-hint="abstract gradient"
-    />
-    <div className="absolute inset-0 bg-black/30"></div>
+  <div className="flex flex-col items-center pt-10 pb-6 px-4">
+    <div className="relative">
+      <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+        <AvatarImage src={PlaceHolderImages.find(p => p.id === currentUser.avatarId)?.imageUrl} />
+        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+      </Avatar>
+      <div className="absolute -bottom-1 -right-1 h-8 w-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-background">
+        <CheckCircle className="h-5 w-5 text-white" />
+      </div>
+    </div>
+    <h1 className="text-3xl font-bold text-center font-headline mt-4">{currentUser.name}</h1>
+    <p className="text-muted-foreground">{currentUser.level}</p>
   </div>
 );
 
-export default function ProfilePage() {
-  const xpPercentage = (currentUser.xp / 1000) * 100;
-
-  return (
-    <div className="space-y-6">
-      <ProfileHeader />
-      <div className="px-4 space-y-6 -mt-32">
-        <div className="flex flex-col items-center">
-          <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-            <AvatarImage src={PlaceHolderImages.find(p => p.id === currentUser.avatarId)?.imageUrl} />
-            <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="flex items-center gap-2 mt-4">
-            <h1 className="text-3xl font-bold text-center font-headline">{currentUser.name}</h1>
-            <CheckCircle2 className="h-7 w-7 text-trust-green" />
-          </div>
-          <p className="text-muted-foreground">Joined {currentUser.joinDate}</p>
-          <Button variant="outline" className="mt-4 bg-background/80">Edit Profile</Button>
-        </div>
-
-        <GlassCard>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <p className="font-semibold text-gold-yellow">{currentUser.level}</p>
-              <p className="text-sm text-muted-foreground">{currentUser.xp} / 1000 XP</p>
-            </div>
-            <Progress value={xpPercentage} className="h-3 [&>div]:bg-gold-yellow" />
-            <p className="text-xs text-center text-muted-foreground mt-2">Complete more tasks to become a Local Hero!</p>
-          </CardContent>
-        </GlassCard>
-
-        <div className="grid grid-cols-3 gap-4 text-center">
-            <GlassCard className="p-4">
-                <DollarSign className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-xl font-bold">₹{currentUser.stats.totalEarnings.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Earnings</p>
-            </GlassCard>
-            <GlassCard className="p-4">
-                <ListChecks className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-xl font-bold">{currentUser.stats.tasksCompleted}</p>
-                <p className="text-xs text-muted-foreground">Tasks</p>
-            </GlassCard>
-            <GlassCard className="p-4">
-                <Star className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-xl font-bold">{currentUser.stats.rating.toFixed(1)}</p>
-                <p className="text-xs text-muted-foreground">Rating</p>
-            </GlassCard>
-        </div>
-
-        <GlassCard>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Award className="text-gold-yellow"/> Badges</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-4">
-            {badges.map(badge => (
-              <div key={badge.id} className="flex flex-col items-center text-center p-2 rounded-lg bg-muted/50">
-                <div className="p-3 bg-background rounded-full mb-2">
-                  <badge.icon className="h-8 w-8 text-secondary" />
-                </div>
-                <p className="text-sm font-semibold">{badge.name}</p>
-              </div>
-            ))}
-          </CardContent>
-        </GlassCard>
-        
+const XPProgress = () => {
+    const xpPercentage = (currentUser.xp / 1000) * 100;
+    return (
         <GlassCard className="p-4">
-            <Button variant="ghost" className="w-full justify-start text-lg h-12">
-                <Settings className="mr-4"/> Settings
-            </Button>
-        </GlassCard>
-      </div>
+            <div className="flex justify-between items-center mb-2">
+                <p className="text-sm font-semibold">XP: {currentUser.xp} / 1000</p>
+                <Star className="h-5 w-5 text-secondary" />
+            </div>
+            <Progress value={xpPercentage} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-secondary [&>div]:to-amber-300" />
+      </GlassCard>
+    );
+}
+
+const Stats = () => (
+    <GlassCard className="p-4">
+        <h3 className="font-semibold mb-4 text-lg">Stats</h3>
+        <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+                <p className="text-2xl font-bold">₹{currentUser.stats.totalEarnings.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Total Earnings</p>
+            </div>
+            <div>
+                <p className="text-2xl font-bold">{currentUser.stats.tasksCompleted}</p>
+                <p className="text-xs text-muted-foreground">Tasks</p>
+            </div>
+             <div>
+                <p className="text-2xl font-bold flex items-center justify-center gap-1">{currentUser.stats.rating.toFixed(1)} <Star className="h-4 w-4 text-secondary"/></p>
+                <p className="text-xs text-muted-foreground">Rating</p>
+            </div>
+        </div>
+    </GlassCard>
+)
+
+const Badges = () => (
+    <GlassCard>
+        <CardHeader>
+        <CardTitle className="text-lg">Badges Case</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-3 gap-4">
+        {badges.slice(0,3).map(badge => (
+            <div key={badge.id} className="flex flex-col items-center text-center p-2 rounded-lg bg-white/5">
+            <div className="p-3 bg-black/20 rounded-full mb-2">
+                <badge.icon className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-sm font-semibold">{badge.name}</p>
+            </div>
+        ))}
+        </CardContent>
+    </GlassCard>
+)
+
+
+export default function ProfilePage() {
+  return (
+    <div className="relative overflow-hidden">
+         <div className="absolute top-0 left-0 w-full h-64 bg-purple-900/40 blur-3xl -z-10" />
+         <div className="p-4 space-y-6">
+            <ProfileHeader />
+            <XPProgress />
+            <Stats />
+            <Badges />
+            <GlassCard>
+                <Button variant="ghost" className="w-full justify-start text-lg h-14">
+                    <Settings className="mr-4"/> Settings
+                </Button>
+            </GlassCard>
+         </div>
     </div>
   );
 }
