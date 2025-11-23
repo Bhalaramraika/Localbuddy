@@ -125,7 +125,6 @@ export default function MobileAuthForm() {
 
   return (
     <div className="glass-card p-8">
-      <div id="recaptcha-container" className="my-2"></div>
       {step === 'phone' ? (
         <Form {...phoneForm}>
           <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-6">
@@ -171,6 +170,8 @@ export default function MobileAuthForm() {
           </form>
         </Form>
       )}
+      {/* This container is now at the bottom and doesn't affect layout */}
+      <div id="recaptcha-container" className="fixed bottom-0 left-0"></div>
     </div>
   );
 }

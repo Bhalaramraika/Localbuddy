@@ -46,7 +46,7 @@ export function initiateGoogleSignIn(authInstance: Auth): void {
  */
 export function setupRecaptcha(authInstance: Auth, containerId: string): RecaptchaVerifier {
   // It's important that this is only called once per page load.
-  // Ensure the container is visible.
+  // The reCAPTCHA will be invisible to the user in most cases.
   return new RecaptchaVerifier(authInstance, containerId, {
     size: 'invisible',
   });
