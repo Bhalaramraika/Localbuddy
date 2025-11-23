@@ -3,10 +3,9 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, getDoc, runTransaction } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
-import { setDocumentNonBlocking } from './non-blocking-updates';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -97,21 +96,22 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                   walletBalance: 0, // starting balance is 0
                   xp: 0,
                   level: 'Rookie',
-                  verificationStatus: 'pending',
-                  mobileVerified: false,
+                  verificationStatus: 'not_started',
+                  mobileVerified: !!firebaseUser.phoneNumber,
                   aadharVerified: false,
                   joinDate: new Date().toISOString(),
                   profileCompleted: false, // Start with profile incomplete
                   birthYear: null,
                   appLanguage: 'english',
               };
-              // Use non-blocking set to avoid holding up the UI
-              setDocumentNonBlocking(userRef, newUserDoc, {});
+              // Use blocking setDoc to ensure the document is created before proceeding
+              await setDoc(userRef, newUserDoc, { merge: true });
             }
           } catch (e) {
             console.error("Failed to check/create user document:", e);
           }
         }
+        // Set user state AFTER ensuring the document exists.
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error

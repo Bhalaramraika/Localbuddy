@@ -63,14 +63,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setIsLoading(true);
     try {
       if (mode === 'signup') {
-        initiateEmailSignUp(auth, values.email, values.password);
+        await initiateEmailSignUp(auth, values.email, values.password);
         toast({
           title: 'Account Created!',
           description: "We're setting up your profile. Redirecting...",
         });
 
       } else {
-        initiateEmailSignIn(auth, values.email, values.password);
+        await initiateEmailSignIn(auth, values.email, values.password);
         toast({
           title: 'Logging In...',
           description: 'Authenticating your credentials.',
