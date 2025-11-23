@@ -44,9 +44,10 @@ export default function MobileAuthForm() {
   const [step, setStep] = React.useState<'phone' | 'otp'>('phone');
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
   const [fullPhoneNumber, setFullPhoneNumber] = React.useState('');
-  const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
+  
+  // Ref for the invisible reCAPTCHA container
   const recaptchaContainerRef = React.useRef<HTMLDivElement>(null);
-
+  const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
@@ -63,28 +64,17 @@ export default function MobileAuthForm() {
     },
   });
 
-
   React.useEffect(() => {
-    if (!auth || !recaptchaContainerRef.current || recaptchaVerifierRef.current) return;
-    
-    // Create and render the verifier
-    const verifier = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        size: 'compact',
-        callback: (response) => {
-            // reCAPTCHA solved, allow user to submit
+    if (auth && !recaptchaVerifierRef.current) {
+      recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(auth, 'recaptcha-button', {
+        size: 'invisible',
+        callback: (response: any) => {
+          // reCAPTCHA solved, this is where we'd ideally trigger sign-in
+          // but signInWithPhoneNumber returns a promise which we handle in onPhoneSubmit
         },
-        'expired-callback': () => {
-            // Response expired. Ask user to solve reCAPTCHA again.
-        }
-    });
-
-    recaptchaVerifierRef.current = verifier;
-    
-    // Render it
-    verifier.render();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth, step]);
+      });
+    }
+  }, [auth]);
 
 
   React.useEffect(() => {
@@ -93,36 +83,44 @@ export default function MobileAuthForm() {
     }
   }, [user, isUserLoading, router]);
 
-  const onPhoneSubmit = (values: z.infer<typeof phoneSchema>) => {
+  const onPhoneSubmit = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
     if (!recaptchaVerifierRef.current) {
-      toast({ variant: 'destructive', title: 'reCAPTCHA not ready. Please wait a moment and try again.' });
-      setIsLoading(false);
-      return;
+        toast({ variant: 'destructive', title: 'reCAPTCHA not initialized.' });
+        setIsLoading(false);
+        return;
     }
-    
+
     const phoneNumber = `${values.countryCode}${values.phone}`;
     setFullPhoneNumber(phoneNumber);
 
-    initiatePhoneNumberSignIn(auth, phoneNumber, recaptchaVerifierRef.current)
-      .then(confirmation => {
+    try {
+        const confirmation = await initiatePhoneNumberSignIn(
+            auth,
+            phoneNumber,
+            recaptchaVerifierRef.current
+        );
         setConfirmationResult(confirmation);
         setStep('otp');
         toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${phoneNumber}.` });
-      })
-      .catch((error: any) => {
+    } catch (error: any) {
         console.error("OTP Send Error:", error);
         toast({
-          variant: 'destructive',
-          title: 'Failed to Send OTP',
-          description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
+            variant: 'destructive',
+            title: 'Failed to Send OTP',
+            description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
         });
-        recaptchaVerifierRef.current?.clear();
-      })
-      .finally(() => {
+        // In case of error, reset verifier
+        recaptchaVerifierRef.current.render().then((widgetId) => {
+            if (recaptchaVerifierRef.current) {
+               // grecaptcha.reset(widgetId);
+            }
+        });
+    } finally {
         setIsLoading(false);
-      });
+    }
   };
+
 
   const onOtpSubmit = async (values: z.infer<typeof otpSchema>) => {
     setIsLoading(true);
@@ -133,7 +131,6 @@ export default function MobileAuthForm() {
       return;
     }
     try {
-      // This part is now BLOCKING to ensure security.
       await confirmOtpCode(confirmationResult, values.otp);
       toast({ title: 'Success!', description: 'You are now logged in.' });
       // The onAuthStateChanged listener will handle the redirect.
@@ -158,6 +155,9 @@ export default function MobileAuthForm() {
 
   return (
     <div className="glass-card p-8">
+      {/* Invisible reCAPTCHA container */}
+      <div ref={recaptchaContainerRef} />
+
       {step === 'phone' ? (
         <Form {...phoneForm}>
           <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-6">
@@ -192,11 +192,9 @@ export default function MobileAuthForm() {
                 </div>
                 <FormMessage>{phoneForm.formState.errors.phone?.message || phoneForm.formState.errors.countryCode?.message}</FormMessage>
              </FormItem>
-            
-            {/* reCAPTCHA container */}
-            <div ref={recaptchaContainerRef} className="flex justify-center my-4"></div>
 
             <Button 
+                id="recaptcha-button"
                 type="submit" 
                 className="w-full h-12 text-lg font-bold cyan-glow-button" 
                 disabled={isLoading}
