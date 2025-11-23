@@ -17,15 +17,15 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['Poppins', 'Inter', 'sans-serif'],
+        headline: ['Poppins', 'Inter', 'sans-serif'],
         sans: ['var(--font-sans)', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
+        background: 'rgb(var(--background-start-rgb))',
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
@@ -55,15 +55,12 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        'trust-green': 'hsl(var(--primary))',
-        'active-blue': 'hsl(var(--accent))',
-        'gold-yellow': 'hsl(var(--secondary))',
-        'alert-red': 'hsl(var(--destructive))',
+        success: 'hsl(var(--success))'
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 8px)',
       },
       keyframes: {
         'accordion-down': {
@@ -78,21 +75,11 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        breathing: {
-          '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(22, 163, 74, 0.4)' },
-          '50%': { transform: 'scale(1.05)', boxShadow: '0 0 20px 10px rgba(22, 163, 74, 0)' },
-        },
-        shimmer: {
-          '0%, 100%': { backgroundPosition: '-100% 0' },
-          '50%': { backgroundPosition: '100% 0' },
-        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-        breathing: 'breathing 3s ease-in-out infinite',
-        shimmer: 'shimmer 2s infinite linear',
       },
     },
   },

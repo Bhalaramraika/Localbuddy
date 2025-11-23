@@ -1,66 +1,67 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { currentUser, transactions } from "@/lib/data";
-import { ArrowDownLeft, ArrowUpRight, Plus, Minus, AlertTriangle, Wallet } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Wallet as WalletIcon, Lock, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const WalletSummary = () => (
-    <div className="space-y-4">
-        <Card className="glass-card overflow-hidden relative cyan-glow">
-            <CardContent className="p-6">
-                <p className="text-sm text-cyan-200">Available Balance</p>
-                <p className="text-5xl font-bold font-headline mt-1">₹{currentUser.walletBalance.toLocaleString()}</p>
-            </CardContent>
-        </Card>
-        <Card className="glass-card overflow-hidden relative gold-glow">
-            <CardContent className="p-6">
-                <p className="text-sm text-amber-200">Locked in Escrow</p>
-                <p className="text-5xl font-bold font-headline mt-1">₹{currentUser.escrowBalance.toLocaleString()}</p>
-            </CardContent>
-        </Card>
+    <div className="space-y-6">
+        <div className="glass-card overflow-hidden relative p-6 green-glow">
+            <div className="flex items-start justify-between">
+                <WalletIcon className="h-8 w-8 text-success" />
+            </div>
+            <p className="text-5xl font-bold font-headline mt-4 text-white">₹2,500</p>
+            <p className="text-sm text-muted-foreground mt-1">Available Balance</p>
+        </div>
+        <div className="glass-card overflow-hidden relative p-6 gold-glow">
+             <div className="flex items-start justify-between">
+                <Lock className="h-8 w-8 text-secondary" />
+            </div>
+            <p className="text-5xl font-bold font-headline mt-4 text-white">₹500</p>
+            <p className="text-sm text-muted-foreground mt-1">Locked in Escrow</p>
+        </div>
     </div>
 );
 
 const WalletActions = () => (
-    <div className="space-y-4">
-        <Button size="lg" className="w-full h-14 glass-card text-base font-semibold justify-center hover:bg-white/10">
+    <div className="space-y-4 text-center">
+        <Button size="lg" className="w-[90%] h-14 glass-card text-base font-semibold justify-center hover:bg-white/10 text-white">
             Withdraw Money
         </Button>
-        <div className="flex items-center justify-center gap-2 p-2 glass-card text-amber-400">
+        <div className="flex items-center justify-center gap-2 p-2 text-secondary">
             <AlertTriangle className="h-4 w-4" />
             <p className="text-xs font-semibold">ID Verification Needed</p>
         </div>
     </div>
 );
 
+const transactions = [
+    { id: 1, type: "credit", title: "Transaction", date: "Den 4, 2023", amount: "+ ₹2,500", color: "text-success", iconColor: "text-success" },
+    { id: 2, type: "debit", title: "Transaction", date: "Nov 4, 2023", amount: "- ₹500", color: "text-destructive", iconColor: "text-secondary" },
+    { id: 3, type: "debit", title: "Transaction", date: "Nov 4, 2023", amount: "- ₹2,500", color: "text-destructive", iconColor: "text-purple-400" },
+]
 
-const TransactionItem = ({ transaction }: { transaction: typeof transactions[0] }) => {
-    const isCredit = transaction.type === "release" || transaction.type === "deposit";
-    const amountColor = isCredit ? "text-primary" : "text-foreground";
-    const sign = isCredit ? "+" : "-";
-
-    const icons: { [key: string]: React.ReactNode } = {
-        release: <Wallet className="h-5 w-5 text-primary" />,
-        deposit: <Wallet className="h-5 w-5 text-primary" />,
-        lock: <Wallet className="h-5 w-5 text-amber-400" />,
-    }
-
-    return (
-        <div className="flex items-center justify-between py-4 animate-fade-in-up">
-            <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-white/5">
-                    {icons[transaction.type]}
-                </div>
-                <div>
-                    <p className="font-semibold">{transaction.taskName}</p>
-                    <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                </div>
+const TransactionHistory = () => (
+    <div>
+        <h2 className="text-xl font-bold font-headline mb-4">Transaction History</h2>
+        <div className="bg-black/20 rounded-2xl p-2">
+             <div className="divide-y divide-white/10">
+                {transactions.map(tx => (
+                    <div className="px-2 flex items-center justify-between py-4" key={tx.id}>
+                        <div className="flex items-center gap-4">
+                            <div className={cn("p-3 rounded-full bg-white/5", tx.iconColor)}>
+                                <WalletIcon className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-white">{tx.title}</p>
+                                <p className="text-sm text-muted-foreground">{tx.date}</p>
+                            </div>
+                        </div>
+                        <p className={cn("font-bold text-lg", tx.color)}>{tx.amount}</p>
+                    </div>
+                ))}
             </div>
-            <p className={`font-bold text-lg ${amountColor}`}>{sign}₹{transaction.amount.toLocaleString()}</p>
         </div>
-    )
-}
+    </div>
+)
 
 export default function WalletPage() {
   return (
@@ -68,19 +69,7 @@ export default function WalletPage() {
         <h1 className="text-3xl font-bold font-headline pt-4">Wallet</h1>
         <WalletSummary />
         <WalletActions />
-        
-        <div>
-            <h2 className="text-xl font-bold font-headline mb-2">Transaction History</h2>
-            <div className="glass-card p-2">
-                 <div className="divide-y divide-white/10">
-                    {transactions.map(tx => (
-                        <div className="px-2" key={tx.id}>
-                         <TransactionItem transaction={tx} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+        <TransactionHistory />
     </div>
   );
 }
