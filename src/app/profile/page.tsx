@@ -125,7 +125,7 @@ export default function ProfilePage() {
       <ProfileHeader />
 
       <section className="glass-card w-full p-4">
-        <div className="flex justify-around gap-2">
+        <div className="flex justify-around gap-4">
           <StatCard value="₹12.5k" label="Earnings" icon={<Wallet className="w-6 h-6"/>} />
           <StatCard value="25" label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} />
           <StatCard value="4.8 ★" label="Avg. Rating" icon={<Star className="w-6 h-6"/>} />

@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Crown, Trophy, TrendingUp, TrendingDown, ChevronsUp, ChevronsDown } from 'lucide-react';
+import { Crown, Trophy, TrendingUp, TrendingDown } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';

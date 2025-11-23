@@ -7,7 +7,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const TransactionItem = ({ icon, title, date, amount, color, type }: { icon: React.ReactNode, title: string, date: string, amount: string, color: string, type: string }) => (
-  <div className={cn("flex items-center justify-between glass-card p-3 my-2 hover:border-neon-cyan/50 transition-all border border-transparent rounded-lg group cursor-pointer", `border-l-4 border-l-${color.replace('text-','')} `)}>
+  <div className={cn("flex items-center justify-between glass-pill p-3 my-2 hover:bg-neon-cyan/10 transition-all border border-transparent rounded-lg group cursor-pointer")}>
     <div className="flex items-center gap-4">
       <div className={cn(`p-3 rounded-full glass-pill transition-all duration-300 group-hover:scale-110`, `bg-${color.replace('text-','')}/10`)}>{icon}</div>
       <div>
