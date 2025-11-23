@@ -31,10 +31,16 @@ service cloud.firestore {
       // Poster can delete if task is still open.
       allow delete: if resource.data.status == 'Open' && isOwner(resource.data.posterId);
 
-      // Poster can update if open, buddy can update if assigned to them.
-      allow update: if (resource.data.status == 'Open' && isOwner(resource.data.posterId)) ||
-                       (isOwner(resource.data.buddyId) && request.resource.data.buddyId == resource.data.buddyId) ||
-                       (isOwner(resource.data.posterId) && request.resource.data.status == 'paid');
+      // Rules for updating a task
+      allow update: if 
+        // 1. Poster can update if the task is still open.
+        (resource.data.status == 'Open' && isOwner(resource.data.posterId)) ||
+        // 2. Any authenticated user can become the buddy if the task is open.
+        (request.auth != null && resource.data.status == 'Open' && request.resource.data.buddyId == request.auth.uid) ||
+        // 3. The assigned buddy can update it (e.g., to mark as completed).
+        (isOwner(resource.data.buddyId) && request.resource.data.buddyId == resource.data.buddyId) ||
+        // 4. The poster can update it to mark as paid.
+        (isOwner(resource.data.posterId) && request.resource.data.status == 'paid');
     }
 
     // Chat is restricted to participants.
