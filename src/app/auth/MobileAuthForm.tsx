@@ -45,8 +45,6 @@ export default function MobileAuthForm() {
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
   const [fullPhoneNumber, setFullPhoneNumber] = React.useState('');
   
-  // Ref for the invisible reCAPTCHA container
-  const recaptchaContainerRef = React.useRef<HTMLDivElement>(null);
   const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
 
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
@@ -65,16 +63,20 @@ export default function MobileAuthForm() {
   });
 
   React.useEffect(() => {
-    if (auth && !recaptchaVerifierRef.current) {
-      recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(auth, 'recaptcha-button', {
-        size: 'invisible',
-        callback: (response: any) => {
-          // reCAPTCHA solved, this is where we'd ideally trigger sign-in
-          // but signInWithPhoneNumber returns a promise which we handle in onPhoneSubmit
-        },
-      });
+    if (auth && !recaptchaVerifierRef.current && step === 'phone') {
+        recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'compact',
+            'callback': (response: any) => {
+                // reCAPTCHA solved, allow user to submit form
+            },
+            'expired-callback': () => {
+                // Response expired. Ask user to solve reCAPTCHA again.
+            }
+        });
+        recaptchaVerifierRef.current.render();
     }
-  }, [auth]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, step]);
 
 
   React.useEffect(() => {
@@ -110,10 +112,11 @@ export default function MobileAuthForm() {
             title: 'Failed to Send OTP',
             description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
         });
-        // In case of error, reset verifier
+        // In case of error, you might need to reset reCAPTCHA
         recaptchaVerifierRef.current.render().then((widgetId) => {
-            if (recaptchaVerifierRef.current) {
-               // grecaptcha.reset(widgetId);
+            // using window.grecaptcha
+            if (window.grecaptcha) {
+                window.grecaptcha.reset(widgetId);
             }
         });
     } finally {
@@ -155,9 +158,6 @@ export default function MobileAuthForm() {
 
   return (
     <div className="glass-card p-8">
-      {/* Invisible reCAPTCHA container */}
-      <div ref={recaptchaContainerRef} />
-
       {step === 'phone' ? (
         <Form {...phoneForm}>
           <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-6">
@@ -192,9 +192,10 @@ export default function MobileAuthForm() {
                 </div>
                 <FormMessage>{phoneForm.formState.errors.phone?.message || phoneForm.formState.errors.countryCode?.message}</FormMessage>
              </FormItem>
+            
+            <div id="recaptcha-container" className="flex justify-center my-4"></div>
 
             <Button 
-                id="recaptcha-button"
                 type="submit" 
                 className="w-full h-12 text-lg font-bold cyan-glow-button" 
                 disabled={isLoading}
