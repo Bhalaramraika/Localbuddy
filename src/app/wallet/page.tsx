@@ -6,7 +6,6 @@ import { Progress } from "@/components/ui/progress";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-// Section 1: Expanded TransactionItem Component
 const TransactionItem = ({ icon, title, date, amount, color, type }: { icon: React.ReactNode, title: string, date: string, amount: string, color: string, type: string }) => (
   <div className={cn("flex items-center justify-between glass-card p-3 my-2 hover:border-neon-cyan/50 transition-all border border-transparent rounded-lg group cursor-pointer", `border-l-4 border-l-${color.replace('text-','')} `)}>
     <div className="flex items-center gap-4">
@@ -20,7 +19,6 @@ const TransactionItem = ({ icon, title, date, amount, color, type }: { icon: Rea
   </div>
 );
 
-// Section 2: Expanded BalanceCard Component
 const BalanceCard = ({ title, balance, icon, color, progress }: { title: string, balance: string, icon: React.ReactNode, color: string, progress: number }) => {
     const neonColor = color.replace('bg-','');
     
@@ -46,7 +44,6 @@ const BalanceCard = ({ title, balance, icon, color, progress }: { title: string,
     </div>
 )};
 
-// Section 3: Expanded ActionMenuItem Component
 const ActionMenuItem = ({icon, title, subtitle}: {icon: React.ReactNode, title: string, subtitle: string}) => (
     <div className="flex items-center p-3 glass-pill w-full hover:bg-white/10 transition-colors cursor-pointer rounded-lg group">
         <div className="p-2 bg-white/10 rounded-lg mr-4 transition-all duration-300 group-hover:scale-110 group-hover:bg-neon-cyan/20">
@@ -60,12 +57,10 @@ const ActionMenuItem = ({icon, title, subtitle}: {icon: React.ReactNode, title: 
     </div>
 );
 
-// Section 4: Main WalletPage Component
 export default function WalletPage() {
   const [filter, setFilter] = React.useState('All');
   const filters = ['All', 'Income', 'Outcome', 'Escrow'];
 
-  // Increased number of transactions for more content
   const transactions = [
     { icon: <Wallet className="w-5 h-5 text-neon-green" />, title: "Task Payment: Plumber", date: "Dec 4, 2023", amount: "+ ₹500", color: "text-neon-green", type: "Income" },
     { icon: <ArrowUp className="w-5 h-5 text-neon-pink" />, title: "Material Purchase", date: "Dec 3, 2023", amount: "- ₹150", color: "text-neon-pink", type: "Outcome" },
@@ -93,7 +88,6 @@ export default function WalletPage() {
         <p className="text-gray-400 text-sm mt-1">Manage your funds and transactions securely</p>
        </header>
 
-      {/* Balance Cards */}
       <section className="flex flex-col gap-6">
         <BalanceCard 
             title="Available Balance"
@@ -111,7 +105,6 @@ export default function WalletPage() {
         />
       </section>
 
-      {/* Action Button */}
       <section className="flex flex-col items-center gap-3">
         <Button className="w-full text-white font-bold py-4 rounded-full text-lg h-14 cyan-glow-button transform hover:scale-105 transition-transform">
           Withdraw Money
@@ -119,7 +112,6 @@ export default function WalletPage() {
         <VerificationBanner />
       </section>
 
-      {/* Quick Actions Menu */}
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-bold px-2">Quick Actions</h2>
         <div className="flex flex-col gap-3 glass-card p-4">
@@ -130,7 +122,6 @@ export default function WalletPage() {
         </div>
       </section>
 
-      {/* Transaction History */}
       <section className="flex flex-col gap-4">
         <div className="flex justify-between items-center px-2">
             <h2 className="text-xl font-bold">Transaction History</h2>

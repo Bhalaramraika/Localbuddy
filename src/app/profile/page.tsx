@@ -11,8 +11,6 @@ import { cn } from '@/lib/utils';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
-// Section 1: Expanded StatCard, Badge, and SkillPill Components
-
 const StatCard = ({ value, label, icon }: { value: string, label: string, icon: React.ReactNode }) => (
   <div className="flex flex-col items-center glass-card p-4 rounded-lg flex-1 group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-neon-cyan/20">
     <div className="text-neon-cyan mb-2 transition-transform duration-300 group-hover:scale-125">{icon}</div>
@@ -46,7 +44,6 @@ const SkillPill = ({ name, level, xp, maxXp }: { name: string, level: number, xp
     </div>
 );
 
-// Section 2: Expanded Header with more details
 const ProfileHeader = () => {
     const userAvatar = getImage('user2');
     const [isEditing, setIsEditing] = React.useState(false);
@@ -86,7 +83,6 @@ const ProfileHeader = () => {
           <p className="text-lg text-gray-400">Level 2: Pro Tasker</p>
         </div>
         
-        {/* XP Bar */}
         <div className="w-full px-4">
            <div className="relative w-full h-4 glass-pill rounded-full overflow-hidden">
                 <div 
@@ -107,7 +103,6 @@ const ProfileHeader = () => {
     );
 };
 
-// Section 3: Main Profile Page Component
 export default function ProfilePage() {
   const allBadges = [
     { icon: <Shield className="w-10 h-10 text-neon-green" />, color: "border-neon-green", label: "Verified", achieved: true, description: "Your identity has been successfully verified." },
@@ -123,7 +118,7 @@ export default function ProfilePage() {
       { name: "Delivery", level: 1, xp: 50, maxXp: 250 },
   ];
 
-  const overallProgress = 72; // Example percentage
+  const overallProgress = 72;
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-8 text-white pb-28">

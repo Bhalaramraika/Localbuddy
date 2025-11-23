@@ -12,8 +12,6 @@ import { Progress } from '@/components/ui/progress';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
-// Section 1: Complex Chat Message Component with Sub-components
-
 const UserAvatar = ({ imageUrl, alt, borderColor }: { imageUrl: string; alt: string; borderColor: string }) => (
     <Image src={imageUrl} alt={alt} width={32} height={32} className={cn("rounded-full border-2", borderColor)} />
 );
@@ -51,7 +49,6 @@ const ChatMessage = ({ text, isOutgoing, time }: { text: React.ReactNode; isOutg
     );
 };
 
-// Section 2: Interactive Voice Note Component
 const VoiceNote = ({ duration, progress: initialProgress, isOutgoing }: { duration: string; initialProgress: number, isOutgoing: boolean }) => {
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [progress, setProgress] = React.useState(initialProgress);
@@ -73,7 +70,7 @@ const VoiceNote = ({ duration, progress: initialProgress, isOutgoing }: { durati
     }, [isPlaying]);
 
     const togglePlay = () => {
-        if (progress >= 100) setProgress(0); // Reset if finished
+        if (progress >= 100) setProgress(0);
         setIsPlaying(!isPlaying);
     };
 
@@ -106,7 +103,6 @@ const LocationAttachment = () => (
 );
 
 
-// Section 3: Expanded Header Component
 const ChatHeader = () => {
     const userAvatar = getImage('user2');
     return (
@@ -140,7 +136,6 @@ const ChatHeader = () => {
     );
 };
 
-// Section 4: Expanded Footer with Attachment Popover
 const AttachmentMenu = ({ onSelect }: { onSelect: (type: string) => void }) => (
     <div className="absolute bottom-14 left-4 w-48 glass-card p-2 rounded-lg shadow-lg">
         <div className="flex flex-col gap-1">
@@ -201,8 +196,6 @@ const ChatFooter = ({ onSend }: { onSend: (message: any) => void }) => {
     );
 };
 
-
-// Section 5: Main Chat Page combining all components
 export default function ChatPage() {
   const [messages, setMessages] = React.useState([
       { type: 'text', content: "Hi, are you on your way? I'm waiting at the location.", isOutgoing: false, time: '10:30 AM' },

@@ -24,8 +24,6 @@ import { cn, formatCurrency, sleep } from '@/lib/utils';
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
 
-// Section 1: Complex and Expanded TaskCard Component and its Sub-components
-
 const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: string, tag: string }) => (
     <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/10">
         <Image src={imageUrl} alt={title} layout="fill" objectFit="cover" className="transition-transform duration-500 group-hover:scale-110" />
@@ -54,9 +52,7 @@ const TaskCardCountdown = ({ countdown }: { countdown: string }) => {
     const [remaining, setRemaining] = React.useState(countdown);
 
     React.useEffect(() => {
-        // This is a mock effect to simulate a live countdown for demonstration.
         const interval = setInterval(() => {
-            // This logic is simplified for the example. A real implementation would parse the time.
             setRemaining(new Date().toLocaleTimeString());
         }, 1000);
         return () => clearInterval(interval);
@@ -96,7 +92,7 @@ const TaskCardButton = () => {
 
     const handleClick = async () => {
         setIsLoading(true);
-        await sleep(1500); // Simulate network request
+        await sleep(1500);
         setIsLoading(false);
         setIsAccepted(true);
     };
@@ -128,9 +124,6 @@ const TaskCard = ({ title, price, tag, countdown, imageUrl }: { title: string, p
   );
 };
 
-
-// Section 2: More complex list component for advanced UI structures
-
 const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor }: { icon: React.ReactNode, title: string, subtitle: string, tag: string, tagColor: string }) => (
     <div className="flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-white/5 hover:border-neon-cyan border border-transparent rounded-lg cursor-pointer group">
         <div className="p-3 bg-white/5 rounded-full transition-all duration-300 group-hover:bg-neon-cyan/10 group-hover:scale-110">
@@ -147,12 +140,8 @@ const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor }: { icon: Reac
     </div>
 );
 
-
-// Section 3: Header and its sub-components for better structure
-
 const HeaderWalletBalance = () => {
     const [balance, setBalance] = React.useState(1500);
-    // Mock effect to simulate balance changes
     React.useEffect(() => {
         const interval = setInterval(() => {
             setBalance(prev => prev + (Math.random() * 100 - 40));
@@ -204,9 +193,6 @@ const MainHeader = () => {
         </header>
     );
 };
-
-
-// Section 4: Stories section with more complex logic and structure
 
 const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.ElementType, ringColor: string }}) => {
     const storyImage = getImage(story.id);
@@ -268,9 +254,6 @@ const StoriesSection = () => {
     );
 };
 
-
-// Section 5: Filter component with enhanced state and styling
-
 const TaskFilters = () => {
     const filters = ['All', 'Household', 'Tech', 'Cleaning', 'Delivery', 'Tutoring', 'Other'];
     const [activeFilter, setActiveFilter] = React.useState('All');
@@ -295,8 +278,6 @@ const TaskFilters = () => {
         </section>
     );
 };
-
-// Section 6: Main Page Component combining all sub-components
 
 export default function HomePage() {
   const advancedListItems = [
@@ -347,13 +328,11 @@ export default function HomePage() {
          </section>
       ))}
 
-      {/* Advanced List Section */}
       <section className="glass-card p-4">
           <h3 className="font-bold text-lg mb-3 px-2">Priority Hub</h3>
           {advancedListItems.map(item => <AdvancedListItem key={item.title} {...item} />)}
       </section>
 
-      {/* Floating Bottom Navigation */}
       <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
         <nav className="glass-card flex items-center justify-around p-3 rounded-full">
           <a href="#" className="flex flex-col items-center gap-1 text-neon-cyan">
