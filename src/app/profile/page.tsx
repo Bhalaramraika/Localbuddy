@@ -1,20 +1,22 @@
 
 'use client';
 import Image from 'next/image';
-import { Check, Star, Award, Pen, Settings, LogOut, Edit, Camera, Wallet, Briefcase, Shield } from 'lucide-react';
+import { Check, Star, Award, Pen, Settings, LogOut, Edit, Camera, Wallet, Briefcase, Shield, Loader } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Progress, CircleProgress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
-const StatCard = ({ value, label, icon }: { value: string, label: string, icon: React.ReactNode }) => (
+const StatCard = ({ value, label, icon, isLoading }: { value: string, label: string, icon: React.ReactNode, isLoading?: boolean }) => (
   <div className="flex flex-col items-center glass-card p-4 rounded-lg flex-1 group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-300">
     <div className="text-main-accent mb-2 transition-transform duration-300 group-hover:scale-125">{icon}</div>
-    <p className="text-2xl font-bold text-foreground">{value}</p>
+    {isLoading ? <Loader className="w-6 h-6 animate-spin text-gray-400" /> : <p className="text-2xl font-bold text-foreground">{value}</p>}
     <p className="text-sm text-gray-500 group-hover:text-foreground">{label}</p>
   </div>
 );
@@ -44,30 +46,44 @@ const SkillPill = ({ name, level, xp, maxXp }: { name: string, level: number, xp
     </div>
 );
 
-const ProfileHeader = () => {
+const ProfileHeader = ({ userData, isLoading }: { userData: any, isLoading: boolean }) => {
     const userAvatar = getImage('user2');
     const [isEditing, setIsEditing] = React.useState(false);
-    const [name, setName] = React.useState('Rahul Smith');
+    const [name, setName] = React.useState(userData?.name || 'Loading...');
+
+    React.useEffect(() => {
+        if (userData?.name) {
+            setName(userData.name);
+        }
+    }, [userData]);
+    
+    if (isLoading) {
+        return (
+            <header className="flex flex-col items-center gap-4 glass-card p-6 w-full">
+                <Loader className="w-12 h-12 animate-spin text-main-accent" />
+            </header>
+        )
+    }
 
     return (
       <header className="flex flex-col items-center gap-4 glass-card p-6 w-full">
         <div className="relative group">
-          {userAvatar && (
-            <Image
-              src={userAvatar.imageUrl}
-              alt="Rahul Smith"
+          <Image
+              src={userData?.photoUrl || userAvatar?.imageUrl || ''}
+              alt={userData?.name || "User Avatar"}
               width={120}
               height={120}
               className="rounded-full border-4 border-main-accent"
               style={{boxShadow: '0 0 20px rgba(0,0,0,0.2)'}}
             />
-          )}
           <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
               <Camera className="w-8 h-8 text-white" />
           </div>
-          <div className="absolute bottom-1 right-1 bg-green-500 rounded-full p-1 border-2 border-white">
-            <Check className="w-4 h-4 text-white" />
-          </div>
+          {userData?.mobileVerified && (
+            <div className="absolute bottom-1 right-1 bg-green-500 rounded-full p-1 border-2 border-white">
+                <Check className="w-4 h-4 text-white" />
+            </div>
+          )}
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-2">
@@ -80,7 +96,7 @@ const ProfileHeader = () => {
               {isEditing ? <Check className="w-5 h-5 text-green-500"/> : <Edit className="w-5 h-5 text-gray-400 cursor-pointer hover:text-main-accent"/>}
             </button>
           </div>
-          <p className="text-lg text-gray-500">Level 2: Pro Tasker</p>
+          <p className="text-lg text-gray-500">Level {userData?.level || 'N/A'}</p>
         </div>
         
         <div className="w-full px-4">
@@ -88,14 +104,14 @@ const ProfileHeader = () => {
                 <div 
                     className="h-full rounded-full bg-main-accent" 
                     style={{
-                        width: `${(350/500)*100}%`,
+                        width: `${((userData?.xp || 0)/500)*100}%`,
                         boxShadow: '0 0 10px var(--main-accent)'
                     }}
                 />
             </div>
             <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                <span>XP: 350 / 500</span>
-                <span className="flex items-center gap-1">To Lvl 3 <Star className="w-4 h-4 text-yellow-400" /></span>
+                <span>XP: {userData?.xp || 0} / 500</span>
+                <span className="flex items-center gap-1">To Lvl up <Star className="w-4 h-4 text-yellow-400" /></span>
             </div>
         </div>
       </header>
@@ -103,8 +119,19 @@ const ProfileHeader = () => {
 };
 
 export default function ProfilePage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
+
+
   const allBadges = [
-    { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: true, description: "Your identity has been successfully verified." },
+    { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified, description: "Your identity has been successfully verified." },
     { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: true, description: "Completed 10+ tasks before deadline." },
     { icon: <Award className="w-10 h-10 text-yellow-500" />, color: "border-yellow-500", label: "5-Star Hero", achieved: true, description: "Maintained a 5-star rating over 20 tasks." },
     { icon: <Star className="w-10 h-10 text-gray-400" />, color: "border-gray-400", label: "Top Earner", achieved: false, description: "Become one of the top 1% earners on the platform." },
@@ -117,15 +144,15 @@ export default function ProfilePage() {
       { name: "Delivery", level: 1, xp: 50, maxXp: 250 },
   ];
 
-  const overallProgress = 72;
+  const overallProgress = (userData?.xp / 500) * 100 || 0;
 
   return (
     <>
-      <ProfileHeader />
+      <ProfileHeader userData={userData} isLoading={isUserLoading} />
 
       <section className="glass-card w-full p-4">
         <div className="flex justify-around gap-4">
-          <StatCard value="₹12.5k" label="Earnings" icon={<Wallet className="w-6 h-6"/>} />
+          <StatCard value={`₹${(userData?.walletBalance/1000) || 0}k`} label="Earnings" icon={<Wallet className="w-6 h-6"/>} isLoading={isUserLoading} />
           <StatCard value="25" label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} />
           <StatCard value="4.8 ★" label="Avg. Rating" icon={<Star className="w-6 h-6"/>} />
         </div>
@@ -133,7 +160,7 @@ export default function ProfilePage() {
 
       <section className="glass-card p-6 flex flex-col md:flex-row items-center gap-6 w-full">
         <div className="flex-shrink-0">
-            <CircleProgress value={overallProgress} size={150} strokeWidth={12} color="var(--main-accent)" />
+            {isUserLoading ? <Loader className="w-10 h-10 animate-spin" /> : <CircleProgress value={overallProgress} size={150} strokeWidth={12} color="var(--main-accent)" />}
         </div>
         <div className="text-center md:text-left">
             <h2 className="text-xl font-bold">Overall Progress</h2>
@@ -179,3 +206,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    

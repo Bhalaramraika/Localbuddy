@@ -1,34 +1,36 @@
 
 'use client';
-import { Wallet, Lock, ArrowDown, ArrowUp, AlertTriangle, ShieldCheck, CreditCard, Banknote, History, ChevronRight } from 'lucide-react';
+import { Wallet, Lock, ArrowDown, ArrowUp, AlertTriangle, ShieldCheck, CreditCard, Banknote, History, ChevronRight, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from "@/components/ui/progress";
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 
 const TransactionItem = ({ icon, title, date, amount, color, type }: { icon: React.ReactNode, title: string, date: string, amount: string, color: string, type: string }) => (
   <div className={cn("flex items-center justify-between glass-pill p-3 my-2 hover:bg-gray-100 transition-all border border-transparent rounded-lg group cursor-pointer")}>
     <div className="flex items-center gap-4">
-      <div className={cn(`p-3 rounded-full glass-pill transition-all duration-300 group-hover:scale-110`, `bg-${color.replace('text-','')}/10`)}>{icon}</div>
+      <div className={cn(`p-3 rounded-full glass-pill transition-all duration-300 group-hover:scale-110`, color ? `bg-${color.replace('text-','')}/10` : '')}>{icon}</div>
       <div>
         <p className="font-semibold text-foreground group-hover:text-main-accent transition-colors">{title}</p>
         <p className="text-xs text-gray-500">{date} - {type}</p>
       </div>
     </div>
-    <p className={`font-bold text-lg ${color}`}>{amount}</p>
+    <p className={cn(`font-bold text-lg`, color)}>{amount}</p>
   </div>
 );
 
-const BalanceCard = ({ title, balance, icon, color, progress }: { title: string, balance: string, icon: React.ReactNode, color: string, progress: number }) => {
+const BalanceCard = ({ title, balance, icon, color, progress, isLoading }: { title: string, balance: number, icon: React.ReactNode, color: string, progress: number, isLoading: boolean }) => {
     const accentColor = color;
     
     return (
     <div className="glass-card p-6 relative overflow-hidden group">
-        <div className={`absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-${accentColor}/30 rounded-full blur-3xl transition-all duration-500 group-hover:scale-150`}></div>
+        <div className={cn(`absolute -top-1/4 -left-1/4 w-1/2 h-1/2 rounded-full blur-3xl transition-all duration-500 group-hover:scale-150`, `bg-${accentColor}/30`)}></div>
         <div className="relative z-10">
             <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-4xl font-bold text-foreground">{balance}</p>
+                  {isLoading ? <Loader className="w-8 h-8 animate-spin text-gray-400" /> : <p className="text-4xl font-bold text-foreground">{formatCurrency(balance)}</p>}
                   <p className="text-gray-500 mt-1">{title}</p>
                 </div>
                 {React.cloneElement(icon as React.ReactElement, { className: `w-8 h-8 text-${accentColor} transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6`, style: { filter: `drop-shadow(0 0 10px var(--${accentColor}))` } })}
@@ -38,7 +40,7 @@ const BalanceCard = ({ title, balance, icon, color, progress }: { title: string,
                     <span>Spending Limit</span>
                     <span>₹{progress * 100} / ₹10000</span>
                 </div>
-                <Progress value={progress} className={`h-2 bg-gray-200 [&>div]:bg-${accentColor}`} />
+                <Progress value={progress} className={cn(`h-2 bg-gray-200 [&>div]:bg-${accentColor}`)} />
             </div>
         </div>
     </div>
@@ -58,28 +60,82 @@ const ActionMenuItem = ({icon, title, subtitle}: {icon: React.ReactNode, title: 
 );
 
 export default function WalletPage() {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [filter, setFilter] = React.useState('All');
   const filters = ['All', 'Income', 'Outcome', 'Escrow'];
 
-  const transactions = [
-    { icon: <Wallet className="w-5 h-5 text-green-500" />, title: "Task Payment: Plumber", date: "Dec 4, 2023", amount: "+ ₹500", color: "text-green-500", type: "Income" },
-    { icon: <ArrowUp className="w-5 h-5 text-red-500" />, title: "Material Purchase", date: "Dec 3, 2023", amount: "- ₹150", color: "text-red-500", type: "Outcome" },
-    { icon: <ArrowDown className="w-5 h-5 text-main-accent" />, title: "Withdrawal to Bank", date: "Dec 1, 2023", amount: "- ₹2,500", color: "text-main-accent", type: "Outcome" },
-    { icon: <Lock className="w-5 h-5 text-yellow-500" />, title: "Payment Locked", date: "Nov 28, 2023", amount: "₹1200", color: "text-yellow-500", type: "Escrow" },
-    { icon: <Wallet className="w-5 h-5 text-green-500" />, title: "Task Payment: Tech Fix", date: "Nov 25, 2023", amount: "+ ₹1200", color: "text-green-500", type: "Income" },
-    { icon: <ArrowUp className="w-5 h-5 text-red-500" />, title: "Platform Fee", date: "Nov 25, 2023", amount: "- ₹60", color: "text-red-500", type: "Outcome" },
-    { icon: <Lock className="w-5 h-5 text-yellow-500" />, title: "Payment Locked: Cleaning", date: "Nov 22, 2023", amount: "₹2500", color: "text-yellow-500", type: "Escrow" },
-    { icon: <Wallet className="w-5 h-5 text-green-500" />, title: "Bonus Payout", date: "Nov 20, 2023", amount: "+ ₹300", color: "text-green-500", type: "Income" },
-  ];
-  
-  const filteredTransactions = transactions.filter(t => filter === 'All' || t.type === filter);
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
 
+  const transactionsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    const baseQuery = query(
+      collection(firestore, 'transactions'),
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc')
+    );
+    if (filter !== 'All') {
+      return query(baseQuery, where('type', '==', filter.toLowerCase()));
+    }
+    return baseQuery;
+  }, [firestore, user, filter]);
+
+  const { data: transactions, isLoading: isTransactionsLoading } = useCollection(transactionsQuery);
+
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'release':
+      case 'add':
+        return <Wallet className="w-5 h-5 text-green-500" />;
+      case 'withdraw':
+        return <ArrowDown className="w-5 h-5 text-main-accent" />;
+      case 'lock':
+        return <Lock className="w-5 h-5 text-yellow-500" />;
+      default:
+        return <ArrowUp className="w-5 h-5 text-red-500" />;
+    }
+  };
+  
+  const getTransactionColor = (type: string) => {
+      switch (type) {
+          case 'release':
+          case 'add':
+              return "text-green-500";
+          case 'withdraw':
+              return "text-main-accent";
+          case 'lock':
+              return "text-yellow-500";
+          default:
+              return "text-red-500";
+      }
+  };
+
+  const getTransactionAmount = (transaction: any) => {
+      switch (transaction.type) {
+          case 'release':
+          case 'add':
+              return `+ ${formatCurrency(transaction.amount)}`;
+          case 'withdraw':
+          case 'lock':
+               return `- ${formatCurrency(transaction.amount)}`;
+          default:
+              return formatCurrency(transaction.amount);
+      }
+  };
+  
   const VerificationBanner = () => (
     <div className="flex items-center justify-center gap-2 text-yellow-600 text-sm glass-card p-2 px-4 cursor-pointer hover:bg-yellow-500/10 transition-all transform hover:scale-105">
         <AlertTriangle className="w-4 h-4" />
         <span>ID Verification Needed for Higher Limits</span>
     </div>
   );
+
+  const availableBalance = userData?.walletBalance ?? 0;
+  const lockedBalance = transactions?.filter(t => t.type === 'lock' && t.status === 'success').reduce((acc, t) => acc + t.amount, 0) ?? 0;
 
   return (
     <>
@@ -91,17 +147,19 @@ export default function WalletPage() {
       <section className="flex flex-col gap-6">
         <BalanceCard 
             title="Available Balance"
-            balance="₹2,500"
+            balance={availableBalance}
             icon={<Wallet />}
             color="green-500"
-            progress={25}
+            progress={isUserLoading ? 0 : (availableBalance / 10000) * 100}
+            isLoading={isUserLoading}
         />
         <BalanceCard 
             title="Locked in Escrow"
-            balance="₹3700"
+            balance={lockedBalance}
             icon={<Lock />}
             color="yellow-500"
-            progress={37}
+            progress={isTransactionsLoading ? 0 : (lockedBalance / 10000) * 100}
+            isLoading={isTransactionsLoading}
         />
       </section>
 
@@ -148,15 +206,19 @@ export default function WalletPage() {
           ))}
         </div>
         
-        <div className="flex flex-col gap-3 glass-card p-4">
-          {filteredTransactions.length > 0 ? filteredTransactions.map((item, index) => (
+        <div className="flex flex-col gap-3 glass-card p-4 min-h-[200px]">
+          {isTransactionsLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+          ) : (filteredTransactions && filteredTransactions.length > 0) ? filteredTransactions.map((item: any) => (
             <TransactionItem
-              key={index}
-              icon={item.icon}
-              title={item.title}
-              date={item.date}
-              amount={item.amount}
-              color={item.color}
+              key={item.id}
+              icon={getTransactionIcon(item.type)}
+              title={item.taskId ? `Task: ${item.taskId.slice(0,6)}...` : 'Wallet Action'}
+              date={new Date(item.timestamp.toDate()).toLocaleDateString()}
+              amount={getTransactionAmount(item)}
+              color={getTransactionColor(item.type)}
               type={item.type}
             />
           )) : (
@@ -171,3 +233,5 @@ export default function WalletPage() {
     </>
   );
 }
+
+    
