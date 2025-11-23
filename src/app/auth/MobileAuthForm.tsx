@@ -43,35 +43,22 @@ export default function MobileAuthForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [step, setStep] = React.useState<'phone' | 'otp'>('phone');
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
-  const [recaptchaResolved, setRecaptchaResolved] = React.useState(false);
   const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
-  const recaptchaContainerRef = React.useRef<HTMLDivElement>(null);
+  const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
 
-  const phoneForm = useForm<z.infer<typeof phoneSchema>>({
-    resolver: zodResolver(phoneSchema),
-    defaultValues: { phone: '+91' },
-  });
-
-  const otpForm = useForm<z.infer<typeof otpSchema>>({
-    resolver: zodResolver(otpSchema),
-    defaultValues: { otp: '' },
-  });
 
   React.useEffect(() => {
-    if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
-      recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        'size': 'compact',
-        'callback': () => {
-          setRecaptchaResolved(true);
-        },
-        'expired-callback': () => {
-          setRecaptchaResolved(false);
-          toast({ variant: 'destructive', title: 'reCAPTCHA expired. Please try again.' });
-        },
-      });
-      recaptchaVerifierRef.current.render();
+    if (!auth) return;
+
+    // Create the verifier once and associate it with the button
+    if (!recaptchaVerifierRef.current && sendOtpButtonRef.current) {
+        recaptchaVerifierRef.current = new FirebaseRecaptchaVerifier(
+            auth,
+            sendOtpButtonRef.current, 
+            { 'size': 'invisible' }
+        );
     }
-  }, [auth, toast]);
+  }, [auth]);
 
 
   React.useEffect(() => {
@@ -83,7 +70,7 @@ export default function MobileAuthForm() {
   const onPhoneSubmit = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
     if (!recaptchaVerifierRef.current) {
-      toast({ variant: 'destructive', title: 'reCAPTCHA not initialized.' });
+      toast({ variant: 'destructive', title: 'reCAPTCHA not ready. Please wait a moment and try again.' });
       setIsLoading(false);
       return;
     }
@@ -94,21 +81,15 @@ export default function MobileAuthForm() {
       setStep('otp');
       toast({ title: 'OTP Sent!', description: `An OTP has been sent to ${values.phone}.` });
     } catch (error: any) {
+      console.error("OTP Send Error:", error);
       toast({
         variant: 'destructive',
         title: 'Failed to Send OTP',
-        description: error.message || 'An unknown error occurred.',
+        description: error.message || 'An unknown error occurred. Please ensure your domain is authorized in Firebase console.',
       });
-       // Important: Reset reCAPTCHA on failure
-      if (recaptchaVerifierRef.current) {
-        const widgetId = recaptchaVerifierRef.current.widgetId;
-        // @ts-ignore
-        if (window.grecaptcha && typeof window.grecaptcha.reset === 'function') {
-            // @ts-ignore
-            window.grecaptcha.reset(widgetId);
-        }
-      }
-      setRecaptchaResolved(false);
+      // In case of error, reset the verifier if it exists
+      recaptchaVerifierRef.current?.clear();
+
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +104,7 @@ export default function MobileAuthForm() {
       return;
     }
     try {
+      // This part is non-blocking. The onAuthStateChanged listener will handle success.
       await confirmOtpCode(confirmationResult, values.otp);
       toast({ title: 'Success!', description: 'You are now logged in.' });
     } catch (error: any) {
@@ -162,11 +144,11 @@ export default function MobileAuthForm() {
                 </FormItem>
               )}
             />
-            <div ref={recaptchaContainerRef} className="flex justify-center"></div>
             <Button 
+                ref={sendOtpButtonRef}
                 type="submit" 
                 className="w-full h-12 text-lg font-bold cyan-glow-button" 
-                disabled={isLoading || !recaptchaResolved}
+                disabled={isLoading}
             >
               {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
               Send OTP
