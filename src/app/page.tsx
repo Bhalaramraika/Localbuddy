@@ -26,7 +26,7 @@ const getImage = (id: string) =>
 
 const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: string, tag: string }) => (
     <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/10">
-        <Image src={imageUrl} alt={title} layout="fill" objectFit="cover" className="transition-transform duration-500 group-hover:scale-110" />
+        <Image src={imageUrl} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
         <div className={`absolute top-2 right-2 bg-neon-pink/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--neon-pink)] transition-all duration-300 group-hover:bg-neon-pink`}>
             {tag}
