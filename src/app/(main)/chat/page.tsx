@@ -38,7 +38,7 @@ const MessageBubble = ({ message, isCurrentUser }: { message: { content: string 
             'max-w-xs lg:max-w-md px-5 py-3 rounded-2xl glass-card',
             isCurrentUser ? 'bg-white/20 rounded-br-lg' : 'bg-blue-500/20 border-blue-400/20 rounded-bl-lg'
         )}>
-            <p className="text-white">{message.content}</p>
+            <p className="text-white drop-shadow-md">{message.content}</p>
         </div>
     </div>
 );
@@ -61,7 +61,7 @@ const VoiceMessageBubble = () => (
 const ActionHub = () => (
     <div className="fixed bottom-24 left-0 right-0 z-30 p-3 md:p-5 md:bottom-5">
         <div className="glass-card p-4 space-y-4">
-            <h3 className="text-lg font-bold text-white px-2">Action Hub</h3>
+            <h3 className="text-lg font-bold text-white px-2 drop-shadow-md">Action Hub</h3>
             <div className="relative">
                 <Input placeholder="Your text here..." className="glass-card border-none rounded-full h-12 pl-5 pr-12 text-white placeholder:text-white/60" />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

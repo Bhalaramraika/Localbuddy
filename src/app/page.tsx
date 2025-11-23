@@ -10,27 +10,27 @@ export default function LoginPage() {
       <div className="w-full max-w-md mx-auto p-8 animate-fade-in-up">
         <div className="glass-card p-8 text-center shadow-2xl">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-primary/20 rounded-full inline-block">
+            <div className="p-4 bg-primary/20 rounded-full inline-block glass-card">
                 <Icons.logo className="h-16 w-16 text-primary" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-2 font-headline">
+          <h1 className="text-4xl font-bold text-foreground mb-2 font-headline drop-shadow-md">
             Local Buddy Pro
           </h1>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-8 drop-shadow-sm">
             Your friendly neighborhood task app.
-          셔</p>
+          </p>
 
           <div className="space-y-4">
             <Button
-              className="w-full h-14 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+              className="w-full h-14 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cyan-glow"
               asChild
             >
               <Link href="/home">
                 Login
               </Link>
             </Button>
-            <Button variant="ghost" className="w-full h-14 text-lg font-semibold text-muted-foreground" asChild>
+            <Button variant="ghost" className="w-full h-14 text-lg font-semibold text-muted-foreground glass-card" asChild>
               <Link href="/home">Continue as Guest</Link>
             </Button>
           </div>

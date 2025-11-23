@@ -15,8 +15,8 @@ const ProfileHeader = () => (
         <CheckCircle className="h-5 w-5 text-white" />
       </div>
     </div>
-    <h1 className="text-2xl font-bold text-center text-white mt-4">Rahul Smith</h1>
-    <p className="text-white/70">Level 2: Pro</p>
+    <h1 className="text-2xl font-bold text-center text-white mt-4 drop-shadow-md">Rahul Smith</h1>
+    <p className="text-white/70 drop-shadow-sm">Level 2: Pro</p>
   </div>
 );
 
@@ -27,7 +27,7 @@ const XPProgress = () => {
             <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                     <Star className="h-5 w-5 text-secondary" />
-                    <p className="text-sm font-semibold text-white">XP: 350 / 500</p>
+                    <p className="text-sm font-semibold text-white drop-shadow-md">XP: 350 / 500</p>
                 </div>
             </div>
             <Progress value={xpPercentage} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-primary" />
@@ -39,16 +39,16 @@ const Stats = () => (
     <div className="glass-card p-6 mx-4">
         <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-                <p className="text-2xl font-bold text-white">₹12,500</p>
-                <p className="text-xs text-white/70">Total Earnings</p>
+                <p className="text-2xl font-bold text-white drop-shadow-md">₹12,500</p>
+                <p className="text-xs text-white/70 drop-shadow-sm">Total Earnings</p>
             </div>
             <div>
-                <p className="text-2xl font-bold text-white">25</p>
-                <p className="text-xs text-white/70">Tasks</p>
+                <p className="text-2xl font-bold text-white drop-shadow-md">25</p>
+                <p className="text-xs text-white/70 drop-shadow-sm">Tasks</p>
             </div>
              <div>
-                <p className="text-2xl font-bold text-white flex items-center justify-center gap-1">4.8 <Star className="h-4 w-4 text-secondary"/></p>
-                <p className="text-xs text-white/70">Rating</p>
+                <p className="text-2xl font-bold text-white flex items-center justify-center gap-1 drop-shadow-md">4.8 <Star className="h-4 w-4 text-secondary"/></p>
+                <p className="text-xs text-white/70 drop-shadow-sm">Rating</p>
             </div>
         </div>
     </div>
@@ -62,14 +62,14 @@ const badges = [
 
 const Badges = () => (
     <div className="glass-card p-6 mx-4">
-        <h3 className="font-semibold mb-4 text-lg text-white">Badges Case</h3>
+        <h3 className="font-semibold mb-4 text-lg text-white drop-shadow-md">Badges Case</h3>
         <div className="grid grid-cols-3 gap-4">
             {badges.map(badge => (
                 <div key={badge.name} className="flex flex-col items-center text-center p-2 rounded-lg glass-card">
                     <div className="p-3 bg-black/20 rounded-full mb-2">
                         <badge.icon className={`h-8 w-8 ${badge.color}`} />
                     </div>
-                    <p className="text-xs font-semibold text-white/80">{badge.name}</p>
+                    <p className="text-xs font-semibold text-white/80 drop-shadow-sm">{badge.name}</p>
                 </div>
             ))}
         </div>

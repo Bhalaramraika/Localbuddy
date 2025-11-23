@@ -8,15 +8,15 @@ const WalletSummary = () => (
              <div className="flex items-start justify-between">
                 <WalletIcon className="h-8 w-8 text-success" />
             </div>
-            <p className="text-5xl font-bold font-headline mt-4 text-white">₹2,500</p>
-            <p className="text-sm text-white/70 mt-1">Available Balance</p>
+            <p className="text-5xl font-bold font-headline mt-4 text-white drop-shadow-md">₹2,500</p>
+            <p className="text-sm text-white/70 mt-1 drop-shadow-sm">Available Balance</p>
         </div>
         <div className="glass-card overflow-hidden relative p-6 gold-glow">
              <div className="flex items-start justify-between">
                 <Lock className="h-8 w-8 text-secondary" />
             </div>
-            <p className="text-5xl font-bold font-headline mt-4 text-white">₹500</p>
-            <p className="text-sm text-white/70 mt-1">Locked in Escrow</p>
+            <p className="text-5xl font-bold font-headline mt-4 text-white drop-shadow-md">₹500</p>
+            <p className="text-sm text-white/70 mt-1 drop-shadow-sm">Locked in Escrow</p>
         </div>
     </div>
 );
@@ -28,7 +28,7 @@ const WalletActions = () => (
         </Button>
         <div className="flex items-center justify-center gap-2 p-2 text-secondary">
             <AlertTriangle className="h-4 w-4" />
-            <p className="text-xs font-semibold">ID Verification Needed</p>
+            <p className="text-xs font-semibold drop-shadow-sm">ID Verification Needed</p>
         </div>
     </div>
 );
@@ -41,7 +41,7 @@ const transactions = [
 
 const TransactionHistory = () => (
     <div className="glass-card p-4">
-        <h2 className="text-xl font-bold text-white mb-4 px-2">Transaction History</h2>
+        <h2 className="text-xl font-bold text-white mb-4 px-2 drop-shadow-md">Transaction History</h2>
         <div className="glass-card p-2">
              <div className="divide-y divide-white/10">
                 {transactions.map(tx => (
@@ -51,11 +51,11 @@ const TransactionHistory = () => (
                                 <WalletIcon className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="font-semibold text-white">{tx.title}</p>
-                                <p className="text-sm text-white/70">{tx.date}</p>
+                                <p className="font-semibold text-white drop-shadow-md">{tx.title}</p>
+                                <p className="text-sm text-white/70 drop-shadow-sm">{tx.date}</p>
                             </div>
                         </div>
-                        <p className={cn("font-bold text-lg", tx.color)}>{tx.amount}</p>
+                        <p className={cn("font-bold text-lg drop-shadow-md", tx.color)}>{tx.amount}</p>
                     </div>
                 ))}
             </div>
@@ -66,7 +66,7 @@ const TransactionHistory = () => (
 export default function WalletPage() {
   return (
     <div className="p-4 space-y-8">
-        <h1 className="text-3xl font-bold text-white pt-4">Wallet</h1>
+        <h1 className="text-3xl font-bold text-white pt-4 drop-shadow-lg">Wallet</h1>
         <WalletSummary />
         <WalletActions />
         <TransactionHistory />

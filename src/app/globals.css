@@ -52,6 +52,10 @@
   body {
     @apply bg-background text-foreground;
     background: linear-gradient(to bottom right, rgb(var(--background-start-rgb)), rgb(var(--background-mid-rgb)), rgb(var(--background-end-rgb)));
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
 }
 

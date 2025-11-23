@@ -18,7 +18,7 @@ const HomeHeader = () => (
         <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse border-2 border-background"></span>
       </div>
       <div className="pill-chip glass-card">
-        <p className="font-semibold text-sm text-white">Wallet: ₹1,500</p>
+        <p className="font-semibold text-sm text-white drop-shadow-md">Wallet: ₹1,500</p>
       </div>
     </div>
   </div>
@@ -48,7 +48,7 @@ const Stories = () => (
                 <AvatarFallback>{story.label.charAt(0)}</AvatarFallback>
               </Avatar>
             </div>
-            <p className="text-xs font-medium text-white/90 truncate w-full">{story.label}</p>
+            <p className="text-xs font-medium text-white/90 truncate w-full drop-shadow-sm">{story.label}</p>
           </div>
         ))}
       </div>
@@ -67,8 +67,8 @@ const FilterChips = () => {
                 <div 
                     key={category} 
                     className={cn(
-                        "pill-chip glass-card text-white/90",
-                         index === 0 && "bg-primary/20 border-primary/30 text-white"
+                        "pill-chip glass-card text-white/90 drop-shadow-sm",
+                         index === 0 && "bg-primary/20 border-primary/30 text-white font-bold"
                     )}
                 >
                     {category}
@@ -86,11 +86,11 @@ const TaskCard = () => (
     <div className="glass-card overflow-hidden shadow-lg animate-fade-in-up relative mx-4">
         <div className="absolute top-4 right-4 pill-chip glass-card bg-destructive/50 text-white text-xs px-3 h-7">Urgent</div>
       <div className="p-6 flex flex-col items-center text-center">
-        <h3 className="font-bold text-2xl text-white mt-4">Need Plumber ASAP</h3>
-        <p className="text-5xl font-bold text-success my-4">₹500</p>
+        <h3 className="font-bold text-2xl text-white mt-4 drop-shadow-md">Need Plumber ASAP</h3>
+        <p className="text-5xl font-bold text-success my-4 drop-shadow-[0_2px_4px_rgba(0,255,148,0.5)]">₹500</p>
         
         <div className="glass-card bg-destructive/20 p-2 rounded-lg text-center mb-6 w-full">
-            <p className="text-xs text-destructive font-semibold">Countdown: 00:02:35:34</p>
+            <p className="text-xs text-destructive font-semibold drop-shadow-md">Countdown: 00:02:35:34</p>
         </div>
 
         <Button size="lg" className="w-full h-14 glass-card bg-primary/20 border-primary/30 text-primary-foreground font-bold text-base cyan-glow">
