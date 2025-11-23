@@ -42,14 +42,14 @@ const ChatMessage = ({ text, isOutgoing, time, senderDetails, currentUserDetails
     
     return (
         <div className={cn("flex items-end gap-2", isOutgoing ? "justify-end" : "justify-start")}>
-            {!isOutgoing && <UserAvatar imageUrl={avatarUrl || getImage('user2')?.imageUrl || ''} alt={senderDetails?.name || 'User'} borderColor={borderColor} />}
+            {!isOutgoing && avatarUrl && <UserAvatar imageUrl={avatarUrl} alt={senderDetails?.name || 'User'} borderColor={borderColor} />}
             <div className="flex flex-col">
                 <MessageBubble isOutgoing={isOutgoing}>
                     {text}
                 </MessageBubble>
                 <MessageTimestamp time={time} isOutgoing={isOutgoing} />
             </div>
-             {isOutgoing && <UserAvatar imageUrl={avatarUrl || ''} alt="My Avatar" borderColor={borderColor} />}
+             {isOutgoing && avatarUrl && <UserAvatar imageUrl={avatarUrl} alt="My Avatar" borderColor={borderColor} />}
         </div>
     );
 };
@@ -203,23 +203,20 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
                 const posterRef = doc(firestore, "users", posterId);
                 const buddyRef = doc(firestore, "users", buddyId);
                 const taskRef = doc(firestore, "tasks", taskId);
-                const transactionRef = doc(collection(firestore, 'transactions'));
     
-                const posterDoc = await transaction.get(posterRef);
                 const buddyDoc = await transaction.get(buddyRef);
     
-                if (!posterDoc.exists() || !buddyDoc.exists()) {
+                if (!buddyDoc.exists()) {
                     throw "User not found";
                 }
     
-                // 1. Decrement poster's balance (not needed, balance is virtual)
-                // 2. Increment buddy's balance
+                // 1. Increment buddy's balance
                 transaction.update(buddyRef, { walletBalance: increment(budget), xp: increment(10) }); // Also add XP
     
-                // 3. Update task status to 'paid'
+                // 2. Update task status to 'paid'
                 transaction.update(taskRef, { status: 'paid' });
     
-                // 4. Create transaction record for buddy (income)
+                // 3. Create transaction record for buddy (income)
                 const buddyTransaction = {
                     userId: buddyId,
                     taskId,
@@ -230,7 +227,7 @@ const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any)
                 };
                 transaction.set(doc(collection(firestore, 'transactions')), buddyTransaction);
 
-                 // 5. Create transaction record for poster (outcome)
+                 // 4. Create transaction record for poster (outcome)
                  const posterTransaction = {
                     userId: posterId,
                     taskId,
@@ -321,6 +318,7 @@ function ChatPageContent() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [messages, setMessages] = React.useState<any[]>([]);
+  const [participants, setParticipants] = React.useState<any>({});
 
   const taskDocRef = useMemoFirebase(() => {
     if (!firestore || !taskId) return null;
@@ -354,30 +352,32 @@ function ChatPageContent() {
 
   const { data: liveMessages } = useCollection(messagesQuery);
 
-    // Create a map of senderId to user details
-    const [participants, setParticipants] = React.useState<any>({});
-
     React.useEffect(() => {
         if (liveMessages && firestore && user) {
             const participantIds = [...new Set(liveMessages.map(msg => msg.senderId))];
             
             const fetchParticipants = async () => {
                 const usersData: any = {};
+                const currentParticipants = participants;
+                let needsUpdate = false;
                 for (const id of participantIds) {
-                    if (!participants[id]) { // Fetch only if not already fetched
+                    if (!currentParticipants[id]) { // Fetch only if not already fetched
                         const userDoc = await getDoc(doc(firestore, 'users', id));
                         if (userDoc.exists()) {
                             usersData[id] = userDoc.data();
+                            needsUpdate = true;
                         }
                     }
                 }
-                setParticipants(prev => ({ ...prev, ...usersData }));
+                if (needsUpdate) {
+                    setParticipants(prev => ({ ...prev, ...usersData }));
+                }
             };
 
             fetchParticipants();
             setMessages(liveMessages);
         }
-    }, [liveMessages, firestore, participants, user]);
+    }, [liveMessages, firestore, user]);
 
 
 
