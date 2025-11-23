@@ -10,7 +10,7 @@ export default function LoginPage() {
                 <p className="text-gray-500 mt-2">Log in to continue your journey in the cyber-verse.</p>
             </header>
             <AuthForm mode="login" />
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-gray-500 mt-6">
                 Don&apos;t have an account?{' '}
                 <Link href="/auth/signup" className="font-semibold text-main-accent hover:underline">
                     Sign up

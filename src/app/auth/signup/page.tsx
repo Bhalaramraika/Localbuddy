@@ -10,7 +10,7 @@ export default function SignupPage() {
                 <p className="text-gray-500 mt-2">Join the ranks of elite task runners.</p>
             </header>
             <AuthForm mode="signup" />
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-gray-500 mt-6">
                 Already have an account?{' '}
                 <Link href="/auth/login" className="font-semibold text-main-accent hover:underline">
                     Log in

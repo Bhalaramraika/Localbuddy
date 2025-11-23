@@ -18,12 +18,14 @@ import { useAuth, useFirestore, useUser } from '@/firebase';
 import {
   initiateEmailSignUp,
   initiateEmailSignIn,
+  initiateGoogleSignIn,
 } from '@/firebase/non-blocking-login';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 import * as React from 'react';
 import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { GoogleIcon } from '@/components/ui/icons';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -55,39 +57,20 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   React.useEffect(() => {
     if (!isUserLoading && user) {
-        router.push('/');
+      router.push('/');
     }
   }, [user, isUserLoading, router]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleGoogleSignIn = () => {
+    initiateGoogleSignIn(auth);
+    // Non-blocking, user creation will be handled by the auth state change listener.
+  }
+
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
     setIsLoading(true);
     try {
       if (mode === 'signup') {
         initiateEmailSignUp(auth, values.email, values.password);
-        
-        // We can't get the user immediately, so we'll rely on the auth state listener to create the user doc.
-        // This is a simplification. A more robust solution might use a cloud function.
-        const unsubscribe = auth.onAuthStateChanged(newUser => {
-            if (newUser && newUser.email === values.email) {
-                const userRef = doc(firestore, 'users', newUser.uid);
-                setDocumentNonBlocking(userRef, {
-                    id: newUser.uid,
-                    name: newUser.email, // default name
-                    photoUrl: '',
-                    location: '',
-                    walletBalance: 1000, // starting balance
-                    xp: 0,
-                    level: 'Rookie',
-                    verificationStatus: 'pending',
-                    mobileVerified: false,
-                    aadharVerified: false,
-                    joinDate: new Date().toISOString(),
-                }, { merge: true });
-                unsubscribe();
-            }
-        });
-
-
         toast({
           title: 'Account Created!',
           description: "We're setting up your profile. Redirecting...",
@@ -121,48 +104,62 @@ export default function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 glass-card p-8">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="you@example.com"
-                  {...field}
-                  className="glass-card"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  {...field}
-                  className="glass-card"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full h-12 text-lg font-bold cyan-glow-button" disabled={isLoading}>
-          {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
-          {mode === 'login' ? 'Log In' : 'Sign Up'}
-        </Button>
-      </form>
-    </Form>
+    <div className="glass-card p-8">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="you@example.com"
+                    {...field}
+                    className="glass-card"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    {...field}
+                    className="glass-card"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" className="w-full h-12 text-lg font-bold cyan-glow-button" disabled={isLoading}>
+            {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
+            {mode === 'login' ? 'Log In' : 'Sign Up'}
+          </Button>
+        </form>
+      </Form>
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white/60 px-2 text-gray-500 backdrop-blur-sm">Or continue with</span>
+        </div>
+      </div>
+      <Button variant="outline" className="w-full h-12 text-md glass-card border-gray-300 hover:bg-gray-100 hover:text-foreground transition-all transform hover:scale-105" onClick={handleGoogleSignIn}>
+          <GoogleIcon className="mr-3 h-5 w-5" />
+          Continue with Google
+      </Button>
+    </div>
   );
 }
