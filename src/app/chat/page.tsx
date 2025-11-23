@@ -328,13 +328,13 @@ function ChatPageContent() {
   const { data: taskData, isLoading: isTaskLoading } = useDoc(taskDocRef);
 
   const chatQuery = useMemoFirebase(() => {
-      if (!firestore || !taskId) return null;
-      return query(collection(firestore, 'chats'), where('taskId', '==', taskId));
-  }, [firestore, taskId]);
+      if (!firestore || !taskId || !user) return null;
+      return query(collection(firestore, 'chats'), where('taskId', '==', taskId), where('participantIds', 'array-contains', user.uid));
+  }, [firestore, taskId, user]);
 
-  const { data: chatData } = useCollection(chatQuery);
+  const { data: chatData, error: chatError } = useCollection(chatQuery);
   const chatId = chatData && chatData.length > 0 ? chatData[0].id : null;
-
+  
   const participantIds = taskData ? [taskData.posterId, taskData.buddyId].filter(Boolean) : [];
   const otherParticipantId = participantIds.find(id => id !== user?.uid);
   

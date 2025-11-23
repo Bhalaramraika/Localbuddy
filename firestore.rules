@@ -45,7 +45,10 @@ service cloud.firestore {
 
     // Chat is restricted to participants.
     match /chats/{chatId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      // Allow list (query) if the user is a participant in the queried chats.
+      allow list: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      // Allow get, write, update for individual chat documents.
+      allow get, write, update: if request.auth != null && request.auth.uid in resource.data.participantIds;
       
       match /messages/{messageId} {
       	 allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
