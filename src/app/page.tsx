@@ -19,7 +19,7 @@ import * as React from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
 
 const getImage = (id: string) =>
@@ -135,13 +135,16 @@ const HeaderNotificationBell = () => (
     </div>
 );
 
-const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, description: string }}) => (
+const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, description: string }}) => {
+    const defaultAvatar = getImage('user5');
+    const avatar = userAvatar?.imageUrl ? userAvatar : defaultAvatar;
+    return (
     <>
-    {userAvatar && (
+    {avatar && (
         <div className="glass-card p-1 rounded-full hover:border-black/20 border-2 border-transparent transition-all">
             <Image
-                src={userAvatar.imageUrl}
-                alt={userAvatar.description}
+                src={avatar.imageUrl}
+                alt={avatar.description}
                 width={48}
                 height={48}
                 className="rounded-full border-2 border-gray-200"
@@ -150,13 +153,13 @@ const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, descrip
     )}
     </>
 );
+};
 
 const MainHeader = ({ userData, isUserLoading }: { userData: any, isUserLoading: boolean }) => {
-    const userAvatar = getImage('user2');
     return (
         <header className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
-                <HeaderAvatar userAvatar={userData?.photoUrl ? { imageUrl: userData.photoUrl, description: 'User avatar' } : userAvatar} />
+                <HeaderAvatar userAvatar={userData?.photoUrl ? { imageUrl: userData.photoUrl, description: 'User avatar' } : undefined} />
                 <HeaderNotificationBell />
             </div>
             <HeaderWalletBalance balance={userData?.walletBalance || 0} isLoading={isUserLoading} />
@@ -164,59 +167,29 @@ const MainHeader = ({ userData, isUserLoading }: { userData: any, isUserLoading:
     );
 };
 
-const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.ElementType, ringColor: string }}) => {
-    const storyImage = getImage(story.id);
-    return (
-        <div
-            key={story.label}
-            className="flex flex-col items-center gap-2 flex-shrink-0 w-24 cursor-pointer group"
-        >
-            <div
-                className={cn(
-                    `relative w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-offset-2 ring-offset-background bg-gray-100/80 glass-pill transition-all duration-300 group-hover:ring-4 overflow-hidden`,
-                    story.ringColor
-                )}
-            >
-                {storyImage ? (
-                    <Image
-                        src={storyImage.imageUrl}
-                        alt={story.label}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                ) : (
-                    <story.Icon className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
-                )}
-            </div>
-            <p className="text-xs text-gray-500 text-center truncate w-full transition-colors duration-300 group-hover:text-foreground">{story.label}</p>
+const QuickActionCard = ({ icon, title, bgColor }: { icon: React.ReactNode, title: string, bgColor: string }) => (
+    <div className="flex-shrink-0 w-36 h-36 flex flex-col items-center justify-center gap-3 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
+        <div className={cn("p-4 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
+            {icon}
         </div>
-    );
-};
-
-const AddStoryButton = () => (
-    <div className="flex-shrink-0 pl-2">
-        <button className="w-16 h-20 rounded-full flex flex-col items-center justify-center glass-pill border-2 border-dashed border-gray-300 transition-all duration-300 hover:border-black/50 hover:text-black hover:scale-105">
-            <Plus className="w-6 h-6 text-gray-400 transition-colors duration-300" />
-            <p className="text-xs text-gray-400 mt-1 transition-colors duration-300">Add</p>
-        </button>
+        <p className="font-bold text-sm text-center text-foreground">{title}</p>
     </div>
 );
 
-const StoriesSection = () => {
-    const stories = [
-        { id: 'story2', label: 'Top Buddies', Icon: Users, ringColor: 'ring-gray-400' },
-        { id: 'story1', label: 'Urgent', Icon: Siren, ringColor: 'ring-red-500' },
-        { id: 'story3', label: 'Safety Tips', Icon: Shield, ringColor: 'ring-blue-500' },
-        { id: 'user3', label: 'Jenny', Icon: User, ringColor: 'ring-green-400' },
-        { id: 'user4', label: 'David', Icon: User, ringColor: 'ring-purple-400' },
+const QuickActionsSection = () => {
+    const actions = [
+        { title: 'Create Task', icon: <Plus className="w-7 h-7 text-white" />, bgColor: 'bg-main-accent' },
+        { title: 'Verify ID', icon: <Shield className="w-7 h-7 text-white" />, bgColor: 'bg-green-500' },
+        { title: 'SOS Alerts', icon: <Siren className="w-7 h-7 text-white" />, bgColor: 'bg-destructive-accent' },
+        { title: 'Refer a Buddy', icon: <Users className="w-7 h-7 text-white" />, bgColor: 'bg-blue-500' },
     ];
     return (
-        <section className="glass-card p-4 w-full">
-            <div className="flex items-center">
-                <div className="flex space-x-6 overflow-x-auto pb-2 -mx-4 px-4">
-                    {stories.map((story) => <StoryItem key={story.id} story={story} />)}
-                </div>
-                <AddStoryButton />
+        <section className="w-full">
+            <h2 className="text-xl font-bold mb-4 px-2">Quick Actions</h2>
+            <div className="flex items-center gap-4 overflow-x-auto pb-2 -mx-4 px-4">
+                {actions.map((action) => (
+                    <QuickActionCard key={action.title} {...action} />
+                ))}
             </div>
         </section>
     );
@@ -259,7 +232,8 @@ export default function HomePage() {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
-  // Note: We're not using useDoc here because MainHeader will fetch it. We just need the ref.
+  
+  const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
 
   const tasksQuery = useMemoFirebase(() => {
       if (!firestore) return null;
@@ -335,12 +309,10 @@ export default function HomePage() {
     }
   };
 
-  const { data: userData, isLoading: isUserLoading } = useCollection(userDocRef);
-
   return (
     <>
       <MainHeader userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
-      <StoriesSection />
+      <QuickActionsSection />
       <TaskFilters />
 
       <section className="w-full">
@@ -383,5 +355,3 @@ export default function HomePage() {
     </>
   );
 }
-
-    
