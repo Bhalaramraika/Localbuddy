@@ -19,12 +19,12 @@ const MessageBubble = ({ children, isOutgoing }: { children: React.ReactNode, is
     <div
         className={cn(
             "glass-card max-w-xs p-3 rounded-2xl group relative",
-            isOutgoing ? "rounded-br-lg bg-white/5" : "rounded-bl-lg bg-neon-cyan/10"
+            isOutgoing ? "rounded-br-lg bg-white/10" : "rounded-bl-lg bg-main-accent/10"
         )}
     >
         {children}
         <div className="absolute -bottom-5 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-             <Trash2 className="w-4 h-4 text-red-400 cursor-pointer hover:text-neon-pink" />
+             <Trash2 className="w-4 h-4 text-red-400 cursor-pointer hover:text-destructive-accent" />
         </div>
     </div>
 );
@@ -36,14 +36,14 @@ const MessageTimestamp = ({ time, isOutgoing }: { time: string; isOutgoing: bool
 const ChatMessage = ({ text, isOutgoing, time }: { text: React.ReactNode; isOutgoing: boolean; time: string }) => {
     return (
         <div className={cn("flex items-end gap-2", isOutgoing ? "justify-end" : "justify-start")}>
-            {!isOutgoing && <UserAvatar imageUrl={getImage('user2')?.imageUrl || ''} alt="User" borderColor="border-neon-cyan" />}
+            {!isOutgoing && <UserAvatar imageUrl={getImage('user2')?.imageUrl || ''} alt="User" borderColor="border-main-accent" />}
             <div className="flex flex-col">
                 <MessageBubble isOutgoing={isOutgoing}>
                     {text}
                 </MessageBubble>
                 <MessageTimestamp time={time} isOutgoing={isOutgoing} />
             </div>
-             {isOutgoing && <UserAvatar imageUrl={getImage('user1')?.imageUrl || ''} alt="My Avatar" borderColor="border-neon-gold" />}
+             {isOutgoing && <UserAvatar imageUrl={getImage('user1')?.imageUrl || ''} alt="My Avatar" borderColor="border-secondary-accent" />}
         </div>
     );
 };
@@ -76,10 +76,10 @@ const VoiceNote = ({ duration, progress: initialProgress, isOutgoing }: { durati
     return (
         <div className={cn("flex items-center gap-3 w-52")}>
             <button onClick={togglePlay}>
-                {isPlaying ? <Pause className="w-6 h-6 text-neon-cyan cursor-pointer" /> : <Play className="w-6 h-6 text-neon-cyan cursor-pointer" />}
+                {isPlaying ? <Pause className="w-6 h-6 text-main-accent cursor-pointer" /> : <Play className="w-6 h-6 text-main-accent cursor-pointer" />}
             </button>
             <div className="w-full h-1 bg-gray-500/50 rounded-full relative">
-                <div className="absolute top-0 left-0 h-full bg-neon-cyan" style={{ width: `${progress}%` }}></div>
+                <div className="absolute top-0 left-0 h-full bg-main-accent" style={{ width: `${progress}%` }}></div>
                 <div className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-white rounded-full" style={{ left: `calc(${progress}% - 6px)`}}></div>
             </div>
             <span className="text-xs text-gray-400">{duration}</span>
@@ -92,10 +92,10 @@ const ImageAttachment = ({ imageUrl }: { imageUrl: string }) => (
 );
 
 const LocationAttachment = () => (
-    <div className="flex items-center gap-2 text-neon-cyan p-2 glass-pill rounded-lg cursor-pointer hover:bg-neon-cyan/20">
+    <div className="flex items-center gap-2 text-main-accent p-2 glass-pill rounded-lg cursor-pointer hover:bg-main-accent/20">
         <MapPin className="w-6 h-6" />
         <div>
-            <p className="font-bold text-sm">Location Shared</p>
+            <p className="font-bold text-sm text-white">Location Shared</p>
             <p className="text-xs">Click to view map</p>
         </div>
     </div>
@@ -113,23 +113,23 @@ const ChatHeader = () => {
                         alt="Rahul's Avatar"
                         width={40}
                         height={40}
-                        className="rounded-full border-2 border-neon-cyan"
+                        className="rounded-full border-2 border-main-accent"
                     />
                 )}
                 <div>
                     <span className="font-bold text-lg">Rahul</span>
-                    <p className="text-xs text-neon-green flex items-center gap-1">
-                        <span className="w-2 h-2 bg-neon-green rounded-full inline-block animate-pulse"></span>
+                    <p className="text-xs text-green-400 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse"></span>
                         Online
                     </p>
                 </div>
             </div>
             <div className="flex items-center gap-4">
-                <Phone className="w-6 h-6 cursor-pointer hover:text-neon-cyan transition-colors" />
-                <div className="relative px-4 py-1.5 rounded-full bg-neon-pink/80 cursor-pointer shadow-[0_0_10px_var(--neon-pink)] hover:bg-neon-pink transition-all hover:scale-110">
+                <Phone className="w-6 h-6 cursor-pointer hover:text-main-accent transition-colors" />
+                <div className="relative px-4 py-1.5 rounded-full bg-destructive-accent/80 cursor-pointer shadow-[0_0_10px_var(--destructive-accent)] hover:bg-destructive-accent transition-all hover:scale-110">
                     <span className="font-bold text-sm">SOS</span>
                 </div>
-                <MoreVertical className="w-6 h-6 cursor-pointer hover:text-neon-cyan transition-colors" />
+                <MoreVertical className="w-6 h-6 cursor-pointer hover:text-main-accent transition-colors" />
             </div>
         </header>
     );
@@ -138,9 +138,9 @@ const ChatHeader = () => {
 const AttachmentMenu = ({ onSelect }: { onSelect: (type: string) => void }) => (
     <div className="absolute bottom-32 left-4 w-48 glass-card p-2 rounded-lg shadow-lg">
         <div className="flex flex-col gap-1">
-            <button onClick={() => onSelect('camera')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><Camera className="w-5 h-5 text-neon-cyan"/> Photo/Video</button>
-            <button onClick={() => onSelect('document')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><FileText className="w-5 h-5 text-neon-gold"/> Document</button>
-            <button onClick={() => onSelect('location')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><MapPin className="w-5 h-5 text-neon-green"/> Location</button>
+            <button onClick={() => onSelect('camera')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><Camera className="w-5 h-5 text-main-accent"/> Photo/Video</button>
+            <button onClick={() => onSelect('document')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><FileText className="w-5 h-5 text-secondary-accent"/> Document</button>
+            <button onClick={() => onSelect('location')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><MapPin className="w-5 h-5 text-green-400"/> Location</button>
         </div>
     </div>
 );
@@ -169,26 +169,26 @@ const ChatFooter = ({ onSend }: { onSend: (message: any) => void }) => {
             <div className="glass-card p-4">
                 <div className="relative flex items-center w-full mb-4">
                     <button onClick={() => setShowAttachments(!showAttachments)} className="absolute left-4 z-10">
-                        <Paperclip className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
+                        <Paperclip className="w-6 h-6 text-gray-400 cursor-pointer hover:text-main-accent" />
                     </button>
                     <Input
                         type="text"
                         placeholder="Your text here..."
-                        className="glass-card w-full h-12 px-12 rounded-full border-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+                        className="glass-card w-full h-12 px-12 rounded-full border-none focus-visible:ring-2 focus-visible:ring-main-accent"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                     />
                     <div className="absolute right-4 flex items-center gap-3">
-                        <Camera className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
-                        <Mic className="w-6 h-6 text-gray-400 cursor-pointer hover:text-neon-cyan" />
+                        <Camera className="w-6 h-6 text-gray-400 cursor-pointer hover:text-main-accent" />
+                        <Mic className="w-6 h-6 text-gray-400 cursor-pointer hover:text-main-accent" />
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" className="flex-1 h-14 text-lg font-bold rounded-full glass-card border-neon-gold/50 text-neon-gold hover:bg-neon-gold/10 hover:text-neon-gold">
+                    <Button variant="outline" className="flex-1 h-14 text-lg font-bold rounded-full glass-card border-secondary-accent/50 text-secondary-accent hover:bg-secondary-accent/10 hover:text-secondary-accent">
                     Request Payment
                     </Button>
-                    <Button onClick={handleSend} className="flex-1 h-14 text-lg font-bold rounded-full" style={{ background: 'linear-gradient(90deg, var(--neon-gold), #ffc107)', color: '#000', boxShadow: '0 0 20px var(--neon-gold)'}}>
+                    <Button onClick={handleSend} className="flex-1 h-14 text-lg font-bold rounded-full cyan-glow-button">
                     <Send className="w-5 h-5 mr-2" /> Send
                     </Button>
                 </div>

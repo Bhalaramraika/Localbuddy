@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --background-start-rgb: 10, 10, 25;
-    --background-end-rgb: 25, 25, 50;
+    --background-start-rgb: 10, 10, 10;
+    --background-end-rgb: 25, 25, 25;
     --background-gradient: linear-gradient(to bottom right, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
 
     --border: 214.3 31.8% 91.4%;
@@ -33,10 +33,10 @@
     
     --font-sans: 'Poppins', sans-serif;
 
-    --neon-cyan: #00F0FF;
-    --neon-green: #00FF94;
-    --neon-gold: #FFD700;
-    --neon-pink: #FF2E63;
+    --main-accent: #FFFFFF;
+    --secondary-accent: #A9A9A9;
+    --highlight: #FFFFFF;
+    --destructive-accent: #FF4747;
   }
 }
 
@@ -51,32 +51,32 @@
 
 @layer components {
   .glass-card {
-    background-color: rgba(0, 122, 255, 0.1);
+    background-color: rgba(40, 40, 40, 0.4);
     -webkit-backdrop-filter: blur(32px);
     backdrop-filter: blur(32px);
-    border: 1px solid rgba(0, 122, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   .glass-pill {
-    background-color: rgba(0, 122, 255, 0.12);
+    background-color: rgba(40, 40, 40, 0.5);
     -webkit-backdrop-filter: blur(32px);
     backdrop-filter: blur(32px);
-    border: 1px solid rgba(0, 122, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
   }
   
   .pill-active {
-    background: linear-gradient(90deg, var(--neon-cyan), #00b8d4);
-    color: #0f0c29;
-    box-shadow: 0 0 15px var(--neon-cyan);
+    background: var(--main-accent);
+    color: #000;
+    box-shadow: 0 0 15px var(--main-accent);
   }
 
   .cyan-glow-button {
-    background: linear-gradient(90deg, #00c6ff, #0072ff);
-    box-shadow: 0 0 20px #00c6ff, 0 0 30px #0072ff;
-    color: white;
+    background: linear-gradient(90deg, #E0E0E0, #FFFFFF);
+    box-shadow: 0 0 20px #FFFFFF, 0 0 30px #E0E0E0;
+    color: black;
     font-weight: bold;
     border-radius: 9999px;
   }

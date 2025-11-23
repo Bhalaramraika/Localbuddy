@@ -53,10 +53,10 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        'neon-cyan': 'var(--neon-cyan)',
-        'neon-green': 'var(--neon-green)',
-        'neon-gold': 'var(--neon-gold)',
-        'neon-pink': 'var(--neon-pink)',
+        'main-accent': 'var(--main-accent)',
+        'secondary-accent': 'var(--secondary-accent)',
+        'highlight': 'var(--highlight)',
+        'destructive-accent': 'var(--destructive-accent)',
       },
       borderRadius: {
         lg: '24px',
@@ -64,8 +64,7 @@ export default {
         sm: '16px',
       },
       boxShadow: {
-        'glow-cyan': '0 0 20px var(--neon-cyan)',
-        'glow-gold': '0 0 20px var(--neon-gold)',
+        'glow-main': '0 0 20px var(--main-accent)',
       },
       keyframes: {
         'accordion-down': {

@@ -30,13 +30,13 @@ const chartConfig = {
 export default function AdminDashboard() {
   return (
     <div className="flex flex-col gap-8 text-white">
-      <h1 className="text-4xl font-bold text-neon-cyan">Admin Dashboard</h1>
+      <h1 className="text-4xl font-bold text-main-accent">Admin Dashboard</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-300">Total Revenue</CardTitle>
-            <IndianRupee className="h-4 w-4 text-neon-green" />
+            <IndianRupee className="h-4 w-4 text-secondary-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹45,231.89</div>
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-300">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-neon-cyan" />
+            <Users className="h-4 w-4 text-main-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+2350</div>
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-300">Tasks Completed</CardTitle>
-            <Briefcase className="h-4 w-4 text-neon-gold" />
+            <Briefcase className="h-4 w-4 text-secondary-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+12,234</div>
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-300">Platform Activity</CardTitle>
-            <Activity className="h-4 w-4 text-neon-pink" />
+            <Activity className="h-4 w-4 text-destructive-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+573</div>
@@ -99,10 +99,10 @@ export default function AdminDashboard() {
                         cursor={false}
                         content={<ChartTooltipContent 
                             labelClassName="text-black font-bold" 
-                            className="bg-white/80 backdrop-blur-sm !border-neon-cyan" 
+                            className="bg-white/80 backdrop-blur-sm !border-main-accent" 
                         />}
                     />
-                    <Bar dataKey="total" fill="var(--neon-cyan)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="total" fill="var(--main-accent)" radius={[4, 4, 0, 0]} />
                 </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

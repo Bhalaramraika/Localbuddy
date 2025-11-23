@@ -24,7 +24,7 @@ export default function AdminLayout({
           <SidebarContent className="p-2">
             <SidebarHeader>
               <div className="flex items-center justify-between p-2">
-                <span className="text-2xl font-bold text-neon-cyan">Admin</span>
+                <span className="text-2xl font-bold text-main-accent">Admin</span>
                 <SidebarTrigger />
               </div>
             </SidebarHeader>

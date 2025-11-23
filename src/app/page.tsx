@@ -25,7 +25,7 @@ const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: stri
     <div className="relative w-full h-40 rounded-lg overflow-hidden border border-white/10">
         <Image src={imageUrl} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        <div className={`absolute top-2 right-2 bg-neon-pink/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--neon-pink)] transition-all duration-300 group-hover:bg-neon-pink`}>
+        <div className={`absolute top-2 right-2 bg-destructive-accent/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--destructive-accent)] transition-all duration-300 group-hover:bg-destructive-accent`}>
             {tag}
         </div>
     </div>
@@ -34,11 +34,11 @@ const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: stri
 const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price: string, tag: string, hasImage: boolean }) => (
     <div className="flex justify-between items-start">
         <div className="flex flex-col">
-            <h2 className="text-xl font-bold text-white transition-colors duration-300 group-hover:text-neon-cyan">{title}</h2>
-            <p className="text-2xl font-bold text-neon-green mt-1" style={{ textShadow: '0 0 10px var(--neon-green)' }}>{price}</p>
+            <h2 className="text-xl font-bold text-white transition-colors duration-300 group-hover:text-main-accent">{title}</h2>
+            <p className="text-2xl font-bold text-green-400 mt-1" style={{ textShadow: '0 0 10px #4ade80' }}>{price}</p>
         </div>
         {!hasImage && (
-            <div className="bg-neon-pink/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--neon-pink)] transition-all duration-300 group-hover:bg-neon-pink">
+            <div className="bg-destructive-accent/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--destructive-accent)] transition-all duration-300 group-hover:bg-destructive-accent">
                 {tag}
             </div>
         )}
@@ -56,8 +56,8 @@ const TaskCardCountdown = ({ countdown }: { countdown: string }) => {
     }, []);
 
     return (
-        <div className="glass-card border-red-700/50 rounded-lg p-2 text-center transition-all duration-300 group-hover:border-neon-pink/50 group-hover:scale-105">
-            <p className="text-sm text-red-200 group-hover:text-neon-pink">Countdown: {remaining}</p>
+        <div className="glass-card border-red-700/50 rounded-lg p-2 text-center transition-all duration-300 group-hover:border-destructive-accent/50 group-hover:scale-105">
+            <p className="text-sm text-red-200 group-hover:text-destructive-accent">Countdown: {remaining}</p>
         </div>
     );
 };
@@ -82,7 +82,7 @@ const TaskCardProgress = () => {
                 <p>Task Progress</p>
                 <p>{Math.round(progress)}%</p>
             </div>
-            <Progress value={progress} className="h-2 bg-black/40 [&>div]:bg-neon-cyan" />
+            <Progress value={progress} className="h-2 bg-black/40 [&>div]:bg-main-accent" />
         </div>
     );
 };
@@ -102,7 +102,7 @@ const TaskCardButton = () => {
         <Button 
             className={cn(
                 "w-full h-12 text-base font-bold transition-all duration-300 ease-in-out transform hover:scale-105",
-                isAccepted ? "bg-neon-green/80 text-black shadow-[0_0_15px_var(--neon-green)]" : "cyan-glow-button"
+                isAccepted ? "bg-green-400/80 text-black shadow-[0_0_15px_#4ade80]" : "cyan-glow-button"
             )}
             onClick={handleClick}
             disabled={isLoading || isAccepted}
@@ -115,7 +115,7 @@ const TaskCardButton = () => {
 
 const TaskCard = ({ title, price, tag, countdown, imageUrl }: { title: string, price: string, tag: string, countdown: string, imageUrl?: string }) => {
   return (
-    <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-neon-cyan/10 hover:-translate-y-1">
+    <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-main-accent/10 hover:-translate-y-1">
       {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={tag} />}
       <TaskCardHeader title={title} price={price} tag={tag} hasImage={!!imageUrl} />
       <TaskCardCountdown countdown={countdown} />
@@ -126,17 +126,17 @@ const TaskCard = ({ title, price, tag, countdown, imageUrl }: { title: string, p
 };
 
 const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor }: { icon: React.ReactNode, title: string, subtitle: string, tag: string, tagColor: string }) => (
-    <div className="flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-white/5 hover:border-neon-cyan border border-transparent rounded-lg cursor-pointer group">
-        <div className="p-3 bg-white/5 rounded-full transition-all duration-300 group-hover:bg-neon-cyan/10 group-hover:scale-110">
-            {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6 transition-colors duration-300 group-hover:text-neon-cyan' })}
+    <div className="flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-white/5 hover:border-main-accent border border-transparent rounded-lg cursor-pointer group">
+        <div className="p-3 bg-white/5 rounded-full transition-all duration-300 group-hover:bg-main-accent/10 group-hover:scale-110">
+            {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6 transition-colors duration-300 group-hover:text-main-accent' })}
         </div>
         <div className="flex-grow">
             <p className="font-bold text-white">{title}</p>
             <p className="text-sm text-gray-400 group-hover:text-gray-300">{subtitle}</p>
         </div>
         <div className="flex items-center gap-2">
-           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${tagColor} transition-all duration-300 group-hover:shadow-[0_0_8px] ${tagColor.replace('bg-', '').replace('/20', '')}`}>{tag}</span>
-           <ChevronRight className="w-5 h-5 text-gray-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-neon-cyan" />
+           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${tagColor}`}>{tag}</span>
+           <ChevronRight className="w-5 h-5 text-gray-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-main-accent" />
         </div>
     </div>
 );
@@ -156,31 +156,31 @@ const HeaderWalletBalance = () => {
     }, []);
 
     return (
-        <div className="glass-card rounded-full px-4 py-2 hover:border-neon-green/50 border border-transparent transition-all">
+        <div className="glass-card rounded-full px-4 py-2 hover:border-green-400/50 border border-transparent transition-all">
           <p className="text-sm font-medium">
-            Wallet: <span className="font-bold text-neon-green transition-all duration-500" style={{ textShadow: '0 0 10px var(--neon-green)' }}>{formatCurrency(balance, 'INR', 'en-IN')}</span>
+            Wallet: <span className="font-bold text-green-400 transition-all duration-500" style={{ textShadow: '0 0 10px #4ade80' }}>{formatCurrency(balance, 'INR', 'en-IN')}</span>
           </p>
         </div>
     );
 };
 
 const HeaderNotificationBell = () => (
-    <div className="relative glass-card p-3 rounded-full cursor-pointer hover:border-neon-pink/50 border border-transparent transition-all group">
-        <Bell className="w-6 h-6 text-gray-400 group-hover:text-neon-pink transition-colors duration-300" />
-        <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-neon-pink ring-2 ring-transparent animate-pulse group-hover:animate-none shadow-[0_0_8px_var(--neon-pink)]"></span>
+    <div className="relative glass-card p-3 rounded-full cursor-pointer hover:border-destructive-accent/50 border border-transparent transition-all group">
+        <Bell className="w-6 h-6 text-gray-400 group-hover:text-destructive-accent transition-colors duration-300" />
+        <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-destructive-accent ring-2 ring-transparent animate-pulse group-hover:animate-none shadow-[0_0_8px_var(--destructive-accent)]"></span>
     </div>
 );
 
 const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, description: string }}) => (
     <>
     {userAvatar && (
-        <div className="glass-card p-1 rounded-full hover:border-neon-cyan/50 border-2 border-transparent transition-all">
+        <div className="glass-card p-1 rounded-full hover:border-main-accent/50 border-2 border-transparent transition-all">
             <Image
                 src={userAvatar.imageUrl}
                 alt={userAvatar.description}
                 width={48}
                 height={48}
-                className="rounded-full border-2 border-neon-cyan"
+                className="rounded-full border-2 border-main-accent"
             />
         </div>
     )}
@@ -210,8 +210,7 @@ const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.
             <div
                 className={cn(
                     `relative w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-offset-4 ring-offset-transparent bg-black/20 glass-pill transition-all duration-300 group-hover:ring-4`,
-                    story.ringColor,
-                    `shadow-[0_0_15px_] ${story.ringColor.replace('ring-', 'var(--neon-')})`
+                    story.ringColor
                 )}
             >
                 {storyImage ? (
@@ -233,7 +232,7 @@ const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.
 
 const AddStoryButton = () => (
     <div className="flex-shrink-0 pl-2">
-        <button className="w-16 h-20 rounded-full flex flex-col items-center justify-center glass-pill border-2 border-dashed border-white/20 transition-all duration-300 hover:border-neon-cyan hover:text-neon-cyan hover:scale-105">
+        <button className="w-16 h-20 rounded-full flex flex-col items-center justify-center glass-pill border-2 border-dashed border-white/20 transition-all duration-300 hover:border-main-accent hover:text-main-accent hover:scale-105">
             <Plus className="w-6 h-6 text-gray-400 transition-colors duration-300" />
             <p className="text-xs text-gray-400 mt-1 transition-colors duration-300">Add</p>
         </button>
@@ -242,11 +241,11 @@ const AddStoryButton = () => (
 
 const StoriesSection = () => {
     const stories = [
-        { id: 'story2', label: 'Top Buddies', Icon: Users, ringColor: 'ring-neon-cyan' },
-        { id: 'story1', label: 'Urgent', Icon: Siren, ringColor: 'ring-neon-pink' },
-        { id: 'story3', label: 'Safety Tips', Icon: Shield, ringColor: 'ring-neon-gold' },
-        { id: 'user3', label: 'Jenny', Icon: User, ringColor: 'ring-neon-green' },
-        { id: 'user4', label: 'David', Icon: User, ringColor: 'ring-neon-cyan' },
+        { id: 'story2', label: 'Top Buddies', Icon: Users, ringColor: 'ring-main-accent' },
+        { id: 'story1', label: 'Urgent', Icon: Siren, ringColor: 'ring-destructive-accent' },
+        { id: 'story3', label: 'Safety Tips', Icon: Shield, ringColor: 'ring-yellow-400' },
+        { id: 'user3', label: 'Jenny', Icon: User, ringColor: 'ring-green-400' },
+        { id: 'user4', label: 'David', Icon: User, ringColor: 'ring-main-accent' },
     ];
     return (
         <section className="glass-card p-4 w-full">
@@ -288,25 +287,25 @@ const TaskFilters = () => {
 export default function HomePage() {
   const advancedListItems = [
       {
-          icon: <Zap className="w-6 h-6 text-neon-gold" />,
+          icon: <Zap className="w-6 h-6 text-yellow-400" />,
           title: "Flash Task: Data Entry",
           subtitle: "Complete within 30 mins",
           tag: "New",
-          tagColor: "bg-neon-cyan/20 text-neon-cyan"
+          tagColor: "bg-main-accent/20 text-main-accent"
       },
       {
-          icon: <Shield className="w-6 h-6 text-neon-green" />,
+          icon: <Shield className="w-6 h-6 text-green-400" />,
           title: "Verify Your ID",
           subtitle: "Enhanced account security",
           tag: "Recommended",
-          tagColor: "bg-neon-green/20 text-neon-green"
+          tagColor: "bg-green-400/20 text-green-400"
       },
       {
-          icon: <Users className="w-6 h-6 text-neon-pink" />,
+          icon: <Users className="w-6 h-6 text-destructive-accent" />,
           title: "Team Up for a Project",
           subtitle: "A big cleaning gig is available",
           tag: "High Pay",
-          tagColor: "bg-neon-pink/20 text-neon-pink"
+          tagColor: "bg-destructive-accent/20 text-destructive-accent"
       }
   ];
 

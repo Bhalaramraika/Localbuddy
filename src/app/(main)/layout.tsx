@@ -33,11 +33,11 @@ export default function MainAppLayout({
                 href={item.href}
                 className={cn(
                   'flex flex-col items-center gap-1 transition-colors',
-                  isActive ? 'text-neon-cyan' : 'text-gray-400 hover:text-neon-cyan'
+                  isActive ? 'text-main-accent' : 'text-gray-400 hover:text-main-accent'
                 )}
               >
-                <div className={cn('p-2 rounded-full', isActive ? 'bg-neon-cyan/20' : '')}>
-                  <item.icon className="w-6 h-6" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--neon-cyan))' } : {}} />
+                <div className={cn('p-2 rounded-full', isActive ? 'bg-main-accent/20' : '')}>
+                  <item.icon className="w-6 h-6" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--main-accent))' } : {}} />
                 </div>
               </Link>
             );
