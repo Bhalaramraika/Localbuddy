@@ -157,6 +157,7 @@ function toast({ ...props }: Toast) {
     toast: {
       ...props,
       id,
+      variant: props.variant || 'blur-blue', // Set default variant
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss()
