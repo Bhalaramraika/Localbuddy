@@ -41,7 +41,7 @@ const transactions = [
 
 const TransactionHistory = () => (
     <div>
-        <h2 className="text-xl font-bold font-headline mb-4">Transaction History</h2>
+        <h2 className="text-xl font-bold text-white mb-4">Transaction History</h2>
         <div className="bg-black/20 rounded-2xl p-2">
              <div className="divide-y divide-white/10">
                 {transactions.map(tx => (
@@ -66,7 +66,7 @@ const TransactionHistory = () => (
 export default function WalletPage() {
   return (
     <div className="p-4 space-y-8">
-        <h1 className="text-3xl font-bold font-headline pt-4">Wallet</h1>
+        <h1 className="text-3xl font-bold text-white pt-4">Wallet</h1>
         <WalletSummary />
         <WalletActions />
         <TransactionHistory />

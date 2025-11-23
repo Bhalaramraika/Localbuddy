@@ -19,7 +19,7 @@ const HomeHeader = () => (
         <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse border-2 border-background"></span>
       </div>
       <div className="pill-chip glass-card">
-        <p className="font-semibold text-sm">Wallet: ₹1,500</p>
+        <p className="font-semibold text-sm text-white">Wallet: ₹1,500</p>
       </div>
     </div>
   </div>
