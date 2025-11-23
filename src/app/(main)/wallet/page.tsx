@@ -42,7 +42,7 @@ const transactions = [
 const TransactionHistory = () => (
     <div>
         <h2 className="text-xl font-bold text-white mb-4">Transaction History</h2>
-        <div className="bg-black/20 rounded-2xl p-2">
+        <div className="glass-card p-2">
              <div className="divide-y divide-white/10">
                 {transactions.map(tx => (
                     <div className="px-2 flex items-center justify-between py-4" key={tx.id}>

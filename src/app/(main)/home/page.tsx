@@ -4,7 +4,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Siren, Shield } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const HomeHeader = () => (
@@ -45,11 +44,11 @@ const Stories = () => (
                   "h-16 w-16 border-2",
                   story.icon ? "border-transparent bg-white/5 flex items-center justify-center" : "border-background bg-background"
               )}>
-                {story.icon ? <story.icon className="h-8 w-8"/> : <AvatarImage src={PlaceHolderImages.find(img => img.id === story.imageId)?.imageUrl} />}
+                {story.icon ? <story.icon className="h-8 w-8 text-white"/> : <AvatarImage src={PlaceHolderImages.find(img => img.id === story.imageId)?.imageUrl} />}
                 <AvatarFallback>{story.label.charAt(0)}</AvatarFallback>
               </Avatar>
             </div>
-            <p className="text-xs font-medium text-muted-foreground truncate w-full">{story.label}</p>
+            <p className="text-xs font-medium text-white/90 truncate w-full">{story.label}</p>
           </div>
         ))}
       </div>
@@ -85,13 +84,13 @@ const FilterChips = () => {
 
 const TaskCard = () => (
     <div className="glass-card overflow-hidden shadow-lg animate-fade-in-up relative mx-4">
-        <div className="absolute top-4 right-4 pill-chip bg-destructive text-white text-xs px-3 h-7">Urgent</div>
+        <div className="absolute top-4 right-4 pill-chip bg-destructive/80 backdrop-blur-sm text-white text-xs px-3 h-7">Urgent</div>
       <div className="p-6 flex flex-col items-center text-center">
         <h3 className="font-bold text-2xl text-white mt-4">Need Plumber ASAP</h3>
         <p className="text-5xl font-bold text-success my-4">₹500</p>
         
-        <div className="bg-destructive/20 p-2 rounded-lg text-center mb-6 w-full">
-            <p className="text-xs text-destructive">Countdown: 00:02:35:34</p>
+        <div className="bg-destructive/20 p-2 rounded-lg text-center mb-6 w-full backdrop-blur-sm">
+            <p className="text-xs text-destructive font-semibold">Countdown: 00:02:35:34</p>
         </div>
 
         <Button size="lg" className="w-full h-14 bg-gradient-to-r from-primary to-blue-500 text-primary-foreground font-bold text-base cyan-glow">

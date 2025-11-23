@@ -33,8 +33,8 @@ const ChatHeader = () => (
 const MessageBubble = ({ message, isCurrentUser }: { message: { content: string }, isCurrentUser: boolean }) => (
     <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in-up`}>
         <div className={cn(
-            'max-w-xs lg:max-w-md px-5 py-3 rounded-2xl',
-            isCurrentUser ? 'glass-card bg-white/10 rounded-br-lg' : 'glass-card bg-blue-500/20 border-blue-400/20 rounded-bl-lg'
+            'max-w-xs lg:max-w-md px-5 py-3 rounded-2xl glass-card',
+            isCurrentUser ? 'bg-white/10 rounded-br-lg' : 'bg-blue-500/20 border-blue-400/20 rounded-bl-lg'
         )}>
             <p className="text-white">{message.content}</p>
         </div>

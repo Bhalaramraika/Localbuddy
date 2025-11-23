@@ -69,7 +69,7 @@ const Badges = () => (
                     <div className="p-3 bg-black/20 rounded-full mb-2">
                         <badge.icon className={`h-8 w-8 ${badge.color}`} />
                     </div>
-                    <p className="text-xs font-semibold text-muted-foreground">{badge.name}</p>
+                    <p className="text-xs font-semibold text-white/80">{badge.name}</p>
                 </div>
             ))}
         </div>
