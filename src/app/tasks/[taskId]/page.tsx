@@ -2,8 +2,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
-import { doc, DocumentReference } from 'firebase/firestore';
+import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { doc, DocumentReference, collection, serverTimestamp } from 'firebase/firestore';
 import { ArrowLeft, Loader, User, MapPin, Calendar, Tag, IndianRupee, Shield, MessageSquare, Zap } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -50,20 +50,36 @@ export default function TaskDetailPage() {
     const { data: posterData, isLoading: isPosterLoading } = useDoc(posterDocRef);
 
     const handleAcceptTask = () => {
-        if (!user || !firestore) {
+        if (!user || !firestore || !taskData || !posterData) {
             toast({ variant: 'destructive', title: "You must be logged in to accept tasks." });
             return;
         }
         setIsAccepting(true);
+
+        // 1. Update task status and buddyId
         updateDocumentNonBlocking(taskDocRef!, {
             status: 'assigned',
             buddyId: user.uid,
         });
+
+        // 2. Create a notification for the task poster
+        const notificationsCol = collection(firestore, `users/${taskData.posterId}/notifications`);
+        addDocumentNonBlocking(notificationsCol, {
+            userId: taskData.posterId,
+            title: "Task Accepted!",
+            message: `${user.displayName || 'A buddy'} has accepted your task: "${taskData.title}"`,
+            type: 'TASK_ACCEPTED',
+            taskId: taskId,
+            isRead: false,
+            timestamp: serverTimestamp(),
+        });
+
         toast({
             title: "Task Accepted!",
             description: "The task poster has been notified. You can start a chat now.",
         });
-        // Optimistically navigate or update UI
+        
+        // 3. Optimistically navigate to chat
         router.push(`/chat?taskId=${taskId}`);
     };
 
@@ -120,7 +136,7 @@ export default function TaskDetailPage() {
                     <DetailItem icon={<IndianRupee />} label="Budget" value={formatCurrency(taskData.budget)} />
                     <DetailItem icon={<Tag />} label="Category" value={taskData.category} />
                     <DetailItem icon={<MapPin />} label="Location" value={taskData.location} />
-                    <DetailItem icon={<Calendar />} label="Posted" value={timeAgo(new Date(taskData.createdAt))} />
+                    <DetailItem icon={<Calendar />} label="Posted" value={taskData.createdAt ? timeAgo(new Date(taskData.createdAt)) : 'Recently'} />
                 </div>
 
                 <div className="glass-card p-6">
@@ -131,7 +147,7 @@ export default function TaskDetailPage() {
                             <div>
                                 <p className="font-bold text-lg">{posterData?.name || 'Loading...'}</p>
                                 {posterData?.aadharVerified && (
-                                    <div className="flex items-center gap-2 text-sm text-yellow-500">
+                                    <div className="flex items-center gap-2 text-sm text-green-500">
                                         <Shield size={14} />
                                         <span>Identity Verified</span>
                                     </div>
@@ -150,7 +166,9 @@ export default function TaskDetailPage() {
                     {isMyTask ? (
                          <Button disabled className="w-full h-14 text-lg font-bold" variant="outline">This is Your Task</Button>
                     ) : isAssignedToMe ? (
-                         <Button disabled className="w-full h-14 text-lg font-bold bg-green-500 text-white">Already Accepted</Button>
+                         <Link href={`/chat?taskId=${taskId}`} className='w-full'>
+                            <Button className="w-full h-14 text-lg font-bold bg-green-500 text-white">Open Chat</Button>
+                         </Link>
                     ) : isAssigned ? (
                          <Button disabled className="w-full h-14 text-lg font-bold" variant="destructive">Task Already Taken</Button>
                     ) : (

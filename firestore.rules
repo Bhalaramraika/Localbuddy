@@ -3,8 +3,56 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Users can read their own profile, but anyone can read public parts
+    match /users/{userId} {
+      allow read; // Allow public read for fields like name, photoUrl
+      allow write: if isOwner(userId); // Only the user can update their own profile
+    }
+
+    // Anyone can read tasks, but only the poster can update/delete before it's assigned
+    match /tasks/{taskId} {
+      allow read;
+      // Allow create for any authenticated user
+      allow create: if request.auth != null;
+      
+      // Poster can delete if task is still open
+      allow delete: if resource.data.status == 'Open' && isOwner(resource.data.posterId);
+
+      // Poster can update if open, buddy can update if assigned
+      allow update: if (resource.data.status == 'Open' && isOwner(resource.data.posterId)) ||
+                       (request.auth.uid == resource.data.buddyId);
+    }
+
+    // Chat is restricted to participants
+    match /chats/{chatId} {
+    	allow read, write: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      
+      match /messages/{messageId} {
+      	 allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+         allow update, delete: if false; // Messages are immutable
+      }
+    }
+    
+    // Transactions can only be created by the user, and are read-only for that user
+    match /transactions/{transactionId} {
+    	allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if false; // Transactions are immutable
+    }
+
+    // Notifications are private to each user
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, write: if isOwner(userId);
+    }
+    
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

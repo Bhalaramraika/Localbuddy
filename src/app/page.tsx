@@ -13,17 +13,19 @@ import {
   User,
   Loader,
   Trophy,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import * as React from 'react';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, timeAgo } from '@/lib/utils';
 import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
-import { collection, doc, query, where, limit } from 'firebase/firestore';
+import { collection, doc, query, where, limit, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 import { ProfileSetupDialog } from '@/components/ProfileSetupDialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
@@ -56,6 +58,7 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const firestore = useFirestore();
     const { toast } = useToast();
+    const router = useRouter();
 
     const isAccepted = task.status === 'assigned' && task.buddyId === user?.uid;
     const isMyTask = task.posterId === user?.uid;
@@ -75,7 +78,7 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
             title: "Task Accepted!",
             description: "You can find this task in your chat to coordinate."
         })
-        // No need to set is loading to false, UI will update reactively
+        router.push(`/chat?taskId=${task.id}`);
     };
 
     if (isAiGenerated) {
@@ -102,6 +105,7 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
         </Button>
     );
 };
+import { useRouter } from 'next/navigation';
 
 const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
   const { title, budget, category, reasoning } = task;
@@ -158,12 +162,55 @@ const HeaderWalletBalance = ({ balance, isLoading }: { balance: number, isLoadin
     );
 };
 
-const HeaderNotificationBell = () => (
-    <div className="relative glass-card p-3 rounded-full cursor-pointer hover:border-red-400/50 border border-transparent transition-all group">
-        <Bell className="w-6 h-6 text-gray-500 group-hover:text-red-500 transition-colors duration-300" />
-        <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse group-hover:animate-none shadow-[0_0_8px_var(--destructive-accent)]"></span>
+const NotificationItem = ({ notification }: { notification: any }) => (
+    <div className="flex items-start gap-3 p-3 hover:bg-gray-100 rounded-md">
+        <div className="p-2 bg-main-accent/10 rounded-full mt-1">
+            <Briefcase className="w-5 h-5 text-main-accent" />
+        </div>
+        <div>
+            <p className="font-semibold text-sm text-foreground">{notification.title}</p>
+            <p className="text-xs text-gray-500">{notification.message}</p>
+            <p className="text-xs text-gray-400 mt-1">{timeAgo(notification.timestamp.toDate())}</p>
+        </div>
     </div>
 );
+
+const HeaderNotificationBell = ({ userId }: { userId: string }) => {
+    const firestore = useFirestore();
+    const notificationsQuery = useMemoFirebase(() => {
+        if (!firestore || !userId) return null;
+        return query(collection(firestore, `users/${userId}/notifications`), orderBy('timestamp', 'desc'), limit(10));
+    }, [firestore, userId]);
+
+    const { data: notifications } = useCollection(notificationsQuery);
+    const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <div className="relative glass-card p-3 rounded-full cursor-pointer hover:border-red-400/50 border border-transparent transition-all group">
+                    <Bell className="w-6 h-6 text-gray-500 group-hover:text-red-500 transition-colors duration-300" />
+                    {unreadCount > 0 && (
+                         <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse group-hover:animate-none shadow-[0_0_8px_var(--destructive-accent)]"></span>
+                    )}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0">
+                <div className="p-3 border-b">
+                    <h3 className="font-semibold">Notifications</h3>
+                </div>
+                <div className="flex flex-col">
+                    {notifications && notifications.length > 0 ? (
+                        notifications.map(n => <NotificationItem key={n.id} notification={n} />)
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center p-6">No new notifications.</p>
+                    )}
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
 
 const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, description: string }}) => {
     const defaultAvatar = getImage('user5');
@@ -185,12 +232,12 @@ const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, descrip
 );
 };
 
-const MainHeader = ({ userData, isUserLoading }: { userData: any, isUserLoading: boolean }) => {
+const MainHeader = ({ user, userData, isUserLoading }: { user: User | null, userData: any, isUserLoading: boolean }) => {
     return (
         <header className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
                 <HeaderAvatar userAvatar={userData?.photoUrl ? { imageUrl: userData.photoUrl, description: 'User avatar' } : undefined} />
-                <HeaderNotificationBell />
+                {user && <HeaderNotificationBell userId={user.uid} />}
             </div>
             <HeaderWalletBalance balance={userData?.walletBalance || 0} isLoading={isUserLoading} />
         </header>
@@ -366,7 +413,7 @@ export default function HomePage() {
   return (
     <>
       {user && !isUserLoading && userData && !userData.profileCompleted && <ProfileSetupDialog />}
-      <MainHeader userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
+      <MainHeader user={user} userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
       <QuickActionsSection />
       <TaskFilters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
 
