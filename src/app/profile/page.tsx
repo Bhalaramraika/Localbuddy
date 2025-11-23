@@ -8,8 +8,11 @@ import { Progress, CircleProgress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -121,6 +124,8 @@ const ProfileHeader = ({ userData, isLoading }: { userData: any, isLoading: bool
 export default function ProfilePage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
+  const router = useRouter();
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -129,6 +134,14 @@ export default function ProfilePage() {
 
   const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/auth/login');
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
 
   const allBadges = [
     { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified || false, description: "Your identity has been successfully verified." },
@@ -192,11 +205,13 @@ export default function ProfilePage() {
       </Tabs>
 
       <footer className="mt-4 grid grid-cols-2 gap-4 w-full">
-         <Button variant="outline" className="w-full h-12 text-md glass-card border-gray-200 hover:bg-gray-100 hover:text-foreground transition-all transform hover:scale-105">
-            <Settings className="mr-2 h-5 w-5" />
-            Settings
-        </Button>
-         <Button variant="outline" className="w-full h-12 text-md glass-card border-destructive-accent/50 text-destructive-accent hover:bg-destructive-accent/10 hover:text-destructive-accent transition-all transform hover:scale-105">
+        <Link href="/profile/settings">
+            <Button variant="outline" className="w-full h-12 text-md glass-card border-gray-200 hover:bg-gray-100 hover:text-foreground transition-all transform hover:scale-105">
+                <Settings className="mr-2 h-5 w-5" />
+                Settings
+            </Button>
+        </Link>
+         <Button onClick={handleLogout} variant="outline" className="w-full h-12 text-md glass-card border-destructive-accent/50 text-destructive-accent hover:bg-destructive-accent/10 hover:text-destructive-accent transition-all transform hover:scale-105">
             <LogOut className="mr-2 h-5 w-5" />
             Logout
         </Button>
@@ -204,5 +219,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
