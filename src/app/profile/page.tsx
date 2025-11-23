@@ -1,11 +1,10 @@
 import Image from 'next/image';
-import { Check, Star, Award, Pen, Settings } from 'lucide-react';
+import { Check, Star, Award, Pen, Settings, User } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 
 const StatCard = ({ value, label }: { value: string, label: string }) => (
-  <div className="flex flex-col items-center">
+  <div className="flex flex-col items-center glass-card p-4 rounded-lg flex-1">
     <p className="text-2xl font-bold text-white">{value}</p>
     <p className="text-sm text-gray-400">{label}</p>
   </div>
@@ -13,7 +12,7 @@ const StatCard = ({ value, label }: { value: string, label: string }) => (
 
 const Badge = ({ icon, color, label }: { icon: React.ReactNode, color: string, label: string }) => (
   <div className="flex flex-col items-center gap-2">
-    <div className={`w-16 h-16 rounded-full flex items-center justify-center glass-pill border-2 ${color}`}>
+    <div className={`w-20 h-20 rounded-full flex items-center justify-center glass-card border-2 ${color}`} style={{boxShadow: `0 0 15px ${color.replace('border-', 'var(--neon-')})`}}>
       {icon}
     </div>
     <p className="text-xs text-center">{label}</p>
@@ -26,7 +25,7 @@ export default function ProfilePage() {
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-8 text-white pb-28">
       {/* Profile Header */}
-      <header className="flex flex-col items-center gap-4">
+      <header className="flex flex-col items-center gap-4 glass-card p-6">
         <div className="relative">
           {userAvatar && (
             <Image
@@ -35,9 +34,10 @@ export default function ProfilePage() {
               width={120}
               height={120}
               className="rounded-full border-4 border-neon-cyan"
+              style={{boxShadow: '0 0 20px var(--neon-cyan)'}}
             />
           )}
-          <div className="absolute bottom-1 right-1 bg-neon-green rounded-full p-1">
+          <div className="absolute bottom-1 right-1 bg-neon-green rounded-full p-1 border-2 border-gray-800">
             <Check className="w-4 h-4 text-black" />
           </div>
         </div>
@@ -53,7 +53,8 @@ export default function ProfilePage() {
                     className="h-full rounded-full" 
                     style={{
                         width: `${(350/500)*100}%`,
-                        background: 'linear-gradient(90deg, #8A2BE2, var(--neon-cyan))'
+                        background: 'linear-gradient(90deg, #8A2BE2, var(--neon-cyan))',
+                        boxShadow: '0 0 10px var(--neon-cyan)'
                     }}
                 />
             </div>
@@ -65,33 +66,31 @@ export default function ProfilePage() {
       </header>
 
       {/* Stats Container */}
-      <section className="glass-card w-full p-6">
-        <div className="flex justify-around">
-          <StatCard value="₹12,500" label="Total Earnings" />
-          <div className="w-px bg-white/10"></div>
+      <section className="glass-card w-full p-4">
+        <div className="flex justify-around gap-2">
+          <StatCard value="₹12,500" label="Earnings" />
           <StatCard value="25" label="Tasks" />
-          <div className="w-px bg-white/10"></div>
           <StatCard value="4.8 ★" label="Rating" />
         </div>
       </section>
 
       {/* Badges Case */}
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold">Badges Case</h2>
+        <h2 className="text-xl font-bold px-2">Badges Case</h2>
         <div className="glass-card p-6">
           <div className="flex justify-around">
             <Badge
-              icon={<Check className="w-8 h-8 text-neon-green" />}
+              icon={<Check className="w-10 h-10 text-neon-green" />}
               color="border-neon-green"
-              label="Verified User"
+              label="Verified"
             />
             <Badge
-              icon={<Pen className="w-8 h-8 text-neon-cyan" />}
+              icon={<Pen className="w-10 h-10 text-neon-cyan" />}
               color="border-neon-cyan"
               label="Fast Worker"
             />
             <Badge
-              icon={<Award className="w-8 h-8 text-neon-gold" />}
+              icon={<Award className="w-10 h-10 text-neon-gold" />}
               color="border-neon-gold"
               label="5-Star Hero"
             />
