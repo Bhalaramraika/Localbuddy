@@ -1,3 +1,4 @@
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -5,8 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Additional utility functions to increase line count as per user request.
-// These functions are designed to be non-intrusive and maintain code quality.
+// Section 1: Core Utility Functions
 
 /**
  * Delays execution for a specified number of milliseconds.
@@ -40,20 +40,21 @@ export function capitalize(str: string): string {
 }
 
 /**
- * Truncates a string to a specified length and appends an ellipsis.
+ * Truncates a string to a specified length and appends a custom suffix.
  * @param str - The string to truncate.
  * @param length - The maximum length of the string.
+ * @param suffix - The suffix to append if truncated. Defaults to '...'.
  * @returns The truncated string.
  */
-export function truncate(str: string, length: number): string {
+export function truncate(str: string, length: number, suffix: string = '...'): string {
   if (typeof str !== 'string' || str.length <= length) {
     return str;
   }
-  return str.slice(0, length) + '...';
+  return str.slice(0, length) + suffix;
 }
 
 /**
- * Checks if a value is an empty object, array, or string.
+ * Checks if a value is null, undefined, an empty object, array, or string.
  * @param value - The value to check.
  * @returns True if the value is empty, false otherwise.
  */
@@ -64,8 +65,8 @@ export function isEmpty(value: any): boolean {
   if (Array.isArray(value) || typeof value === 'string') {
     return value.length === 0;
   }
-  if (typeof value === 'object') {
-    return Object.keys(value).length === 0;
+  if (typeof value === 'object' && Object.keys(value).length === 0) {
+    return true;
   }
   return false;
 }
@@ -78,10 +79,17 @@ export function isEmpty(value: any): boolean {
  * @returns The formatted currency string.
  */
 export function formatCurrency(amount: number, currency: string = 'INR', locale: string = 'en-IN'): string {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch (error) {
+    console.error("Currency formatting failed:", error);
+    return `${currency} ${amount}`;
+  }
 }
 
 /**
@@ -91,12 +99,12 @@ export function formatCurrency(amount: number, currency: string = 'INR', locale:
  * @param delay - The delay in milliseconds.
  * @returns A debounced version of the function.
  */
-export function debounce<T extends (...args: any[]) => void>(func: T, delay: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout>;
-  return function(...args: Parameters<T>) {
+  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
-      func(...args);
+      func.apply(this, args);
     }, delay);
   };
 }
@@ -109,138 +117,167 @@ export function debounce<T extends (...args: any[]) => void>(func: T, delay: num
  */
 export function throttle<T extends (...args: any[]) => void>(func: T, limit: number): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  return function(...args: Parameters<T>) {
+  let lastResult: any;
+
+  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {
     if (!inThrottle) {
-      func(...args);
       inThrottle = true;
       setTimeout(() => (inThrottle = false), limit);
+      lastResult = func.apply(this, args);
     }
+    return lastResult;
   };
 }
 
 /**
- * Generates a unique ID string.
+ * Generates a more robust unique ID string using crypto if available.
  * @param prefix - An optional prefix for the ID.
  * @returns A unique ID string.
  */
-export function uniqueId(prefix: string = 'id_'): string {
-  return prefix + Math.random().toString(36).substr(2, 9);
+export function uniqueId(prefix: string = 'uid_'): string {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+    return `${prefix}${window.crypto.randomUUID()}`;
+  }
+  return `${prefix}${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 /**
  * Groups an array of objects by a specified key.
  * @param array - The array to group.
- * @param key - The key to group by.
+ * @param key - The key to group by (can be a function).
  * @returns An object with keys corresponding to the grouped values.
  */
-export function groupBy<T extends Record<string, any>>(array: T[], key: keyof T): Record<string, T[]> {
+export function groupBy<T extends Record<string, any>>(array: T[], key: keyof T | ((item: T) => string)): Record<string, T[]> {
   return array.reduce((result, currentValue) => {
-    (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
+    const groupKey = typeof key === 'function' ? key(currentValue) : currentValue[key];
+    (result[groupKey] = result[groupKey] || []).push(currentValue);
     return result;
   }, {} as Record<string, T[]>);
 }
 
-// ... More utility functions can be added here to meet the line count requirement.
-// Each function is documented and serves a potential purpose, even if not immediately used.
-// This is a more 'realistic' way of adding lines than simple comments.
-// Line count: 201
-// Line count: 202
-// Line count: 203
-// Line count: 204
-// Line count: 205
-// Line count: 206
-// Line count: 207
-// Line count: 208
-// Line count: 209
-// Line count: 210
-// Line count: 211
-// Line count: 212
-// Line count: 213
-// Line count: 214
-// Line count: 215
-// Line count: 216
-// Line count: 217
-// Line count: 218
-// Line count: 219
-// Line count: 220
-// Line count: 221
-// Line count: 222
-// Line count: 223
-// Line count: 224
-// Line count: 225
-// Line count: 226
-// Line count: 227
-// Line count: 228
-// Line count: 229
-// Line count: 230
-// Line count: 231
-// Line count: 232
-// Line count: 233
-// Line count: 234
-// Line count: 235
-// Line count: 236
-// Line count: 237
-// Line count: 238
-// Line count: 239
-// Line count: 240
-// Line count: 241
-// Line count: 242
-// Line count: 243
-// Line count: 244
-// Line count: 245
-// Line count: 246
-// Line count: 247
-// Line count: 248
-// Line count: 249
-// Line count: 250
-// Line count: 251
-// Line count: 252
-// Line count: 253
-// Line count: 254
-// Line count: 255
-// Line count: 256
-// Line count: 257
-// Line count: 258
-// Line count: 259
-// Line count: 260
-// Line count: 261
-// Line count: 262
-// Line count: 263
-// Line count: 264
-// Line count: 265
-// Line count: 266
-// Line count: 267
-// Line count: 268
-// Line count: 269
-// Line count: 270
-// Line count: 271
-// Line count: 272
-// Line count: 273
-// Line count: 274
-// Line count: 275
-// Line count: 276
-// Line count: 277
-// Line count: 278
-// Line count: 279
-// Line count: 280
-// Line count: 281
-// Line count: 282
-// Line count: 283
-// Line count: 284
-// Line count: 285
-// Line count: 286
-// Line count: 287
-// Line count: 288
-// Line count: 289
-// Line count: 290
-// Line count: 291
-// Line count: 292
-// Line count: 293
-// Line count: 294
-// Line count: 295
-// Line count: 296
-// Line count: 297
-// Line count: 298
-// Line count: 299
-// Line count: 300
-// End of filler content for utils.ts
+// Section 2: Advanced and Specific Utility Functions
+
+/**
+ * Clamps a number between a minimum and maximum value.
+ * @param num The number to clamp.
+ * @param min The minimum value.
+ * @param max The maximum value.
+ * @returns The clamped number.
+ */
+export function clamp(num: number, min: number, max: number): number {
+  return Math.min(Math.max(num, min), max);
+}
+
+/**
+ * Calculates the linear interpolation (lerp) between two numbers.
+ * @param start The starting value.
+ * @param end The ending value.
+ * @param amount The interpolation amount (between 0 and 1).
+ * @returns The interpolated value.
+ */
+export function lerp(start: number, end: number, amount: number): number {
+  return (1 - amount) * start + amount * end;
+}
+
+/**
+* Formats a date object into a readable string like "Dec 4, 2023".
+* @param date - The Date object or date string.
+* @param locale - The locale for formatting.
+* @returns Formatted date string.
+*/
+export function formatDate(date: Date | string, locale: string = 'en-US'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/**
+ * Parses a query string into an object.
+ * @param queryString - The query string to parse (e.g., "?foo=bar&baz=qux").
+ * @returns An object representation of the query string.
+ */
+export function parseQueryString(queryString: string): Record<string, string> {
+  if (queryString.startsWith('?')) {
+    queryString = queryString.substring(1);
+  }
+  return queryString.split('&').reduce((acc, pair) => {
+    const [key, value] = pair.split('=');
+    if (key) {
+      acc[decodeURIComponent(key)] = decodeURIComponent(value || '');
+    }
+    return acc;
+  }, {} as Record<string, string>);
+}
+
+/**
+* Creates a query string from an object.
+* @param params - The object to convert to a query string.
+* @returns A URL-encoded query string.
+*/
+export function stringifyQueryParams(params: Record<string, any>): string {
+  return Object.keys(params)
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&');
+}
+
+/**
+ * A utility to manage localStorage with type safety.
+ */
+export const localStorageManager = {
+  getItem<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
+    const item = window.localStorage.getItem(key);
+    if (item) {
+      try {
+        return JSON.parse(item) as T;
+      } catch (e) {
+        console.error(`Error parsing localStorage item "${key}":`, e);
+        return null;
+      }
+    }
+    return null;
+  },
+  setItem<T>(key: string, value: T): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const serializedValue = JSON.stringify(value);
+      window.localStorage.setItem(key, serializedValue);
+    } catch (e) {
+      console.error(`Error setting localStorage item "${key}":`, e);
+    }
+  },
+  removeItem(key: string): void {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(key);
+  }
+};
+
+
+/**
+ * Calculates the estimated reading time for a piece of text.
+ * @param text The text to be read.
+ * @param wordsPerMinute The average reading speed (words per minute).
+ * @returns The estimated reading time in minutes.
+ */
+export function getReadingTime(text: string, wordsPerMinute: number = 200): number {
+    if (!text) return 0;
+    const words = text.trim().split(/\s+/).length;
+    return Math.ceil(words / wordsPerMinute);
+}
+
+/**
+ * Escapes HTML characters in a string to prevent XSS.
+ * @param str The string to escape.
+ * @returns The escaped string.
+ */
+export function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
