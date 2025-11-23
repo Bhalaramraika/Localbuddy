@@ -39,19 +39,6 @@ export function initiateGoogleSignIn(authInstance: Auth): void {
   });
 }
 
-/**
- * Sets up the reCAPTCHA verifier for phone number authentication.
- * @param authInstance The Firebase Auth instance.
- * @param containerId The ID of the HTML element where the reCAPTCHA should be rendered.
- * @returns A RecaptchaVerifier instance.
- */
-export function setupRecaptcha(authInstance: Auth, containerId: string): RecaptchaVerifier {
-  // It's important that this is only called once per page load.
-  // The reCAPTCHA will now be visible to the user.
-  return new RecaptchaVerifier(authInstance, containerId, {
-    // 'size': 'invisible' is removed to make it visible.
-  });
-}
 
 /**
  * Initiates phone number sign-in.

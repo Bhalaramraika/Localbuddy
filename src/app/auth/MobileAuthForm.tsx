@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useUser } from '@/firebase';
 import {
-  setupRecaptcha,
   initiatePhoneNumberSignIn,
   confirmOtpCode,
 } from '@/firebase/non-blocking-login';
@@ -25,6 +24,7 @@ import * as React from 'react';
 import { Loader } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
+import { RecaptchaVerifier as FirebaseRecaptchaVerifier } from 'firebase/auth';
 
 const phoneSchema = z.object({
   phone: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Please enter a valid phone number with country code (e.g., +919876543210).'),
@@ -43,10 +43,10 @@ export default function MobileAuthForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [step, setStep] = React.useState<'phone' | 'otp'>('phone');
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
-  
-  // Use a ref to hold the recaptcha verifier to prevent re-creation
+  const [recaptchaResolved, setRecaptchaResolved] = React.useState(false);
   const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
-  
+  const recaptchaContainerRef = React.useRef<HTMLDivElement>(null);
+
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({
     resolver: zodResolver(phoneSchema),
     defaultValues: { phone: '+91' },
@@ -58,8 +58,18 @@ export default function MobileAuthForm() {
   });
 
   React.useEffect(() => {
-    if (!recaptchaVerifierRef.current && auth) {
-      recaptchaVerifierRef.current = setupRecaptcha(auth, 'recaptcha-container');
+    if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
+      const verifier = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        'size': 'normal',
+        'callback': () => {
+          setRecaptchaResolved(true);
+        },
+        'expired-callback': () => {
+          setRecaptchaResolved(false);
+        },
+      });
+      recaptchaVerifierRef.current = verifier;
+      verifier.render();
     }
   }, [auth]);
 
@@ -72,9 +82,9 @@ export default function MobileAuthForm() {
   const onPhoneSubmit = async (values: z.infer<typeof phoneSchema>) => {
     setIsLoading(true);
     if (!recaptchaVerifierRef.current) {
-        toast({ variant: 'destructive', title: 'reCAPTCHA not initialized.' });
-        setIsLoading(false);
-        return;
+      toast({ variant: 'destructive', title: 'reCAPTCHA not initialized.' });
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -88,11 +98,12 @@ export default function MobileAuthForm() {
         title: 'Failed to Send OTP',
         description: error.message || 'An unknown error occurred.',
       });
-       // Reset reCAPTCHA if it fails
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
-        recaptchaVerifierRef.current = setupRecaptcha(auth, 'recaptcha-container');
-      }
+      // Reset reCAPTCHA if it fails
+      recaptchaVerifierRef.current.render().then(widgetId => {
+        // @ts-ignore
+        window.grecaptcha.reset(widgetId);
+        setRecaptchaResolved(false);
+      });
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +119,6 @@ export default function MobileAuthForm() {
     }
     try {
       await confirmOtpCode(confirmationResult, values.otp);
-      // Don't setIsLoading(false) here, the useEffect will redirect
       toast({ title: 'Success!', description: 'You are now logged in.' });
     } catch (error: any) {
       toast({
@@ -147,8 +157,12 @@ export default function MobileAuthForm() {
                 </FormItem>
               )}
             />
-             <div id="recaptcha-container" className="flex justify-center"></div>
-            <Button type="submit" className="w-full h-12 text-lg font-bold cyan-glow-button" disabled={isLoading}>
+            <div ref={recaptchaContainerRef} className="flex justify-center"></div>
+            <Button 
+                type="submit" 
+                className="w-full h-12 text-lg font-bold cyan-glow-button" 
+                disabled={isLoading || !recaptchaResolved}
+            >
               {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
               Send OTP
             </Button>
