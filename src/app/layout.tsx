@@ -3,6 +3,7 @@ import { Poppins } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import MainAppLayout from './(main)/layout';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -29,7 +30,7 @@ export default function RootLayout({
         )}
       >
         <main className="relative flex flex-col items-center p-4 sm:p-6 md:p-8">
-          {children}
+          <MainAppLayout>{children}</MainAppLayout>
         </main>
         <Toaster />
       </body>

@@ -20,6 +20,12 @@ export default function MainAppLayout({
     { href: '/profile', icon: User, label: 'Profile' },
   ];
 
+  // We only want to show the main app layout on the main pages
+  const showLayout = navItems.some(item => item.href === pathname);
+  if (!showLayout) {
+    return <div className="w-full max-w-6xl mx-auto">{children}</div>;
+  }
+
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground pb-28">
       {children}
