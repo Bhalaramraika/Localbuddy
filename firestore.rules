@@ -11,18 +11,10 @@ service cloud.firestore {
 
     // Users can read public parts of any profile, but only write to their own.
     match /users/{userId} {
+      // Allow reading basic public info by any authenticated user
       allow read: if request.auth != null;
-      allow get: if isOwner(userId);
-      
-      // On create, only specific fields can be set by the system (via provider).
-      allow create: if isOwner(userId) 
-                    && request.resource.data.walletBalance == 0 
-                    && request.resource.data.xp == 0;
-
-      // On update, user can only change a few fields. Balance/XP is changed by transactions.
-      allow update: if isOwner(userId)
-                    && request.resource.data.walletBalance == resource.data.walletBalance
-                    && request.resource.data.xp == resource.data.xp;
+      // Allow full get/write access only to the owner
+      allow get, write: if isOwner(userId);
     }
 
     // Tasks can be read by anyone, but mutations are restricted.
@@ -55,13 +47,16 @@ service cloud.firestore {
       }
     }
     
-    // Transactions can only be created by the user involved, and are read-only for that user.
+    // Transactions can only be accessed by the user involved.
     match /transactions/{transactionId} {
+      // User can only get their own transaction
     	allow get: if isOwner(resource.data.userId);
-      // Allow users to query their own transactions
-      allow list: if request.auth.uid == request.query.filters.userId.string_value;
+      // User can only list their own transactions by querying on their userId
+      allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
+      // User can only create transactions for themselves
       allow create: if isOwner(request.resource.data.userId);
-      allow update, delete: if false; // Transactions are immutable
+      // Transactions are immutable
+      allow update, delete: if false;
     }
 
     // Notifications are private to each user.

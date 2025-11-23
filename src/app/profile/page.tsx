@@ -150,7 +150,6 @@ export default function ProfilePage() {
 
   const { data: completedTasks, isLoading: isTasksLoading } = useCollection(completedTasksQuery);
 
-
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -185,7 +184,7 @@ export default function ProfilePage() {
 
       <section className="glass-card w-full p-4">
         <div className="flex justify-around gap-4">
-          <StatCard value={`₹${(userData?.walletBalance) || 0}`} label="Earnings" icon={<Wallet className="w-6 h-6"/>} isLoading={isUserLoading} />
+          <StatCard value={`₹${(userData?.walletBalance || 0).toLocaleString()}`} label="Earnings" icon={<Wallet className="w-6 h-6"/>} isLoading={isUserLoading} />
           <StatCard value={String(tasksDone)} label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} isLoading={isTasksLoading}/>
           <StatCard value={tasksDone > 0 ? avgRating : 'N/A'} label="Avg. Rating" icon={<Star className="w-6 h-6"/>} isLoading={isTasksLoading}/>
         </div>

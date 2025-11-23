@@ -74,28 +74,28 @@ export default function WalletPage() {
   const transactionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     
-    let q = query(
-        collection(firestore, 'transactions'),
-        where('userId', '==', user.uid),
-        orderBy('timestamp', 'desc')
-    );
+    const baseQuery = query(collection(firestore, 'transactions'), where('userId', '==', user.uid));
+    let finalQuery = query(baseQuery, orderBy('timestamp', 'desc'));
 
     let typeFilter;
     switch(filter) {
         case 'Income':
-            typeFilter = 'release';
+            typeFilter = ['release', 'add'];
+            finalQuery = query(baseQuery, where('type', 'in', typeFilter), orderBy('timestamp', 'desc'));
             break;
         case 'Outcome':
-            typeFilter = 'withdraw';
+            typeFilter = ['withdraw'];
+            finalQuery = query(baseQuery, where('type', 'in', typeFilter), orderBy('timestamp', 'desc'));
             break;
         case 'Escrow':
-            typeFilter = 'lock';
+            typeFilter = ['lock'];
+            finalQuery = query(baseQuery, where('type', 'in', typeFilter), orderBy('timestamp', 'desc'));
             break;
         default:
-             return q;
+             break; // 'All' uses the base query with just the userId filter
     }
 
-    return query(q, where('type', '==', typeFilter));
+    return finalQuery;
 
   }, [firestore, user, filter]);
 
@@ -234,7 +234,7 @@ export default function WalletPage() {
               key={item.id}
               icon={getTransactionIcon(item.type)}
               title={item.taskId ? `Task: ${item.taskId.slice(0,6)}...` : 'Wallet Action'}
-              date={new Date(item.timestamp.toDate()).toLocaleDateString()}
+              date={new Date(item.timestamp?.toDate()).toLocaleDateString()}
               amount={getTransactionAmount(item)}
               color={getTransactionColor(item.type)}
               type={item.type}
