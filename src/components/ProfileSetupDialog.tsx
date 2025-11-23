@@ -246,27 +246,6 @@ export function ProfileSetupDialog() {
                   </motion.div>
                 )}
 
-                {step === 3 && (
-                   <motion.div
-                    key="step3"
-                    custom={direction}
-                    variants={StepVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="flex flex-col items-center text-center"
-                  >
-                    <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border-2 border-green-500" style={{boxShadow: '0 0 20px rgba(0, 255, 150, 0.4)'}}>
-                        <Check className="w-12 h-12 text-green-400" />
-                    </div>
-                    <h2 className="text-3xl font-bold mb-2">All Set!</h2>
-                    <p className="text-white/80 mb-6">Your profile is ready. Welcome to the future of tasks.</p>
-                     <button onClick={() => setIsOpen(false)} className="cyan-glow-button w-full h-12 text-lg">
-                        Let's Go!
-                    </button>
-                  </motion.div>
-                )}
-
               </AnimatePresence>
             </motion.div>
           </motion.div>

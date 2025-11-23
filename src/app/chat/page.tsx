@@ -337,11 +337,12 @@ function ChatPageContent() {
   const { data: chatData } = useCollection(chatQuery);
   const chatId = chatData && chatData.length > 0 ? chatData[0].id : null;
 
-  const otherParticipantId = taskData && user ? taskData.participantIds?.find((id: string) => id !== user.uid) : null;
+  const participantIds = taskData ? [taskData.posterId, taskData.buddyId].filter(Boolean) : [];
+  const otherParticipantId = participantIds.find(id => id !== user?.uid);
   
   const otherParticipantRef = useMemoFirebase(() => {
-      if (!firestore || !otherParticipantId) return null;
-      return doc(firestore, 'users', otherParticipantId);
+    if (!firestore || !otherParticipantId) return null;
+    return doc(firestore, 'users', otherParticipantId);
   }, [firestore, otherParticipantId]);
 
   const { data: otherParticipantData } = useDoc(otherParticipantRef);
