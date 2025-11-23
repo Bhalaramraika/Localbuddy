@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
 import Link from 'next/link';
+import { ProfileSetupDialog } from '@/components/ProfileSetupDialog';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
@@ -321,6 +322,7 @@ export default function HomePage() {
 
   return (
     <>
+      {user && !userData?.profileCompleted && <ProfileSetupDialog />}
       <MainHeader userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
       <QuickActionsSection />
       <TaskFilters />

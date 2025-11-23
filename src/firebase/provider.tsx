@@ -86,28 +86,30 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
           const userRef = doc(firestore, 'users', firebaseUser.uid);
           
           try {
-            await runTransaction(firestore, async (transaction) => {
-              const userSnap = await transaction.get(userRef);
-              if (!userSnap.exists()) {
-                // User is new, create a document for them.
-                const newUserDoc = {
-                    id: firebaseUser.uid,
-                    name: firebaseUser.displayName || firebaseUser.email || 'Anonymous',
-                    photoUrl: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
-                    location: '',
-                    walletBalance: 0, // starting balance is 0
-                    xp: 0,
-                    level: 'Rookie',
-                    verificationStatus: 'pending',
-                    mobileVerified: false,
-                    aadharVerified: false,
-                    joinDate: new Date().toISOString(),
-                };
-                transaction.set(userRef, newUserDoc);
-              }
-            });
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+              // User is new, create a document for them.
+              const newUserDoc = {
+                  id: firebaseUser.uid,
+                  name: firebaseUser.displayName || firebaseUser.email || 'Anonymous',
+                  photoUrl: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
+                  location: '',
+                  walletBalance: 0, // starting balance is 0
+                  xp: 0,
+                  level: 'Rookie',
+                  verificationStatus: 'pending',
+                  mobileVerified: false,
+                  aadharVerified: false,
+                  joinDate: new Date().toISOString(),
+                  profileCompleted: false, // Start with profile incomplete
+                  birthYear: null,
+                  appLanguage: 'english',
+              };
+              // Use non-blocking set to avoid holding up the UI
+              setDocumentNonBlocking(userRef, newUserDoc, {});
+            }
           } catch (e) {
-            console.error("Transaction failed: ", e);
+            console.error("Failed to check/create user document:", e);
           }
         }
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
@@ -205,5 +207,3 @@ export const useUser = (): UserHookResult => { // Renamed from useAuthUser
   const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
   return { user, isUserLoading, userError };
 };
-
-    
