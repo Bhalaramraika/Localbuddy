@@ -20,6 +20,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import * as React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { cn, formatCurrency, sleep } from '@/lib/utils';
+import Link from 'next/link';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
@@ -66,7 +67,11 @@ const TaskCardCountdown = ({ countdown }: { countdown: string }) => {
 };
 
 const TaskCardProgress = () => {
-    const [progress, setProgress] = React.useState(Math.random() * 100);
+    const [progress, setProgress] = React.useState(0);
+    
+    React.useEffect(() => {
+        setProgress(Math.random() * 100);
+    }, []);
 
     React.useEffect(() => {
         const timer = setTimeout(() => {
@@ -141,7 +146,12 @@ const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor }: { icon: Reac
 );
 
 const HeaderWalletBalance = () => {
-    const [balance, setBalance] = React.useState(1500);
+    const [balance, setBalance] = React.useState(0);
+    
+    React.useEffect(() => {
+        setBalance(1500);
+    }, []);
+    
     React.useEffect(() => {
         const interval = setInterval(() => {
             setBalance(prev => prev + (Math.random() * 100 - 40));
@@ -335,20 +345,20 @@ export default function HomePage() {
 
       <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
         <nav className="glass-card flex items-center justify-around p-3 rounded-full">
-          <a href="#" className="flex flex-col items-center gap-1 text-neon-cyan">
+          <Link href="/" className="flex flex-col items-center gap-1 text-neon-cyan">
              <div className="p-2 bg-neon-cyan/20 rounded-full">
                 <Home className="w-6 h-6" style={{ filter: 'drop-shadow(0 0 5px var(--neon-cyan))' }} />
              </div>
-          </a>
-          <a href="/wallet" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
+          </Link>
+          <Link href="/wallet" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
             <Wallet className="w-6 h-6" />
-          </a>
-          <a href="/chat" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
+          </Link>
+          <Link href="/chat" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
             <MessageSquare className="w-6 h-6" />
-          </a>
-          <a href="/profile" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center gap-1 text-gray-400 hover:text-neon-cyan transition-colors">
             <User className="w-6 h-6" />
-          </a>
+          </Link>
         </nav>
       </footer>
     </div>
