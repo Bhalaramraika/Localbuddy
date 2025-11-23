@@ -1,0 +1,117 @@
+/**
+ * Core Philosophy: This ruleset enforces a security model based on user ownership and controlled public access.
+ * Data is segregated into user-private collections (users, transactions) and publicly readable collections (tasks).
+ * Access to shared resources like chats is strictly controlled by a denormalized list of participants on each document.
+ * The default posture is to deny access, granting permissions explicitly and securely.
+ *
+ * Data Structure: The database uses four top-level collections:
+ * - /users/{userId}: Private user profile data, accessible only by the owner.
+ * - /tasks/{taskId}: Publicly viewable tasks, with write access restricted to the original poster.
+ * - /chats/{chatId}: Private chat sessions, accessible only to the task poster and the assigned buddy.
+ * - /transactions/{transactionId}: Private transaction records, accessible only by the owning user.
+ *
+ * Key Security Decisions:
+ * - User Listing Disabled: To protect user privacy, it is not possible to query or list all users in the `/users` collection.
+ * - Private Data Isolation: User-specific, sensitive collections like `/transactions` are structured at the top level. To prevent data leakage, `list` operations on these collections are completely disabled. Users can only fetch their own documents by their specific ID.
+ * - Chat Security: Access to `/chats` is controlled by a `participantIds` array that MUST be present on each chat document. This denormalization is critical for performance and security, avoiding complex and slow `get()` calls to other documents.
+ * - Immutable Ownership: Once a document is created (e.g., a Task or Transaction), its ownership link (e.g., `posterId`, `userId`) cannot be changed. This prevents documents from being reassigned to other users after creation.
+ *
+ * Denormalization for Authorization:
+ * - Tasks: Each task document contains a `posterId` field. This allows rules to verify ownership for update/delete operations directly and efficiently without looking up other documents.
+ * - Chats: To secure chats, each `/chats/{chatId}` document MUST contain a `participantIds` array (e.g., `['poster_uid', 'buddy_uid']`). This allows a simple and fast check to see if the requesting user is part of the chat, which is vastly superior to performing a `get()` on the associated task document.
+ *
+ * Structural Segregation:
+ * The data model uses separate top-level collections for different data types, each with a distinct and uniform security posture. This avoids mixing public and private data within the same collection, which simplifies rules and makes queries safer and more performant.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for readable, reusable logic
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checks if the requesting user's UID matches the provided userId.
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Checks for ownership on an existing document. Used for update/delete.
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // Checks if a user is a participant in a chat on create.
+    // NOTE: This rule requires a `participantIds` array on the chat document.
+    function isParticipantOnCreate() {
+      return isSignedIn() && request.auth.uid in request.resource.data.participantIds;
+    }
+
+    // Checks if a user is a participant in an existing chat.
+    // NOTE: This rule requires a `participantIds` array on the chat document.
+    function isParticipantOnAccess() {
+      return isSignedIn() && resource != null && request.auth.uid in resource.data.participantIds;
+    }
+
+    /**
+     * @description Manages user profiles. A user can create their own profile and has full control over it.
+     * @path /users/{userId}
+     * @allow A user (auth.uid='user123') can create their own profile at `/users/user123`.
+     * @deny A user (auth.uid='user123') cannot read or write to another user's profile at `/users/user456`. Listing all users is denied.
+     * @principle Restricts access to a user's own data tree and enforces relational integrity.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages tasks. Tasks are public for anyone to read and list.
+     * @path /tasks/{taskId}
+     * @allow Any user, signed in or not, can read a task. A signed-in user (auth.uid='user123') can (create) a new task if they set `posterId` to 'user123'.
+     * @deny A user (auth.uid='user456') cannot (update) or (delete) a task created by 'user123'.
+     * @principle Enforces public read access while restricting writes to the document owner.
+     */
+    match /tasks/{taskId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.posterId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.posterId) && request.resource.data.posterId == resource.data.posterId;
+      allow delete: if isExistingOwner(resource.data.posterId);
+    }
+
+    /**
+     * @description Manages chat sessions for tasks. Access is restricted to participants.
+     * @path /chats/{chatId}
+     * @allow A user (auth.uid='user123') can (get) or (create) a chat if their UID is in the `participantIds` array.
+     * @deny A user (auth.uid='user456') cannot read or write a chat if their UID is not in `participantIds`. Listing all chats is denied.
+     * @principle Enforces shared access for a closed group of collaborators using a denormalized participant list.
+     */
+    match /chats/{chatId} {
+      allow get: if isParticipantOnAccess();
+      allow list: if false;
+      allow create: if isParticipantOnCreate();
+      allow update: if isParticipantOnAccess();
+      allow delete: if isParticipantOnAccess();
+    }
+
+    /**
+     * @description Manages user transaction records. Transactions are private to the user.
+     * @path /transactions/{transactionId}
+     * @allow A user (auth.uid='user123') can (create) and (get) their own transaction if the document's `userId` field is 'user123'.
+     * @deny A user (auth.uid='user456') cannot read or write a transaction belonging to 'user123'. Listing transactions is denied to prevent data leakage.
+     * @principle Enforces strict document ownership for sensitive data and disables collection listing.
+     */
+    match /transactions/{transactionId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(resource.data.userId);
+    }
+  }
+}
