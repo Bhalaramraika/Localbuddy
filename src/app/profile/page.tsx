@@ -50,7 +50,7 @@ const ProfileHeader = () => {
     const [name, setName] = React.useState('Rahul Smith');
 
     return (
-      <header className="flex flex-col items-center gap-4 glass-card p-6">
+      <header className="flex flex-col items-center gap-4 glass-card p-6 w-full">
         <div className="relative group">
           {userAvatar && (
             <Image
@@ -132,7 +132,7 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      <section className="glass-card p-6 flex flex-col md:flex-row items-center gap-6">
+      <section className="glass-card p-6 flex flex-col md:flex-row items-center gap-6 w-full">
         <div className="flex-shrink-0">
             <CircleProgress value={overallProgress} size={150} strokeWidth={12} />
         </div>
@@ -167,7 +167,7 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
 
-      <footer className="mt-4 grid grid-cols-2 gap-4">
+      <footer className="mt-4 grid grid-cols-2 gap-4 w-full">
          <Button variant="outline" className="w-full h-12 text-md glass-card border-white/20 hover:bg-white/10 hover:text-white transition-all transform hover:scale-105">
             <Settings className="mr-2 h-5 w-5" />
             Settings

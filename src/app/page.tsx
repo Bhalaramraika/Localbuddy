@@ -22,7 +22,7 @@ const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
 
 const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: string, tag: string }) => (
-    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/10">
+    <div className="relative w-full h-40 rounded-lg overflow-hidden border border-white/10">
         <Image src={imageUrl} alt={title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
         <div className={`absolute top-2 right-2 bg-neon-pink/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--neon-pink)] transition-all duration-300 group-hover:bg-neon-pink`}>
@@ -34,8 +34,8 @@ const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: stri
 const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price: string, tag: string, hasImage: boolean }) => (
     <div className="flex justify-between items-start">
         <div className="flex flex-col">
-            <h2 className="text-2xl font-bold text-white transition-colors duration-300 group-hover:text-neon-cyan">{title}</h2>
-            <p className="text-3xl font-bold text-neon-green mt-1" style={{ textShadow: '0 0 10px var(--neon-green)' }}>{price}</p>
+            <h2 className="text-xl font-bold text-white transition-colors duration-300 group-hover:text-neon-cyan">{title}</h2>
+            <p className="text-2xl font-bold text-neon-green mt-1" style={{ textShadow: '0 0 10px var(--neon-green)' }}>{price}</p>
         </div>
         {!hasImage && (
             <div className="bg-neon-pink/80 text-white text-xs font-bold px-3 py-1 rounded-full shadow-[0_0_8px_var(--neon-pink)] transition-all duration-300 group-hover:bg-neon-pink">
@@ -115,7 +115,7 @@ const TaskCardButton = () => {
 
 const TaskCard = ({ title, price, tag, countdown, imageUrl }: { title: string, price: string, tag: string, countdown: string, imageUrl?: string }) => {
   return (
-    <div className="glass-card p-6 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-neon-cyan/10 hover:-translate-y-1">
+    <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-neon-cyan/10 hover:-translate-y-1">
       {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={tag} />}
       <TaskCardHeader title={title} price={price} tag={tag} hasImage={!!imageUrl} />
       <TaskCardCountdown countdown={countdown} />
@@ -322,19 +322,20 @@ export default function HomePage() {
       <StoriesSection />
       <TaskFilters />
 
-      {tasks.map((task, index) => (
-         <section key={index}>
+      <section className="w-full grid grid-cols-1 gap-6">
+        {tasks.map((task, index) => (
             <TaskCard 
+              key={index}
               title={task.title}
               price={task.price}
               tag={task.tag}
               countdown={task.countdown}
               imageUrl={task.imageUrl}
             />
-         </section>
-      ))}
+        ))}
+      </section>
 
-      <section className="glass-card p-4">
+      <section className="glass-card p-4 w-full">
           <h3 className="font-bold text-lg mb-3 px-2">Priority Hub</h3>
           {advancedListItems.map(item => <AdvancedListItem key={item.title} {...item} />)}
       </section>
