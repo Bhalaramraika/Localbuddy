@@ -95,7 +95,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
                     name: firebaseUser.displayName || firebaseUser.email || 'Anonymous',
                     photoUrl: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
                     location: '',
-                    walletBalance: 1000, // starting balance
+                    walletBalance: 0, // starting balance is 0
                     xp: 0,
                     level: 'Rookie',
                     verificationStatus: 'pending',

@@ -9,8 +9,8 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSearchParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { doc, collection, writeBatch, runTransaction, getDoc, increment } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking, useCollection } from '@/firebase';
+import { doc, collection, writeBatch, runTransaction, getDoc, increment, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -166,22 +166,25 @@ const AttachmentMenu = ({ onSelect }: { onSelect: (type: string) => void }) => (
     </div>
 );
 
-const ChatFooter = ({ onSend, taskData, user }: { onSend: (message: any) => void; taskData: any, user: any }) => {
+const ChatFooter = ({ onSend, taskData, user, chatId }: { onSend: (message: any) => void; taskData: any, user: any, chatId: string | null }) => {
     const [message, setMessage] = React.useState('');
     const [showAttachments, setShowAttachments] = React.useState(false);
     const firestore = useFirestore();
 
     const handleSend = () => {
-        if (message.trim()) {
-            onSend({ type: 'text', content: message, isOutgoing: true, time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' }) });
+        if (message.trim() && firestore && chatId) {
+            const messagesCol = collection(firestore, 'chats', chatId, 'messages');
+            addDocumentNonBlocking(messagesCol, {
+                text: message,
+                senderId: user.uid,
+                timestamp: new Date()
+            });
             setMessage('');
         }
     };
 
     const handleAttachmentSelect = (type: string) => {
-        if (type === 'location') {
-             onSend({ type: 'location', isOutgoing: true, time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' }) });
-        }
+        // This is a placeholder for future functionality
         setShowAttachments(false);
     };
 
@@ -209,25 +212,34 @@ const ChatFooter = ({ onSend, taskData, user }: { onSend: (message: any) => void
                     throw "User not found";
                 }
     
-                // 1. Decrement poster's balance
-                transaction.update(posterRef, { walletBalance: increment(-budget) });
-    
+                // 1. Decrement poster's balance (not needed, balance is virtual)
                 // 2. Increment buddy's balance
                 transaction.update(buddyRef, { walletBalance: increment(budget) });
     
                 // 3. Update task status to 'paid'
                 transaction.update(taskRef, { status: 'paid' });
     
-                // 4. Create transaction record
-                const newTransaction = {
-                    userId: posterId,
+                // 4. Create transaction record for buddy (income)
+                const buddyTransaction = {
+                    userId: buddyId,
                     taskId,
                     type: 'release',
                     amount: budget,
                     status: 'success',
                     timestamp: new Date(),
                 };
-                transaction.set(transactionRef, newTransaction);
+                transaction.set(doc(collection(firestore, 'transactions')), buddyTransaction);
+
+                 // 5. Create transaction record for poster (outcome)
+                 const posterTransaction = {
+                    userId: posterId,
+                    taskId,
+                    type: 'withdraw', // This is an outcome for the poster
+                    amount: budget,
+                    status: 'success',
+                    timestamp: new Date(),
+                };
+                transaction.set(doc(collection(firestore, 'transactions')), posterTransaction);
             });
     
         } catch (error) {
@@ -308,6 +320,7 @@ function ChatPageContent() {
   const taskId = searchParams.get('taskId');
   const { user } = useUser();
   const firestore = useFirestore();
+  const [messages, setMessages] = React.useState<any[]>([]);
 
   const taskDocRef = useMemoFirebase(() => {
     if (!firestore || !taskId) return null;
@@ -316,6 +329,28 @@ function ChatPageContent() {
 
   const { data: taskData, isLoading: isTaskLoading } = useDoc(taskDocRef);
 
+  const chatQuery = useMemoFirebase(() => {
+      if (!firestore || !taskId) return null;
+      return query(collection(firestore, 'chats'), where('taskId', '==', taskId));
+  }, [firestore, taskId]);
+
+  const { data: chatData } = useCollection(chatQuery);
+  const chatId = chatData && chatData.length > 0 ? chatData[0].id : null;
+
+  const messagesQuery = useMemoFirebase(() => {
+      if (!firestore || !chatId) return null;
+      return query(collection(firestore, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
+  }, [firestore, chatId]);
+
+  const { data: liveMessages } = useCollection(messagesQuery);
+
+  React.useEffect(() => {
+    if (liveMessages) {
+        setMessages(liveMessages);
+    }
+  }, [liveMessages])
+
+
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
@@ -323,18 +358,8 @@ function ChatPageContent() {
   
   const { data: userData } = useDoc(userDocRef);
 
-  const [messages, setMessages] = React.useState([
-      { type: 'text', content: "Hi, are you on your way? I'm waiting at the location.", isOutgoing: false, time: '10:30 AM' },
-      { type: 'text', content: "Hey, almost there. Please release the payment from escrow.", isOutgoing: true, time: '10:32 AM' },
-      { type: 'voice', duration: "0:23", progress: 33, isOutgoing: false, time: '10:33 AM' },
-      { type: 'text', content: "Okay, I've just released it. Check your wallet.", isOutgoing: false, time: '10:34 AM' },
-      { type: 'text', content: "Got it, thanks! I'm just around the corner.", isOutgoing: true, time: '10:35 AM' },
-      { type: 'image', imageUrl: getImage('task_household')?.imageUrl, isOutgoing: true, time: '10:36 AM' },
-      { type: 'location', isOutgoing: false, time: '10:38 AM' }
-  ]);
-
   const handleSend = (newMessage: any) => {
-      setMessages(prev => [...prev, newMessage]);
+      // This is now handled by the ChatFooter component directly
   };
 
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
@@ -347,6 +372,18 @@ function ChatPageContent() {
         }
     }
   }, [messages]);
+
+  // Create chat if it doesn't exist
+  React.useEffect(() => {
+    if (firestore && taskId && taskData && user && chatData && chatData.length === 0 && (user.uid === taskData.posterId || user.uid === taskData.buddyId)) {
+        const chatCol = collection(firestore, 'chats');
+        addDocumentNonBlocking(chatCol, {
+            taskId: taskId,
+            participantIds: [taskData.posterId, taskData.buddyId].filter(Boolean)
+        });
+    }
+  }, [firestore, taskId, taskData, user, chatData]);
+
 
   if (!taskId) {
       return (
@@ -363,15 +400,17 @@ function ChatPageContent() {
         <div className="p-4 space-y-6">
             {messages.map((msg, index) => (
                 <div key={index}>
-                    {msg.type === 'text' && <ChatMessage text={<p className="text-sm">{msg.content}</p>} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
-                    {msg.type === 'voice' && <ChatMessage text={<VoiceNote duration={msg.duration} initialProgress={msg.progress} />} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
-                    {msg.type === 'image' && msg.imageUrl && <ChatMessage text={<ImageAttachment imageUrl={msg.imageUrl}/>} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
-                    {msg.type === 'location' && <ChatMessage text={<LocationAttachment />} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
+                    <ChatMessage 
+                        text={<p className="text-sm">{msg.text}</p>} 
+                        isOutgoing={msg.senderId === user?.uid} 
+                        time={new Date(msg.timestamp?.toDate()).toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' })} 
+                        userDetails={userData} 
+                    />
                 </div>
             ))}
         </div>
       </ScrollArea>
-      <ChatFooter onSend={handleSend} taskData={taskData} user={user} />
+      <ChatFooter onSend={handleSend} taskData={taskData} user={user} chatId={chatId} />
     </div>
   );
 }

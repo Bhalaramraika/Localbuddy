@@ -131,17 +131,13 @@ export default function ProfilePage() {
 
 
   const allBadges = [
-    { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified, description: "Your identity has been successfully verified." },
-    { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: true, description: "Completed 10+ tasks before deadline." },
-    { icon: <Award className="w-10 h-10 text-yellow-500" />, color: "border-yellow-500", label: "5-Star Hero", achieved: true, description: "Maintained a 5-star rating over 20 tasks." },
+    { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified || false, description: "Your identity has been successfully verified." },
+    { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: false, description: "Completed 10+ tasks before deadline." },
+    { icon: <Award className="w-10 h-10 text-yellow-500" />, color: "border-yellow-500", label: "5-Star Hero", achieved: false, description: "Maintained a 5-star rating over 20 tasks." },
     { icon: <Star className="w-10 h-10 text-gray-400" />, color: "border-gray-400", label: "Top Earner", achieved: false, description: "Become one of the top 1% earners on the platform." },
   ];
   
   const skills = [
-      { name: "Plumbing", level: 4, xp: 850, maxXp: 1000 },
-      { name: "Tech Repair", level: 3, xp: 550, maxXp: 750 },
-      { name: "Cleaning", level: 2, xp: 300, maxXp: 500 },
-      { name: "Delivery", level: 1, xp: 50, maxXp: 250 },
   ];
 
   const overallProgress = (userData?.xp / 500) * 100 || 0;
@@ -152,9 +148,9 @@ export default function ProfilePage() {
 
       <section className="glass-card w-full p-4">
         <div className="flex justify-around gap-4">
-          <StatCard value={`₹${(userData?.walletBalance/1000) || 0}k`} label="Earnings" icon={<Wallet className="w-6 h-6"/>} isLoading={isUserLoading} />
-          <StatCard value="25" label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} />
-          <StatCard value="4.8 ★" label="Avg. Rating" icon={<Star className="w-6 h-6"/>} />
+          <StatCard value={`₹${(userData?.walletBalance) || 0}`} label="Earnings" icon={<Wallet className="w-6 h-6"/>} isLoading={isUserLoading} />
+          <StatCard value="0" label="Tasks Done" icon={<Briefcase className="w-6 h-6"/>} />
+          <StatCard value="N/A" label="Avg. Rating" icon={<Star className="w-6 h-6"/>} />
         </div>
       </section>
 
@@ -187,7 +183,9 @@ export default function ProfilePage() {
              <section className="flex flex-col gap-4">
                 <h2 className="text-xl font-bold px-2">Skill Set</h2>
                 <div className="glass-card p-4 flex flex-col gap-3">
-                    {skills.map(skill => <SkillPill key={skill.name} {...skill} />)}
+                    {skills.length > 0 ? skills.map(skill => <SkillPill key={skill.name} {...skill} />) : (
+                      <p className="text-center text-gray-500 py-4">You haven't added any skills yet.</p>
+                    )}
                 </div>
             </section>
         </TabsContent>

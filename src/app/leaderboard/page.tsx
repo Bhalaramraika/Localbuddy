@@ -2,33 +2,22 @@
 'use client';
 
 import Image from 'next/image';
-import { Crown, Trophy, TrendingUp, TrendingDown } from 'lucide-react';
+import { Crown, Trophy, TrendingUp, TrendingDown, Loader } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
 type LeaderboardUser = {
   rank: number;
   name: string;
-  avatarId: string;
+  photoUrl: string;
   score: number;
-  change: number;
+  change: number; // Placeholder for now
 };
-
-const leaderboardData: LeaderboardUser[] = [
-  { rank: 1, name: 'CyberRonin', avatarId: 'user2', score: 15200, change: 0 },
-  { rank: 2, name: 'GlitchMaster', avatarId: 'user1', score: 14800, change: 2 },
-  { rank: 3, name: 'SynthWave', avatarId: 'user3', score: 14500, change: -1 },
-  { rank: 4, name: 'DataWraith', avatarId: 'user4', score: 13900, change: 1 },
-  { rank: 5, name: 'Jax', avatarId: 'user5', score: 13200, change: -2 },
-  { rank: 6, name: 'Echo', avatarId: 'user2', score: 12800, change: 0 },
-  { rank: 7, name: 'Nova', avatarId: 'user3', score: 12100, change: 3 },
-  { rank: 8, name: 'Vector', avatarId: 'user1', score: 11500, change: 0 },
-  { rank: 9, name: 'Pixel', avatarId: 'user4', score: 11200, change: -1 },
-  { rank: 10, name: 'GridRunner', avatarId: 'user5', score: 10800, change: 2 },
-];
 
 const RankIndicator = ({ rank }: { rank: number }) => {
   if (rank === 1) return <Crown className="w-6 h-6 text-yellow-500" style={{ filter: 'drop-shadow(0 0 5px #f59e0b)' }} />;
@@ -44,7 +33,6 @@ const ChangeIndicator = ({ change }: { change: number }) => {
 };
 
 const LeaderboardRow = ({ user }: { user: LeaderboardUser }) => {
-  const avatar = getImage(user.avatarId);
   const isTopThree = user.rank <= 3;
 
   return (
@@ -55,7 +43,7 @@ const LeaderboardRow = ({ user }: { user: LeaderboardUser }) => {
       <div className="w-10 text-center flex items-center justify-center">
         <RankIndicator rank={user.rank} />
       </div>
-      <Image src={avatar?.imageUrl || ''} alt={user.name} width={48} height={48} className="rounded-full border-2 border-gray-300 group-hover:border-main-accent transition-colors" />
+      <Image src={user.photoUrl} alt={user.name} width={48} height={48} className="rounded-full border-2 border-gray-300 group-hover:border-main-accent transition-colors" />
       <div className="flex-grow">
         <p className="font-bold text-foreground text-lg">{user.name}</p>
         <p className="text-sm text-green-600">{user.score.toLocaleString()} XP</p>
@@ -69,6 +57,23 @@ const LeaderboardRow = ({ user }: { user: LeaderboardUser }) => {
 };
 
 export default function LeaderboardPage() {
+  const firestore = useFirestore();
+
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'users'), orderBy('xp', 'desc'), limit(10));
+  }, [firestore]);
+
+  const { data: users, isLoading } = useCollection(usersQuery);
+
+  const leaderboardData: LeaderboardUser[] = (users || []).map((user, index) => ({
+      rank: index + 1,
+      name: user.name,
+      photoUrl: user.photoUrl,
+      score: user.xp,
+      change: 0 // This is a placeholder as we don't track rank change
+  }));
+
   return (
     <>
       <header className="glass-card p-6 text-center">
@@ -80,24 +85,34 @@ export default function LeaderboardPage() {
         <p className="text-gray-500 text-sm mt-2">See who's dominating the task world.</p>
       </header>
       
-      <Tabs defaultValue="weekly" className="w-full">
+      <Tabs defaultValue="all-time" className="w-full">
         <TabsList className="grid w-full grid-cols-3 glass-card p-1 h-auto">
           <TabsTrigger value="daily" className="data-[state=active]:pill-active data-[state=inactive]:glass-card">Daily</TabsTrigger>
           <TabsTrigger value="weekly" className="data-[state=active]:pill-active data-[state=inactive]:glass-card">Weekly</TabsTrigger>
           <TabsTrigger value="all-time" className="data-[state=active]:pill-active data-[state=inactive]:glass-card">All-Time</TabsTrigger>
         </TabsList>
-        <TabsContent value="weekly" className="mt-6">
-            <div className="flex flex-col gap-2">
-                {leaderboardData.map(user => (
-                    <LeaderboardRow key={user.rank} user={user} />
-                ))}
-            </div>
+        <TabsContent value="all-time" className="mt-6">
+            {isLoading ? (
+                <div className="flex justify-center items-center h-40">
+                    <Loader className="w-12 h-12 animate-spin text-main-accent" />
+                </div>
+            ) : leaderboardData.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                    {leaderboardData.map(user => (
+                        <LeaderboardRow key={user.rank} user={user} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center text-gray-500 py-10 glass-card">
+                    <p>The leaderboard is empty. Complete some tasks to get started!</p>
+                </div>
+            )}
         </TabsContent>
         <TabsContent value="daily" className="mt-6 text-center text-gray-500">
             <p>Daily leaderboards are coming soon!</p>
         </TabsContent>
-        <TabsContent value="all-time" className="mt-6 text-center text-gray-500">
-             <p>All-Time leaderboards are coming soon!</p>
+        <TabsContent value="weekly" className="mt-6 text-center text-gray-500">
+             <p>Weekly leaderboards are coming soon!</p>
         </TabsContent>
       </Tabs>
     </>
