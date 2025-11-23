@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 
 const HomeHeader = () => (
   <div className="flex items-center justify-between p-4 glass-card mx-4">
-    <Avatar className="h-12 w-12 border-2 border-primary">
+    <Avatar className="h-12 w-12 border-2 border-primary glass-card p-0.5">
       <AvatarImage src={PlaceHolderImages.find(img => img.id === "user1")?.imageUrl} alt={"Sarah Williams"} />
-      <AvatarFallback>S</AvatarFallback>
+      <AvatarFallback className="glass-card">S</AvatarFallback>
     </Avatar>
     <div className="flex items-center gap-4">
        <div className="relative glass-card h-12 w-12 flex items-center justify-center rounded-full">
@@ -18,7 +18,7 @@ const HomeHeader = () => (
         <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse border-2 border-background"></span>
       </div>
       <div className="pill-chip glass-card">
-        <p className="font-semibold text-sm text-white drop-shadow-md">Wallet: ₹1,500</p>
+        <p className="font-semibold text-sm text-white drop-shadow-lg">Wallet: ₹1,500</p>
       </div>
     </div>
   </div>
@@ -41,14 +41,14 @@ const Stories = () => (
                  story.icon ? `${story.ringColor} ring-2 ring-offset-4 ring-offset-background` : 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500'
              )}>
               <Avatar className={cn(
-                  "h-16 w-16 border-2",
+                  "h-16 w-16 border-2 glass-card p-0.5",
                   story.icon ? "border-transparent bg-white/5 flex items-center justify-center" : "border-background bg-background"
               )}>
                 {story.icon ? <story.icon className="h-8 w-8 text-white"/> : <AvatarImage src={PlaceHolderImages.find(img => img.id === story.imageId)?.imageUrl} />}
-                <AvatarFallback>{story.label.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="glass-card">{story.label.charAt(0)}</AvatarFallback>
               </Avatar>
             </div>
-            <p className="text-xs font-medium text-white/90 truncate w-full drop-shadow-sm">{story.label}</p>
+            <p className="text-xs font-medium text-white/90 truncate w-full drop-shadow-lg">{story.label}</p>
           </div>
         ))}
       </div>
@@ -67,7 +67,7 @@ const FilterChips = () => {
                 <div 
                     key={category} 
                     className={cn(
-                        "pill-chip glass-card text-white/90 drop-shadow-sm",
+                        "pill-chip glass-card text-white/90 drop-shadow-lg",
                          index === 0 && "bg-primary/20 border-primary/30 text-white font-bold"
                     )}
                 >
@@ -86,11 +86,11 @@ const TaskCard = () => (
     <div className="glass-card overflow-hidden shadow-lg animate-fade-in-up relative mx-4">
         <div className="absolute top-4 right-4 pill-chip glass-card bg-destructive/50 text-white text-xs px-3 h-7">Urgent</div>
       <div className="p-6 flex flex-col items-center text-center">
-        <h3 className="font-bold text-2xl text-white mt-4 drop-shadow-md">Need Plumber ASAP</h3>
+        <h3 className="font-bold text-2xl text-white mt-4 drop-shadow-lg">Need Plumber ASAP</h3>
         <p className="text-5xl font-bold text-success my-4 drop-shadow-[0_2px_4px_rgba(0,255,148,0.5)]">₹500</p>
         
         <div className="glass-card bg-destructive/20 p-2 rounded-lg text-center mb-6 w-full">
-            <p className="text-xs text-destructive font-semibold drop-shadow-md">Countdown: 00:02:35:34</p>
+            <p className="text-xs text-destructive font-semibold drop-shadow-lg">Countdown: 00:02:35:34</p>
         </div>
 
         <Button size="lg" className="w-full h-14 glass-card bg-primary/20 border-primary/30 text-primary-foreground font-bold text-base cyan-glow">

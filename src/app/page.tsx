@@ -14,16 +14,16 @@ export default function LoginPage() {
                 <Icons.logo className="h-16 w-16 text-primary" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-2 font-headline drop-shadow-md">
+          <h1 className="text-4xl font-bold text-foreground mb-2 font-headline drop-shadow-lg">
             Local Buddy Pro
           </h1>
-          <p className="text-muted-foreground mb-8 drop-shadow-sm">
+          <p className="text-muted-foreground mb-8 drop-shadow-lg">
             Your friendly neighborhood task app.
           </p>
 
           <div className="space-y-4">
             <Button
-              className="w-full h-14 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cyan-glow"
+              className="w-full h-14 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cyan-glow glass-card"
               asChild
             >
               <Link href="/home">

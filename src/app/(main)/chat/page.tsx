@@ -17,7 +17,7 @@ const ChatHeader = () => (
                     <ChevronLeft className="h-6 w-6 text-white"/>
                 </Link>
             </Button>
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-10 w-10 glass-card p-0.5">
                 <AvatarImage src={PlaceHolderImages.find(p => p.id === "user2")?.imageUrl} alt={"Rahul"} />
                 <AvatarFallback>R</AvatarFallback>
             </Avatar>
@@ -36,7 +36,7 @@ const MessageBubble = ({ message, isCurrentUser }: { message: { content: string 
     <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in-up`}>
         <div className={cn(
             'max-w-xs lg:max-w-md px-5 py-3 rounded-2xl glass-card',
-            isCurrentUser ? 'bg-white/20 rounded-br-lg' : 'bg-blue-500/20 border-blue-400/20 rounded-bl-lg'
+            isCurrentUser ? 'bg-white/20 rounded-br-lg' : 'bg-blue-500/20 rounded-bl-lg'
         )}>
             <p className="text-white drop-shadow-md">{message.content}</p>
         </div>
@@ -45,7 +45,7 @@ const MessageBubble = ({ message, isCurrentUser }: { message: { content: string 
 
 const VoiceMessageBubble = () => (
     <div className="flex justify-start mb-4 animate-fade-in-up">
-        <div className="glass-card bg-blue-500/20 border-blue-400/20 rounded-2xl rounded-bl-lg flex items-center gap-3 px-4 py-3">
+        <div className="glass-card bg-blue-500/20 rounded-2xl rounded-bl-lg flex items-center gap-3 px-4 py-3">
             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full glass-card bg-primary/20 text-primary-foreground">
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.5 7.5L11.5 3.26795V11.732L3.5 7.5Z" fill="currentColor"></path></svg>
             </Button>
@@ -86,7 +86,26 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <ChatHeader />
+      <div className="p-4 border-b border-white/10 glass-card flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" asChild className="glass-card">
+                <Link href="/home">
+                    <ChevronLeft className="h-6 w-6 text-white"/>
+                </Link>
+            </Button>
+            <Avatar className="h-10 w-10 glass-card p-0.5">
+                <AvatarImage src={PlaceHolderImages.find(p => p.id === "user2")?.imageUrl} alt={"Rahul"} />
+                <AvatarFallback className="glass-card">R</AvatarFallback>
+            </Avatar>
+            <h1 className="text-xl font-bold text-white drop-shadow-lg">Rahul</h1>
+        </div>
+        <div className="flex items-center gap-4">
+            <Phone className="h-6 w-6 text-white/70"/>
+            <Button className="h-11 px-5 glass-card bg-destructive/50 text-white font-bold text-sm rounded-full shadow-[0_0_15px] shadow-destructive/70">
+                SOS
+            </Button>
+        </div>
+    </div>
 
       <ScrollArea className="flex-1 px-4 pt-4">
         {messages.map((msg, i) => (
