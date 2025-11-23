@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, DocumentReference, collection, serverTimestamp } from 'firebase/firestore';
 import { ArrowLeft, Loader, User, MapPin, Calendar, Tag, IndianRupee, Shield, MessageSquare, Zap } from 'lucide-react';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { acceptTask } from '@/app/actions/tasks';
 
 const getImage = (id: string) => PlaceHolderImages.find((img) => img.id === id);
 
@@ -49,38 +50,34 @@ export default function TaskDetailPage() {
     
     const { data: posterData, isLoading: isPosterLoading } = useDoc(posterDocRef);
 
-    const handleAcceptTask = () => {
-        if (!user || !firestore || !taskData || !posterData) {
+    const handleAcceptTask = async () => {
+        if (!user) {
             toast({ variant: 'destructive', title: "You must be logged in to accept tasks." });
             return;
         }
         setIsAccepting(true);
 
-        // 1. Update task status and buddyId
-        updateDocumentNonBlocking(taskDocRef!, {
-            status: 'assigned',
-            buddyId: user.uid,
-        });
+        try {
+            const result = await acceptTask(taskId);
 
-        // 2. Create a notification for the task poster
-        const notificationsCol = collection(firestore, `users/${taskData.posterId}/notifications`);
-        addDocumentNonBlocking(notificationsCol, {
-            userId: taskData.posterId,
-            title: "Task Accepted!",
-            message: `${user.displayName || 'A buddy'} has accepted your task: "${taskData.title}"`,
-            type: 'TASK_ACCEPTED',
-            taskId: taskId,
-            isRead: false,
-            timestamp: serverTimestamp(),
-        });
-
-        toast({
-            title: "Task Accepted!",
-            description: "The task poster has been notified. You can start a chat now.",
-        });
-        
-        // 3. Optimistically navigate to chat
-        router.push(`/chat?taskId=${taskId}`);
+            if (result.success) {
+                toast({
+                    title: "Task Accepted!",
+                    description: "The task poster has been notified. You can start a chat now.",
+                });
+                router.push(`/chat?taskId=${taskId}`);
+            } else {
+                throw new Error(result.error || 'Failed to accept the task.');
+            }
+        } catch (error: any) {
+            console.error("Failed to accept task:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error Accepting Task',
+                description: error.message,
+            });
+            setIsAccepting(false);
+        }
     };
 
     if (isTaskLoading || isPosterLoading) {

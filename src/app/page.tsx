@@ -21,10 +21,12 @@ import * as React from 'react';
 import { cn, formatCurrency, timeAgo } from '@/lib/utils';
 import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useDoc } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, query, where, limit, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { acceptTask } from '@/app/actions/tasks';
+import { useRouter } from 'next/navigation';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
@@ -55,7 +57,6 @@ const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price:
 
 const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const [isLoading, setIsLoading] = React.useState(false);
-    const firestore = useFirestore();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -65,19 +66,29 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const isAiGenerated = task.posterId === 'ai_generated';
 
     const handleClick = async (e: React.MouseEvent) => {
-        e.preventDefault(); // Prevent link navigation
-        if (!firestore || !user || isAiGenerated || !task.id) return;
+        e.preventDefault(); 
+        if (!user || isAiGenerated || !task.id) return;
         setIsLoading(true);
-        const taskRef = doc(firestore, 'tasks', task.id);
-        updateDocumentNonBlocking(taskRef, {
-            status: 'assigned',
-            buddyId: user.uid
-        });
-        toast({
-            title: "Task Accepted!",
-            description: "You can find this task in your chat to coordinate."
-        })
-        router.push(`/chat?taskId=${task.id}`);
+
+        try {
+            const result = await acceptTask(task.id);
+            if (result.success) {
+                 toast({
+                    title: "Task Accepted!",
+                    description: "You can find this task in your chat to coordinate."
+                });
+                router.push(`/chat?taskId=${task.id}`);
+            } else {
+                throw new Error(result.error || 'An unknown error occurred');
+            }
+        } catch (error: any) {
+             toast({
+                variant: "destructive",
+                title: "Failed to Accept Task",
+                description: error.message,
+            });
+            setIsLoading(false);
+        }
     };
 
     if (isAiGenerated) {
@@ -104,7 +115,6 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
         </Button>
     );
 };
-import { useRouter } from 'next/navigation';
 
 const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
   const { title, budget, category, reasoning } = task;
