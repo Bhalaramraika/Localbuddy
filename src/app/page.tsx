@@ -15,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import * as React from 'react';
-import { Progress } from '@/components/ui/progress';
 import { cn, formatCurrency, sleep } from '@/lib/utils';
 
 const getImage = (id: string) =>
@@ -62,31 +61,6 @@ const TaskCardCountdown = ({ countdown }: { countdown: string }) => {
     );
 };
 
-const TaskCardProgress = () => {
-    const [progress, setProgress] = React.useState(0);
-    
-    React.useEffect(() => {
-        setProgress(Math.random() * 100);
-    }, []);
-
-    React.useEffect(() => {
-        const timer = setTimeout(() => {
-            setProgress(prev => (prev > 90 ? 10 : prev + Math.random() * 20));
-        }, 2000 + Math.random() * 2000);
-        return () => clearTimeout(timer);
-    }, [progress]);
-
-    return (
-        <div>
-            <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                <p>Task Progress</p>
-                <p>{Math.round(progress)}%</p>
-            </div>
-            <Progress value={progress} className="h-2 bg-gray-200 [&>div]:bg-main-accent" />
-        </div>
-    );
-};
-
 const TaskCardButton = () => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [isAccepted, setIsAccepted] = React.useState(false);
@@ -119,7 +93,6 @@ const TaskCard = ({ title, price, tag, countdown, imageUrl }: { title: string, p
       {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={tag} />}
       <TaskCardHeader title={title} price={price} tag={tag} hasImage={!!imageUrl} />
       <TaskCardCountdown countdown={countdown} />
-      <TaskCardProgress />
       <TaskCardButton />
     </div>
   );
@@ -209,7 +182,7 @@ const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.
         >
             <div
                 className={cn(
-                    `relative w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-offset-4 ring-offset-transparent bg-gray-100 glass-pill transition-all duration-300 group-hover:ring-4`,
+                    `relative w-20 h-20 rounded-full flex items-center justify-center ring-2 ring-offset-4 ring-offset-transparent bg-gray-100 glass-pill transition-all duration-300 group-hover:ring-4 overflow-hidden`,
                     story.ringColor
                 )}
             >
@@ -217,9 +190,8 @@ const StoryItem = ({ story }: { story: { id: string, label: string, Icon: React.
                     <Image
                         src={storyImage.imageUrl}
                         alt={story.label}
-                        width={80}
-                        height={80}
-                        className="rounded-full object-cover p-1 transition-transform duration-300 group-hover:scale-90"
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                 ) : (
                     <story.Icon className="w-8 h-8 transition-transform duration-300 group-hover:scale-110" />
