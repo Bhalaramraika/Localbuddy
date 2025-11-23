@@ -16,9 +16,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import * as React from 'react';
-import { cn, formatCurrency, sleep } from '@/lib/utils';
-import { getTaskSuggestions, TaskSuggestionInput, TaskSuggestionOutput } from '@/ai/flows/suggestion-flow';
+import { cn, formatCurrency } from '@/lib/utils';
+import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
+import { useUser, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query, where } from 'firebase/firestore';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
@@ -33,11 +35,11 @@ const TaskCardImage = ({ imageUrl, title, tag }: { imageUrl: string, title: stri
     </div>
 );
 
-const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price: string | number, tag: string, hasImage: boolean }) => (
+const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price: number, tag: string, hasImage: boolean }) => (
     <div className="flex justify-between items-start">
         <div className="flex flex-col">
             <h2 className="text-xl font-bold text-foreground transition-colors duration-300 group-hover:text-main-accent">{title}</h2>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{typeof price === 'number' ? formatCurrency(price) : price}</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{formatCurrency(price)}</p>
         </div>
         {!hasImage && (
             <div className="bg-black/50 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg backdrop-blur-sm">
@@ -47,39 +49,55 @@ const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price:
     </div>
 );
 
-const TaskCardButton = () => {
+const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     const [isLoading, setIsLoading] = React.useState(false);
-    const [isAccepted, setIsAccepted] = React.useState(false);
+    const firestore = useFirestore();
+
+    const isAccepted = task.status === 'assigned' && task.buddyId === user?.uid;
+    const isMyTask = task.posterId === user?.uid;
+    const isUnavailable = task.status !== 'Open';
 
     const handleClick = async () => {
+        if (!firestore || !user) return;
         setIsLoading(true);
-        await sleep(1500);
-        setIsLoading(false);
-        setIsAccepted(true);
+        const taskRef = doc(firestore, 'tasks', task.id);
+        updateDocumentNonBlocking(taskRef, {
+            status: 'assigned',
+            buddyId: user.uid
+        });
+        // No need to set is loading to false, UI will update reactively
     };
+
+    if (isMyTask) {
+         return <Button disabled className="w-full h-12 text-base font-bold" variant="outline">Your Task</Button>;
+    }
+    
+    if (isAccepted) {
+        return <Button disabled className="w-full h-12 text-base font-bold bg-green-500 text-white">Task Accepted</Button>
+    }
 
     return (
         <Button 
-            className={cn(
-                "w-full h-12 text-base font-bold transition-all duration-300 ease-in-out transform hover:scale-105",
-                isAccepted ? "bg-green-500 text-white shadow-lg" : "bg-black text-white hover:bg-black/80"
-            )}
+            className="w-full h-12 text-base font-bold transition-all duration-300 ease-in-out transform hover:scale-105 bg-black text-white hover:bg-black/80"
             onClick={handleClick}
-            disabled={isLoading || isAccepted}
+            disabled={isLoading || isUnavailable || !user}
         >
-            {isLoading ? "Accepting..." : (isAccepted ? "Task Accepted" : "Accept Task")}
-            {!isAccepted && <Zap className="ml-2 w-5 h-5"/>}
+            {isLoading && <Loader className="w-5 h-5 animate-spin mr-2" />}
+            {isUnavailable ? 'Task Unavailable' : "Accept Task"}
+            {!isUnavailable && <Zap className="ml-2 w-5 h-5"/>}
         </Button>
     );
 };
 
-const TaskCard = ({ title, price, tag, imageUrl, reasoning }: { title: string, price: string | number, tag: string, imageUrl?: string, reasoning?: string }) => {
+const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
+  const { title, budget, category, reasoning } = task;
+  const imageUrl = getImage(`task_${category?.toLowerCase()}`)?.imageUrl;
   return (
     <div className="glass-card p-4 flex flex-col gap-4 group transition-all duration-300 hover:shadow-2xl hover:shadow-gray-300 hover:-translate-y-1">
-      {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={tag} />}
-      <TaskCardHeader title={title} price={price} tag={tag} hasImage={!!imageUrl} />
+      {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={category} />}
+      <TaskCardHeader title={title} price={budget} tag={category} hasImage={!!imageUrl} />
       {reasoning && <p className="text-sm text-gray-600 border-l-2 border-gray-300 pl-3">{reasoning}</p>}
-      <TaskCardButton />
+      <TaskCardButton task={task} user={user} />
     </div>
   );
 };
@@ -100,20 +118,11 @@ const AdvancedListItem = ({ icon, title, subtitle, tag, tagColor }: { icon: Reac
     </div>
 );
 
-const HeaderWalletBalance = () => {
-    const [balance, setBalance] = React.useState(1500);
-    
-    React.useEffect(() => {
-        const interval = setInterval(() => {
-            setBalance(prev => prev + (Math.random() * 100 - 40));
-        }, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
+const HeaderWalletBalance = ({ balance, isLoading }: { balance: number, isLoading: boolean }) => {
     return (
         <div className="glass-card rounded-full px-4 py-2 hover:border-gray-300/80 border border-transparent transition-all">
           <p className="text-sm font-medium text-gray-700">
-            Wallet: <span className="font-bold text-black transition-all duration-500">{formatCurrency(balance)}</span>
+            Wallet: {isLoading ? <Loader className="w-4 h-4 inline-block animate-spin"/> : <span className="font-bold text-black transition-all duration-500">{formatCurrency(balance)}</span>}
           </p>
         </div>
     );
@@ -142,15 +151,15 @@ const HeaderAvatar = ({ userAvatar }: { userAvatar?: { imageUrl: string, descrip
     </>
 );
 
-const MainHeader = () => {
+const MainHeader = ({ userData, isUserLoading }: { userData: any, isUserLoading: boolean }) => {
     const userAvatar = getImage('user2');
     return (
         <header className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
-                <HeaderAvatar userAvatar={userAvatar} />
+                <HeaderAvatar userAvatar={userData?.photoUrl ? { imageUrl: userData.photoUrl, description: 'User avatar' } : userAvatar} />
                 <HeaderNotificationBell />
             </div>
-            <HeaderWalletBalance />
+            <HeaderWalletBalance balance={userData?.walletBalance || 0} isLoading={isUserLoading} />
         </header>
     );
 };
@@ -238,18 +247,32 @@ const TaskFilters = () => {
     );
 };
 
-type Task = {
-    title: string;
-    price: string | number;
-    tag: string;
-    imageUrl?: string;
-    reasoning?: string;
-};
-
 
 export default function HomePage() {
+  const { user, isUserLoading: isAuthLoading } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [tasks, setTasks] = React.useState<any[]>([]);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  // Note: We're not using useDoc here because MainHeader will fetch it. We just need the ref.
+
+  const tasksQuery = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return query(collection(firestore, 'tasks'), where('status', '==', 'Open'));
+  }, [firestore]);
+
+  const { data: firestoreTasks, isLoading: areTasksLoading } = useCollection(tasksQuery);
+
+  React.useEffect(() => {
+      if (firestoreTasks) {
+          setTasks(firestoreTasks);
+      }
+  }, [firestoreTasks]);
 
   const advancedListItems = [
       {
@@ -274,14 +297,6 @@ export default function HomePage() {
           tagColor: "bg-red-100 text-red-800"
       }
   ];
-  
-  const initialTasks: Task[] = [
-    { title: "Need Plumber ASAP", price: "₹500", tag: "Urgent", imageUrl: undefined },
-    { title: "Fix My Laptop", price: "₹1200", tag: "Tech", imageUrl: getImage('task_tech')?.imageUrl },
-    { title: "House Deep Cleaning", price: "₹2500", tag: "Household", imageUrl: getImage('task_cleaning')?.imageUrl }
-  ];
-
-  const [tasks, setTasks] = React.useState<Task[]>(initialTasks);
 
   const handleGenerateSuggestions = async () => {
     setIsGenerating(true);
@@ -295,14 +310,15 @@ export default function HomePage() {
             ]
         };
         const result = await getTaskSuggestions(input);
-        const newTasks: Task[] = result.suggestions.map(s => ({
-            title: s.title,
-            price: s.estimatedEarning,
-            tag: s.category,
+        const newTasks = result.suggestions.map(s => ({
+            ...s, // Spread suggestion properties
+            id: `ai_${Date.now()}_${Math.random()}`, // Create a temporary unique ID
+            budget: s.estimatedEarning,
             reasoning: s.reasoning,
-            imageUrl: getImage(`task_${s.category.toLowerCase()}`)?.imageUrl || getImage('task_household')?.imageUrl,
+            status: 'Open',
+            posterId: 'ai_generated'
         }));
-        setTasks(newTasks);
+        setTasks(prev => [...newTasks, ...prev]);
         toast({
             title: "New Tasks Suggested!",
             description: "We've found some new tasks for you.",
@@ -319,9 +335,11 @@ export default function HomePage() {
     }
   };
 
+  const { data: userData, isLoading: isUserLoading } = useCollection(userDocRef);
+
   return (
     <>
-      <MainHeader />
+      <MainHeader userData={userData} isUserLoading={isAuthLoading || isUserLoading} />
       <StoriesSection />
       <TaskFilters />
 
@@ -339,16 +357,23 @@ export default function HomePage() {
       </section>
 
       <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-        {tasks.map((task, index) => (
-            <TaskCard 
-              key={index}
-              title={task.title}
-              price={task.price}
-              tag={task.tag}
-              imageUrl={task.imageUrl}
-              reasoning={task.reasoning}
-            />
-        ))}
+        {areTasksLoading ? (
+            <div className="col-span-full flex justify-center items-center h-40">
+                <Loader className="w-12 h-12 animate-spin text-main-accent" />
+            </div>
+        ) : tasks && tasks.length > 0 ? (
+            tasks.map((task, index) => (
+                <TaskCard 
+                  key={task.id || index}
+                  task={task}
+                  user={user}
+                />
+            ))
+        ) : (
+            <div className="col-span-full text-center text-gray-500 py-10 glass-card">
+                <p>No open tasks available right now. Check back later!</p>
+            </div>
+        )}
       </section>
 
       <section className="glass-card p-4 w-full">

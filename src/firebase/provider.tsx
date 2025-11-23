@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, getDoc } from 'firebase/firestore';
+import { Firestore, doc, getDoc, runTransaction } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 import { setDocumentNonBlocking } from './non-blocking-updates';
@@ -83,23 +84,30 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         if (firebaseUser) {
           // User is signed in, check if user doc exists
           const userRef = doc(firestore, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (!userSnap.exists()) {
-            // User is new, create a document for them.
-            setDocumentNonBlocking(userRef, {
-                id: firebaseUser.uid,
-                name: firebaseUser.displayName || firebaseUser.email || 'Anonymous',
-                photoUrl: firebaseUser.photoURL || '',
-                location: '',
-                walletBalance: 1000, // starting balance
-                xp: 0,
-                level: 'Rookie',
-                verificationStatus: 'pending',
-                mobileVerified: false,
-                aadharVerified: false,
-                joinDate: new Date().toISOString(),
-            }, { merge: true });
+          
+          try {
+            await runTransaction(firestore, async (transaction) => {
+              const userSnap = await transaction.get(userRef);
+              if (!userSnap.exists()) {
+                // User is new, create a document for them.
+                const newUserDoc = {
+                    id: firebaseUser.uid,
+                    name: firebaseUser.displayName || firebaseUser.email || 'Anonymous',
+                    photoUrl: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.uid}`,
+                    location: '',
+                    walletBalance: 1000, // starting balance
+                    xp: 0,
+                    level: 'Rookie',
+                    verificationStatus: 'pending',
+                    mobileVerified: false,
+                    aadharVerified: false,
+                    joinDate: new Date().toISOString(),
+                };
+                transaction.set(userRef, newUserDoc);
+              }
+            });
+          } catch (e) {
+            console.error("Transaction failed: ", e);
           }
         }
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
@@ -197,3 +205,5 @@ export const useUser = (): UserHookResult => { // Renamed from useAuthUser
   const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
   return { user, isUserLoading, userError };
 };
+
+    

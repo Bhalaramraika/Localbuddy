@@ -22,25 +22,25 @@ const TransactionItem = ({ icon, title, date, amount, color, type }: { icon: Rea
 );
 
 const BalanceCard = ({ title, balance, icon, color, progress, isLoading }: { title: string, balance: number, icon: React.ReactNode, color: string, progress: number, isLoading: boolean }) => {
-    const accentColor = color;
+    const accentColor = color.split('-')[0];
     
     return (
     <div className="glass-card p-6 relative overflow-hidden group">
-        <div className={cn(`absolute -top-1/4 -left-1/4 w-1/2 h-1/2 rounded-full blur-3xl transition-all duration-500 group-hover:scale-150`, `bg-${accentColor}/30`)}></div>
+        <div className={cn(`absolute -top-1/4 -left-1/4 w-1/2 h-1/2 rounded-full blur-3xl transition-all duration-500 group-hover:scale-150`, `bg-${accentColor}-500/30`)}></div>
         <div className="relative z-10">
             <div className="flex items-start justify-between">
                 <div>
                   {isLoading ? <Loader className="w-8 h-8 animate-spin text-gray-400" /> : <p className="text-4xl font-bold text-foreground">{formatCurrency(balance)}</p>}
                   <p className="text-gray-500 mt-1">{title}</p>
                 </div>
-                {React.cloneElement(icon as React.ReactElement, { className: `w-8 h-8 text-${accentColor} transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6`, style: { filter: `drop-shadow(0 0 10px var(--${accentColor}))` } })}
+                {React.cloneElement(icon as React.ReactElement, { className: `w-8 h-8 text-${accentColor}-500 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6`, style: { filter: `drop-shadow(0 0 10px var(--${accentColor}))` } })}
             </div>
             <div className="mt-6">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>Spending Limit</span>
                     <span>₹{progress * 100} / ₹10000</span>
                 </div>
-                <Progress value={progress} className={cn(`h-2 bg-gray-200 [&>div]:bg-${accentColor}`)} />
+                <Progress value={progress} className={cn(`h-2 bg-gray-200 [&>div]:bg-${accentColor}-500`)} />
             </div>
         </div>
     </div>
@@ -73,13 +73,30 @@ export default function WalletPage() {
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
+    
+    let typeFilter;
+    switch(filter) {
+        case 'Income':
+            typeFilter = 'release';
+            break;
+        case 'Outcome':
+            typeFilter = 'withdraw';
+            break;
+        case 'Escrow':
+            typeFilter = 'lock';
+            break;
+        default:
+             typeFilter = null;
+    }
+
     const baseQuery = query(
       collection(firestore, 'transactions'),
       where('userId', '==', user.uid),
       orderBy('timestamp', 'desc')
     );
-    if (filter !== 'All') {
-      return query(baseQuery, where('type', '==', filter.toLowerCase()));
+
+    if (typeFilter) {
+      return query(baseQuery, where('type', '==', typeFilter));
     }
     return baseQuery;
   }, [firestore, user, filter]);
@@ -135,7 +152,8 @@ export default function WalletPage() {
   );
 
   const availableBalance = userData?.walletBalance ?? 0;
-  const lockedBalance = transactions?.filter(t => t.type === 'lock' && t.status === 'success').reduce((acc, t) => acc + t.amount, 0) ?? 0;
+  
+  const lockedBalance = (transactions?.filter(t => t.type === 'lock' && t.status === 'success').reduce((acc, t) => acc + t.amount, 0) ?? 0);
 
   return (
     <>
@@ -211,7 +229,7 @@ export default function WalletPage() {
             <div className="flex justify-center items-center h-full">
               <Loader className="w-8 h-8 animate-spin text-gray-400" />
             </div>
-          ) : (filteredTransactions && filteredTransactions.length > 0) ? filteredTransactions.map((item: any) => (
+          ) : (transactions && transactions.length > 0) ? transactions.map((item: any) => (
             <TransactionItem
               key={item.id}
               icon={getTransactionIcon(item.type)}

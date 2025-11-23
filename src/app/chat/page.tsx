@@ -1,13 +1,16 @@
 
 'use client';
 import Image from 'next/image';
-import { Phone, Mic, MoreVertical, Paperclip, Send, Camera, Play, Pause, Trash2, FileText, MapPin } from 'lucide-react';
+import { Phone, Mic, MoreVertical, Paperclip, Send, Camera, Play, Pause, Trash2, FileText, MapPin, Loader, IndianRupee } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSearchParams } from 'next/navigation';
+import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { doc, collection, writeBatch } from 'firebase/firestore';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -33,22 +36,25 @@ const MessageTimestamp = ({ time, isOutgoing }: { time: string; isOutgoing: bool
     <span className={cn("text-xs text-gray-500 mt-1", isOutgoing ? 'text-right' : 'text-left')}>{time}</span>
 );
 
-const ChatMessage = ({ text, isOutgoing, time }: { text: React.ReactNode; isOutgoing: boolean; time: string }) => {
+const ChatMessage = ({ text, isOutgoing, time, userDetails }: { text: React.ReactNode; isOutgoing: boolean; time: string, userDetails?: any }) => {
+    const avatarUrl = isOutgoing ? userDetails?.photoUrl : getImage('user2')?.imageUrl;
+    const borderColor = isOutgoing ? "border-secondary-accent" : "border-main-accent";
+    
     return (
         <div className={cn("flex items-end gap-2", isOutgoing ? "justify-end" : "justify-start")}>
-            {!isOutgoing && <UserAvatar imageUrl={getImage('user2')?.imageUrl || ''} alt="User" borderColor="border-main-accent" />}
+            {!isOutgoing && <UserAvatar imageUrl={avatarUrl || ''} alt="User" borderColor={borderColor} />}
             <div className="flex flex-col">
                 <MessageBubble isOutgoing={isOutgoing}>
                     {text}
                 </MessageBubble>
                 <MessageTimestamp time={time} isOutgoing={isOutgoing} />
             </div>
-             {isOutgoing && <UserAvatar imageUrl={getImage('user1')?.imageUrl || ''} alt="My Avatar" borderColor="border-secondary-accent" />}
+             {isOutgoing && <UserAvatar imageUrl={avatarUrl || ''} alt="My Avatar" borderColor={borderColor} />}
         </div>
     );
 };
 
-const VoiceNote = ({ duration, progress: initialProgress, isOutgoing }: { duration: string; initialProgress: number, isOutgoing: boolean }) => {
+const VoiceNote = ({ duration, progress: initialProgress }: { duration: string; initialProgress: number }) => {
     const [isPlaying, setIsPlaying] = React.useState(false);
     const [progress, setProgress] = React.useState(initialProgress);
 
@@ -102,8 +108,17 @@ const LocationAttachment = () => (
 );
 
 
-const ChatHeader = () => {
+const ChatHeader = ({ taskData, isLoading }: { taskData: any, isLoading: boolean }) => {
     const userAvatar = getImage('user2');
+
+    if (isLoading || !taskData) {
+        return (
+            <header className="glass-card flex items-center justify-between p-3">
+                <Loader className="w-6 h-6 animate-spin" />
+            </header>
+        )
+    }
+
     return (
         <header className="glass-card flex items-center justify-between p-3">
             <div className="flex items-center gap-3">
@@ -117,10 +132,16 @@ const ChatHeader = () => {
                     />
                 )}
                 <div>
-                    <span className="font-bold text-lg">Rahul</span>
-                    <p className="text-xs text-green-500 flex items-center gap-1">
-                        <span className="w-2 h-2 bg-green-500 rounded-full inline-block animate-pulse"></span>
-                        Online
+                    <span className="font-bold text-lg">{taskData.title}</span>
+                    <p className={cn(
+                        "text-xs flex items-center gap-1",
+                        taskData.status === 'Open' && 'text-blue-500',
+                        taskData.status === 'assigned' && 'text-yellow-500',
+                        taskData.status === 'completed' && 'text-green-500',
+                        taskData.status === 'paid' && 'text-purple-500',
+                    )}>
+                        <span className="w-2 h-2 bg-current rounded-full inline-block animate-pulse"></span>
+                        Status: {taskData.status}
                     </p>
                 </div>
             </div>
@@ -145,9 +166,10 @@ const AttachmentMenu = ({ onSelect }: { onSelect: (type: string) => void }) => (
     </div>
 );
 
-const ChatFooter = ({ onSend }: { onSend: (message: any) => void }) => {
+const ChatFooter = ({ onSend, taskData, user }: { onSend: (message: any) => void; taskData: any, user: any }) => {
     const [message, setMessage] = React.useState('');
     const [showAttachments, setShowAttachments] = React.useState(false);
+    const firestore = useFirestore();
 
     const handleSend = () => {
         if (message.trim()) {
@@ -162,6 +184,90 @@ const ChatFooter = ({ onSend }: { onSend: (message: any) => void }) => {
         }
         setShowAttachments(false);
     };
+
+    const handleRequestPayment = () => {
+        if (!firestore || !taskData) return;
+        const taskRef = doc(firestore, 'tasks', taskData.id);
+        updateDocumentNonBlocking(taskRef, { status: 'completed' });
+    };
+
+    const handleReleasePayment = async () => {
+        if (!firestore || !taskData || !user) return;
+        const { id: taskId, budget, posterId, buddyId } = taskData;
+
+        const posterRef = doc(firestore, 'users', posterId);
+        const buddyRef = doc(firestore, 'users', buddyId);
+        const taskRef = doc(firestore, 'tasks', taskId);
+        const transactionRef = collection(firestore, 'transactions');
+        
+        try {
+            const batch = writeBatch(firestore);
+
+            // 1. Decrement poster's balance
+            batch.update(posterRef, { walletBalance: -budget });
+
+            // 2. Increment buddy's balance
+            batch.update(buddyRef, { walletBalance: budget });
+
+            // 3. Update task status to 'paid'
+            batch.update(taskRef, { status: 'paid' });
+
+            // 4. Create transaction record
+            const newTransaction = {
+                userId: posterId,
+                taskId,
+                type: 'release',
+                amount: budget,
+                status: 'success',
+                timestamp: new Date(),
+            };
+            const newTransactionRef = doc(transactionRef);
+            batch.set(newTransactionRef, newTransaction);
+            
+            await batch.commit();
+
+        } catch (error) {
+            console.error("Payment release failed:", error);
+            // Here you would emit a proper error
+        }
+    };
+    
+    const isBuddy = user?.uid === taskData?.buddyId;
+    const isPoster = user?.uid === taskData?.posterId;
+
+    const renderActionButtons = () => {
+        if (!taskData) return null;
+
+        switch(taskData.status) {
+            case 'assigned':
+                if (isBuddy) {
+                    return (
+                        <Button onClick={handleRequestPayment} className="flex-1 h-14 text-lg font-bold rounded-full bg-yellow-500 text-white hover:bg-yellow-600">
+                            Request Payment
+                        </Button>
+                    );
+                }
+                return <p className="text-center text-sm text-gray-500 w-full">Waiting for buddy to complete the task.</p>;
+            case 'completed':
+                 if (isPoster) {
+                    return (
+                        <Button onClick={handleReleasePayment} className="flex-1 h-14 text-lg font-bold rounded-full cyan-glow-button">
+                           <IndianRupee className="w-5 h-5 mr-2" /> Release Payment
+                        </Button>
+                    );
+                }
+                return <p className="text-center text-sm text-gray-500 w-full">Payment requested. Waiting for release.</p>;
+            case 'paid':
+                return <p className="text-center text-sm text-green-500 w-full">Payment for this task has been completed.</p>;
+            default:
+                return (
+                     <Button onClick={handleSend} className="flex-1 h-14 text-lg font-bold rounded-full cyan-glow-button">
+                        <Send className="w-5 h-5 mr-2" /> Send
+                    </Button>
+                );
+        }
+    }
+
 
     return (
         <div className="mt-auto">
@@ -185,19 +291,29 @@ const ChatFooter = ({ onSend }: { onSend: (message: any) => void }) => {
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" className="flex-1 h-14 text-lg font-bold rounded-full glass-card border-secondary-accent/50 text-secondary-accent hover:bg-secondary-accent/10 hover:text-secondary-accent">
-                    Request Payment
-                    </Button>
-                    <Button onClick={handleSend} className="flex-1 h-14 text-lg font-bold rounded-full cyan-glow-button">
-                    <Send className="w-5 h-5 mr-2" /> Send
-                    </Button>
+                   {renderActionButtons()}
                 </div>
             </div>
         </div>
     );
 };
 
-export default function ChatPage() {
+
+function ChatPageContent() {
+  const searchParams = useSearchParams();
+  const taskId = searchParams.get('taskId');
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const taskDocRef = useMemoFirebase(() => {
+    if (!firestore || !taskId) return null;
+    return doc(firestore, 'tasks', taskId);
+  }, [firestore, taskId]);
+
+  const { data: taskData, isLoading: isTaskLoading } = useDoc(taskDocRef);
+
+  const { data: userData } = useDoc(user ? doc(firestore, 'users', user.uid) : null);
+
   const [messages, setMessages] = React.useState([
       { type: 'text', content: "Hi, are you on your way? I'm waiting at the location.", isOutgoing: false, time: '10:30 AM' },
       { type: 'text', content: "Hey, almost there. Please release the payment from escrow.", isOutgoing: true, time: '10:32 AM' },
@@ -223,22 +339,41 @@ export default function ChatPage() {
     }
   }, [messages]);
 
+  if (!taskId) {
+      return (
+          <div className="flex items-center justify-center h-full text-gray-500">
+              <p>Please select a task to start chatting.</p>
+          </div>
+      );
+  }
+
   return (
     <div className="w-full h-[calc(100vh-150px)] flex flex-col">
-      <ChatHeader />
+      <ChatHeader taskData={taskData} isLoading={isTaskLoading} />
       <ScrollArea className="flex-grow my-4 -mx-4" ref={scrollAreaRef}>
         <div className="p-4 space-y-6">
             {messages.map((msg, index) => (
                 <div key={index}>
-                    {msg.type === 'text' && <ChatMessage text={<p className="text-sm">{msg.content}</p>} isOutgoing={msg.isOutgoing} time={msg.time} />}
-                    {msg.type === 'voice' && <ChatMessage text={<VoiceNote duration={msg.duration} initialProgress={msg.progress} isOutgoing={msg.isOutgoing}/>} isOutgoing={msg.isOutgoing} time={msg.time} />}
-                    {msg.type === 'image' && msg.imageUrl && <ChatMessage text={<ImageAttachment imageUrl={msg.imageUrl}/>} isOutgoing={msg.isOutgoing} time={msg.time} />}
-                    {msg.type === 'location' && <ChatMessage text={<LocationAttachment />} isOutgoing={msg.isOutgoing} time={msg.time} />}
+                    {msg.type === 'text' && <ChatMessage text={<p className="text-sm">{msg.content}</p>} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
+                    {msg.type === 'voice' && <ChatMessage text={<VoiceNote duration={msg.duration} initialProgress={msg.progress} />} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
+                    {msg.type === 'image' && msg.imageUrl && <ChatMessage text={<ImageAttachment imageUrl={msg.imageUrl}/>} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
+                    {msg.type === 'location' && <ChatMessage text={<LocationAttachment />} isOutgoing={msg.isOutgoing} time={msg.time} userDetails={userData} />}
                 </div>
             ))}
         </div>
       </ScrollArea>
-      <ChatFooter onSend={handleSend} />
+      <ChatFooter onSend={handleSend} taskData={taskData} user={user} />
     </div>
   );
 }
+
+
+export default function ChatPage() {
+    return (
+        <React.Suspense fallback={<Loader className="w-12 h-12 animate-spin" />}>
+            <ChatPageContent />
+        </React.Suspense>
+    )
+}
+
+    
