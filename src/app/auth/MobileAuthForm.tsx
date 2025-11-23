@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -45,6 +44,21 @@ export default function MobileAuthForm() {
   const [confirmationResult, setConfirmationResult] = React.useState<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = React.useRef<RecaptchaVerifier | null>(null);
   const sendOtpButtonRef = React.useRef<HTMLButtonElement>(null);
+
+
+  const phoneForm = useForm<z.infer<typeof phoneSchema>>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: {
+      phone: '',
+    },
+  });
+
+  const otpForm = useForm<z.infer<typeof otpSchema>>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: {
+      otp: '',
+    },
+  });
 
 
   React.useEffect(() => {
