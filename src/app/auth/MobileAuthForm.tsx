@@ -133,9 +133,10 @@ export default function MobileAuthForm() {
       return;
     }
     try {
-      // This part is non-blocking. The onAuthStateChanged listener will handle success.
+      // This part is now BLOCKING to ensure security.
       await confirmOtpCode(confirmationResult, values.otp);
       toast({ title: 'Success!', description: 'You are now logged in.' });
+      // The onAuthStateChanged listener will handle the redirect.
     } catch (error: any) {
       toast({
         variant: 'destructive',

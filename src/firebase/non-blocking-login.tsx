@@ -10,6 +10,7 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
+  UserCredential,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -56,7 +57,7 @@ export async function initiatePhoneNumberSignIn(
 }
 
 /**
- * Confirms the OTP code sent to the user's phone.
+ * Confirms the OTP code sent to the user's phone. This is now a blocking call.
  * @param confirmationResult The ConfirmationResult object from initiatePhoneNumberSignIn.
  * @param otpCode The 6-digit OTP code entered by the user.
  * @returns A Promise that resolves with the UserCredential on successful sign-in.
@@ -64,7 +65,7 @@ export async function initiatePhoneNumberSignIn(
 export async function confirmOtpCode(
   confirmationResult: ConfirmationResult,
   otpCode: string
-) {
-  // Do not await this. Let the onAuthStateChanged listener handle the redirect.
-  confirmationResult.confirm(otpCode);
+): Promise<UserCredential> {
+  // CRITICAL: This must be awaited to verify the code before proceeding.
+  return await confirmationResult.confirm(otpCode);
 }
