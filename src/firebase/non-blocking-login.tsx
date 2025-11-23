@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -46,9 +47,9 @@ export function initiateGoogleSignIn(authInstance: Auth): void {
  */
 export function setupRecaptcha(authInstance: Auth, containerId: string): RecaptchaVerifier {
   // It's important that this is only called once per page load.
-  // The reCAPTCHA will be invisible to the user in most cases.
+  // The reCAPTCHA will now be visible to the user.
   return new RecaptchaVerifier(authInstance, containerId, {
-    size: 'invisible',
+    // 'size': 'invisible' is removed to make it visible.
   });
 }
 

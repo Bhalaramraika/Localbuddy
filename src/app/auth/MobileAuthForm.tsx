@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -87,6 +88,11 @@ export default function MobileAuthForm() {
         title: 'Failed to Send OTP',
         description: error.message || 'An unknown error occurred.',
       });
+       // Reset reCAPTCHA if it fails
+      if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = setupRecaptcha(auth, 'recaptcha-container');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -141,6 +147,7 @@ export default function MobileAuthForm() {
                 </FormItem>
               )}
             />
+             <div id="recaptcha-container" className="flex justify-center"></div>
             <Button type="submit" className="w-full h-12 text-lg font-bold cyan-glow-button" disabled={isLoading}>
               {isLoading && <Loader className="mr-2 h-5 w-5 animate-spin" />}
               Send OTP
@@ -170,8 +177,6 @@ export default function MobileAuthForm() {
           </form>
         </Form>
       )}
-      {/* This container is now at the bottom and doesn't affect layout */}
-      <div id="recaptcha-container" className="fixed bottom-0 left-0"></div>
     </div>
   );
 }
