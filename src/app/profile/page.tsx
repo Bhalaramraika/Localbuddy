@@ -8,7 +8,7 @@ import { Progress, CircleProgress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth, useCollection } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth, useCollection, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -49,10 +49,11 @@ const SkillPill = ({ name, level, xp, maxXp }: { name: string, level: number, xp
     </div>
 );
 
-const ProfileHeader = ({ userData, isLoading }: { userData: any, isLoading: boolean }) => {
+const ProfileHeader = ({ userData, user, isLoading }: { userData: any, user: any, isLoading: boolean }) => {
     const userAvatar = getImage('user2');
     const [isEditing, setIsEditing] = React.useState(false);
     const [name, setName] = React.useState(userData?.name || 'Loading...');
+    const firestore = useFirestore();
 
     React.useEffect(() => {
         if (userData?.name) {
@@ -60,6 +61,14 @@ const ProfileHeader = ({ userData, isLoading }: { userData: any, isLoading: bool
         }
     }, [userData]);
     
+    const handleNameChange = () => {
+        if (user && firestore && name !== userData.name) {
+            const userRef = doc(firestore, 'users', user.uid);
+            updateDocumentNonBlocking(userRef, { name: name });
+        }
+        setIsEditing(false);
+    };
+
     if (isLoading) {
         return (
             <header className="flex flex-col items-center gap-4 glass-card p-6 w-full">
@@ -91,7 +100,7 @@ const ProfileHeader = ({ userData, isLoading }: { userData: any, isLoading: bool
         <div className="text-center">
           <div className="flex items-center justify-center gap-2">
             {isEditing ? (
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => setIsEditing(false)} className="bg-transparent border-b-2 border-main-accent text-3xl font-bold text-center w-64 focus:outline-none" />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} onBlur={handleNameChange} onKeyPress={e => e.key === 'Enter' && handleNameChange()} className="bg-transparent border-b-2 border-main-accent text-3xl font-bold text-center w-64 focus:outline-none" autoFocus />
             ) : (
                 <h1 className="text-3xl font-bold">{name}</h1>
             )}
@@ -152,13 +161,13 @@ export default function ProfilePage() {
   };
   
   const tasksDone = completedTasks?.length || 0;
-  const avgRating = "4.8"; // This would need a reviews collection
+  const avgRating = "4.8"; // This would need a reviews collection, so it's still a placeholder.
 
   const allBadges = [
     { icon: <Shield className="w-10 h-10 text-green-500" />, color: "border-green-500", label: "Verified", achieved: userData?.aadharVerified || false, description: "Your identity has been successfully verified." },
-    { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: tasksDone >= 10, description: "Completed 10+ tasks before deadline." },
+    { icon: <Pen className="w-10 h-10 text-main-accent" />, color: "border-main-accent", label: "Fast Worker", achieved: tasksDone >= 10, description: "Completed 10+ tasks." },
     { icon: <Award className="w-10 h-10 text-yellow-500" />, color: "border-yellow-500", label: "5-Star Hero", achieved: false, description: "Maintained a 5-star rating over 20 tasks." },
-    { icon: <Star className="w-10 h-10 text-gray-400" />, color: "border-gray-400", label: "Top Earner", achieved: false, description: "Become one of the top 1% earners on the platform." },
+    { icon: <Star className="w-10 h-10 text-gray-400" />, color: "border-gray-400", label: "Top Earner", achieved: (userData?.walletBalance || 0) > 10000, description: "Become one of the top earners on the platform." },
   ];
   
   const skills = userData?.skills?.map((skill: string) => ({
@@ -172,7 +181,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <ProfileHeader userData={userData} isLoading={isUserLoading} />
+      <ProfileHeader userData={userData} user={user} isLoading={isUserLoading} />
 
       <section className="glass-card w-full p-4">
         <div className="flex justify-around gap-4">
