@@ -10,16 +10,16 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const ChatHeader = () => (
-    <div className="p-4 border-b border-white/10 glass-card flex items-center justify-between sticky top-0 z-20">
+    <div className="p-4 border-b border-white/10 glass-card flex items-center justify-between sticky top-0 z-20 rounded-b-3xl rounded-t-none">
         <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild className="glass-card">
+            <Button variant="ghost" size="icon" asChild className="glass-card rounded-full">
                 <Link href="/home">
                     <ChevronLeft className="h-6 w-6 text-white"/>
                 </Link>
             </Button>
-            <Avatar className="h-10 w-10 glass-card p-0.5">
+            <Avatar className="h-10 w-10 glass-card p-0.5 rounded-full">
                 <AvatarImage src={PlaceHolderImages.find(p => p.id === "user2")?.imageUrl} alt={"Rahul"} />
-                <AvatarFallback>R</AvatarFallback>
+                <AvatarFallback className="glass-card">R</AvatarFallback>
             </Avatar>
             <h1 className="text-xl font-bold text-white">Rahul</h1>
         </div>
@@ -35,7 +35,7 @@ const ChatHeader = () => (
 const MessageBubble = ({ message, isCurrentUser }: { message: { content: string }, isCurrentUser: boolean }) => (
     <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in-up`}>
         <div className={cn(
-            'max-w-xs lg:max-w-md px-5 py-3 rounded-2xl glass-card',
+            'max-w-xs lg:max-w-md px-5 py-3 glass-card',
             isCurrentUser ? 'bg-white/20 rounded-br-lg' : 'bg-blue-500/20 rounded-bl-lg'
         )}>
             <p className="text-white drop-shadow-md">{message.content}</p>
@@ -60,7 +60,7 @@ const VoiceMessageBubble = () => (
 
 const ActionHub = () => (
     <div className="fixed bottom-24 left-0 right-0 z-30 p-3 md:p-5 md:bottom-5">
-        <div className="glass-card p-4 space-y-4">
+        <div className="glass-card p-4 space-y-4 rounded-3xl">
             <h3 className="text-lg font-bold text-white px-2 drop-shadow-md">Action Hub</h3>
             <div className="relative">
                 <Input placeholder="Your text here..." className="glass-card border-none rounded-full h-12 pl-5 pr-12 text-white placeholder:text-white/60" />
@@ -70,7 +70,7 @@ const ActionHub = () => (
                     </Button>
                 </div>
             </div>
-             <Button className="w-full h-14 text-lg font-semibold glass-card bg-secondary/30 text-secondary-foreground gold-glow">
+             <Button className="w-full h-14 text-lg font-semibold glass-card bg-secondary/30 text-secondary-foreground gold-glow rounded-xl">
                 Release Payment 💸
             </Button>
         </div>
@@ -86,26 +86,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-4 border-b border-white/10 glass-card flex items-center justify-between sticky top-0 z-20">
-        <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild className="glass-card">
-                <Link href="/home">
-                    <ChevronLeft className="h-6 w-6 text-white"/>
-                </Link>
-            </Button>
-            <Avatar className="h-10 w-10 glass-card p-0.5">
-                <AvatarImage src={PlaceHolderImages.find(p => p.id === "user2")?.imageUrl} alt={"Rahul"} />
-                <AvatarFallback className="glass-card">R</AvatarFallback>
-            </Avatar>
-            <h1 className="text-xl font-bold text-white drop-shadow-lg">Rahul</h1>
-        </div>
-        <div className="flex items-center gap-4">
-            <Phone className="h-6 w-6 text-white/70"/>
-            <Button className="h-11 px-5 glass-card bg-destructive/50 text-white font-bold text-sm rounded-full shadow-[0_0_15px] shadow-destructive/70">
-                SOS
-            </Button>
-        </div>
-    </div>
+      <ChatHeader />
 
       <ScrollArea className="flex-1 px-4 pt-4">
         {messages.map((msg, i) => (

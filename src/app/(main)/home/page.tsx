@@ -7,7 +7,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 
 const HomeHeader = () => (
-  <div className="flex items-center justify-between p-4 glass-card mx-4">
+  <div className="flex items-center justify-between p-4">
     <Avatar className="h-12 w-12 border-2 border-primary glass-card p-0.5">
       <AvatarImage src={PlaceHolderImages.find(img => img.id === "user1")?.imageUrl} alt={"Sarah Williams"} />
       <AvatarFallback className="glass-card">S</AvatarFallback>
@@ -83,7 +83,7 @@ const FilterChips = () => {
 
 
 const TaskCard = () => (
-    <div className="glass-card overflow-hidden shadow-lg animate-fade-in-up relative mx-4">
+    <div className="glass-card overflow-hidden shadow-lg animate-fade-in-up relative mx-4 rounded-3xl">
         <div className="absolute top-4 right-4 pill-chip glass-card bg-destructive/50 text-white text-xs px-3 h-7">Urgent</div>
       <div className="p-6 flex flex-col items-center text-center">
         <h3 className="font-bold text-2xl text-white mt-4 drop-shadow-lg">Need Plumber ASAP</h3>
@@ -93,7 +93,7 @@ const TaskCard = () => (
             <p className="text-xs text-destructive font-semibold drop-shadow-lg">Countdown: 00:02:35:34</p>
         </div>
 
-        <Button size="lg" className="w-full h-14 glass-card bg-primary/20 border-primary/30 text-primary-foreground font-bold text-base cyan-glow">
+        <Button size="lg" className="w-full h-14 glass-card bg-primary/20 border-primary/30 text-primary-foreground font-bold text-base cyan-glow rounded-xl">
             Accept Task
         </Button>
       </div>

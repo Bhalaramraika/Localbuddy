@@ -1,17 +1,18 @@
+'use client'
 import { Button } from "@/components/ui/button";
 import { Wallet as WalletIcon, Lock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const WalletSummary = () => (
     <div className="space-y-6">
-        <div className="glass-card overflow-hidden relative p-6 green-glow">
+        <div className="glass-card overflow-hidden relative p-6 green-glow rounded-3xl">
              <div className="flex items-start justify-between">
                 <WalletIcon className="h-8 w-8 text-success" />
             </div>
             <p className="text-5xl font-bold font-headline mt-4 text-white drop-shadow-lg">₹2,500</p>
             <p className="text-sm text-white/70 mt-1 drop-shadow-lg">Available Balance</p>
         </div>
-        <div className="glass-card overflow-hidden relative p-6 gold-glow">
+        <div className="glass-card overflow-hidden relative p-6 gold-glow rounded-3xl">
              <div className="flex items-start justify-between">
                 <Lock className="h-8 w-8 text-secondary" />
             </div>
@@ -22,8 +23,8 @@ const WalletSummary = () => (
 );
 
 const WalletActions = () => (
-    <div className="space-y-4 text-center glass-card p-4">
-        <Button size="lg" className="w-full h-14 glass-card text-base font-semibold justify-center bg-white/10 hover:bg-white/20 text-white">
+    <div className="space-y-4 text-center glass-card p-4 rounded-3xl">
+        <Button size="lg" className="w-full h-14 glass-card text-base font-semibold justify-center bg-white/10 hover:bg-white/20 text-white rounded-xl">
             Withdraw Money
         </Button>
         <div className="flex items-center justify-center gap-2 p-2 text-secondary">
@@ -40,9 +41,9 @@ const transactions = [
 ]
 
 const TransactionHistory = () => (
-    <div className="glass-card p-4">
+    <div className="glass-card p-4 rounded-3xl">
         <h2 className="text-xl font-bold text-white mb-4 px-2 drop-shadow-lg">Transaction History</h2>
-        <div className="glass-card p-2">
+        <div className="glass-card p-2 rounded-2xl">
              <div className="divide-y divide-white/10">
                 {transactions.map(tx => (
                     <div className="px-2 flex items-center justify-between py-4" key={tx.id}>
