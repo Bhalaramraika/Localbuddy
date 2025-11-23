@@ -4,38 +4,38 @@
 
 @layer base {
   :root {
-    --background-start-rgb: 10, 10, 10;
-    --background-end-rgb: 25, 25, 25;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 245, 245, 245;
     --background-gradient: linear-gradient(to bottom right, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --foreground: 0 0% 98%;
-    --primary-foreground: 210 40% 98%;
-    --secondary-foreground: 210 40% 98%;
+    --foreground: 0 0% 3.9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary-foreground: 0 0% 98%;
     --destructive-foreground: 0 0% 98%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent-foreground: 210 40% 98%;
-    --popover-foreground: 0 0% 98%;
-    --card-foreground: 0 0% 98%;
+    --accent-foreground: 0 0% 98%;
+    --popover-foreground: 0 0% 3.9%;
+    --card-foreground: 0 0% 3.9%;
 
     --primary: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --destructive: 0 62.8% 30.6%;
     --muted: 217.2 32.6% 17.5%;
     --accent: 217.2 32.6% 17.5%;
-    --popover: 224 71.4% 4.1%;
-    --card: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --card: 0 0% 100%;
 
     --radius: 0.5rem;
     
     --font-sans: 'Poppins', sans-serif;
 
-    --main-accent: #FFFFFF;
-    --secondary-accent: #A9A9A9;
-    --highlight: #FFFFFF;
+    --main-accent: #000000;
+    --secondary-accent: #555555;
+    --highlight: #000000;
     --destructive-accent: #FF4747;
   }
 }
@@ -51,32 +51,32 @@
 
 @layer components {
   .glass-card {
-    background-color: rgba(40, 40, 40, 0.4);
-    -webkit-backdrop-filter: blur(32px);
-    backdrop-filter: blur(32px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.6);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   }
 
   .glass-pill {
-    background-color: rgba(40, 40, 40, 0.5);
-    -webkit-backdrop-filter: blur(32px);
-    backdrop-filter: blur(32px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+    background-color: rgba(255, 255, 255, 0.5);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
   }
   
   .pill-active {
     background: var(--main-accent);
-    color: #000;
+    color: white;
     box-shadow: 0 0 15px var(--main-accent);
   }
 
   .cyan-glow-button {
-    background: linear-gradient(90deg, #E0E0E0, #FFFFFF);
-    box-shadow: 0 0 20px #FFFFFF, 0 0 30px #E0E0E0;
-    color: black;
+    background: var(--main-accent);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    color: white;
     font-weight: bold;
     border-radius: 9999px;
   }

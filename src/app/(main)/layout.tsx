@@ -21,7 +21,7 @@ export default function MainAppLayout({
   ];
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-white pb-28">
+    <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground pb-28">
       {children}
       <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
         <nav className="glass-card flex items-center justify-around p-3 rounded-full">
@@ -33,7 +33,7 @@ export default function MainAppLayout({
                 href={item.href}
                 className={cn(
                   'flex flex-col items-center gap-1 transition-colors',
-                  isActive ? 'text-main-accent' : 'text-gray-400 hover:text-main-accent'
+                  isActive ? 'text-main-accent' : 'text-gray-500 hover:text-main-accent'
                 )}
               >
                 <div className={cn('p-2 rounded-full', isActive ? 'bg-main-accent/20' : '')}>

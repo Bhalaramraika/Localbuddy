@@ -29,14 +29,14 @@ const chartConfig = {
 
 export default function AdminDashboard() {
   return (
-    <div className="flex flex-col gap-8 text-white">
+    <div className="flex flex-col gap-8 text-foreground">
       <h1 className="text-4xl font-bold text-main-accent">Admin Dashboard</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Total Revenue</CardTitle>
-            <IndianRupee className="h-4 w-4 text-secondary-accent" />
+            <CardTitle className="text-sm font-medium text-gray-500">Total Revenue</CardTitle>
+            <IndianRupee className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹45,231.89</div>
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
         </Card>
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Active Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Active Users</CardTitle>
             <Users className="h-4 w-4 text-main-accent" />
           </CardHeader>
           <CardContent>
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
         </Card>
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Tasks Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Tasks Completed</CardTitle>
             <Briefcase className="h-4 w-4 text-secondary-accent" />
           </CardHeader>
           <CardContent>
@@ -65,7 +65,7 @@ export default function AdminDashboard() {
         </Card>
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Platform Activity</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Platform Activity</CardTitle>
             <Activity className="h-4 w-4 text-destructive-accent" />
           </CardHeader>
           <CardContent>
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
             <ResponsiveContainer width="100%" height={350}>
                 <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.1)" />
                     <XAxis
                     dataKey="month"
                     stroke="#888888"

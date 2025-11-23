@@ -19,7 +19,7 @@ const MessageBubble = ({ children, isOutgoing }: { children: React.ReactNode, is
     <div
         className={cn(
             "glass-card max-w-xs p-3 rounded-2xl group relative",
-            isOutgoing ? "rounded-br-lg bg-white/10" : "rounded-bl-lg bg-main-accent/10"
+            isOutgoing ? "rounded-br-lg bg-gray-100" : "rounded-bl-lg bg-main-accent/10"
         )}
     >
         {children}
@@ -80,7 +80,7 @@ const VoiceNote = ({ duration, progress: initialProgress, isOutgoing }: { durati
             </button>
             <div className="w-full h-1 bg-gray-500/50 rounded-full relative">
                 <div className="absolute top-0 left-0 h-full bg-main-accent" style={{ width: `${progress}%` }}></div>
-                <div className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-white rounded-full" style={{ left: `calc(${progress}% - 6px)`}}></div>
+                <div className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-foreground rounded-full" style={{ left: `calc(${progress}% - 6px)`}}></div>
             </div>
             <span className="text-xs text-gray-400">{duration}</span>
         </div>
@@ -88,14 +88,14 @@ const VoiceNote = ({ duration, progress: initialProgress, isOutgoing }: { durati
 };
 
 const ImageAttachment = ({ imageUrl }: { imageUrl: string }) => (
-    <Image src={imageUrl} width={200} height={150} alt="attachment" className="rounded-lg border border-white/10 transition-transform duration-300 hover:scale-105 cursor-pointer" />
+    <Image src={imageUrl} width={200} height={150} alt="attachment" className="rounded-lg border border-gray-200 transition-transform duration-300 hover:scale-105 cursor-pointer" />
 );
 
 const LocationAttachment = () => (
     <div className="flex items-center gap-2 text-main-accent p-2 glass-pill rounded-lg cursor-pointer hover:bg-main-accent/20">
         <MapPin className="w-6 h-6" />
         <div>
-            <p className="font-bold text-sm text-white">Location Shared</p>
+            <p className="font-bold text-sm text-foreground">Location Shared</p>
             <p className="text-xs">Click to view map</p>
         </div>
     </div>
@@ -118,8 +118,8 @@ const ChatHeader = () => {
                 )}
                 <div>
                     <span className="font-bold text-lg">Rahul</span>
-                    <p className="text-xs text-green-400 flex items-center gap-1">
-                        <span className="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse"></span>
+                    <p className="text-xs text-green-500 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full inline-block animate-pulse"></span>
                         Online
                     </p>
                 </div>
@@ -127,7 +127,7 @@ const ChatHeader = () => {
             <div className="flex items-center gap-4">
                 <Phone className="w-6 h-6 cursor-pointer hover:text-main-accent transition-colors" />
                 <div className="relative px-4 py-1.5 rounded-full bg-destructive-accent/80 cursor-pointer shadow-[0_0_10px_var(--destructive-accent)] hover:bg-destructive-accent transition-all hover:scale-110">
-                    <span className="font-bold text-sm">SOS</span>
+                    <span className="font-bold text-sm text-white">SOS</span>
                 </div>
                 <MoreVertical className="w-6 h-6 cursor-pointer hover:text-main-accent transition-colors" />
             </div>
@@ -138,9 +138,9 @@ const ChatHeader = () => {
 const AttachmentMenu = ({ onSelect }: { onSelect: (type: string) => void }) => (
     <div className="absolute bottom-32 left-4 w-48 glass-card p-2 rounded-lg shadow-lg">
         <div className="flex flex-col gap-1">
-            <button onClick={() => onSelect('camera')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><Camera className="w-5 h-5 text-main-accent"/> Photo/Video</button>
-            <button onClick={() => onSelect('document')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><FileText className="w-5 h-5 text-secondary-accent"/> Document</button>
-            <button onClick={() => onSelect('location')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-white/10"><MapPin className="w-5 h-5 text-green-400"/> Location</button>
+            <button onClick={() => onSelect('camera')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-gray-100"><Camera className="w-5 h-5 text-main-accent"/> Photo/Video</button>
+            <button onClick={() => onSelect('document')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-gray-100"><FileText className="w-5 h-5 text-secondary-accent"/> Document</button>
+            <button onClick={() => onSelect('location')} className="flex items-center gap-2 p-2 text-sm rounded-md hover:bg-gray-100"><MapPin className="w-5 h-5 text-green-500"/> Location</button>
         </div>
     </div>
 );

@@ -31,15 +31,15 @@ const leaderboardData: LeaderboardUser[] = [
 ];
 
 const RankIndicator = ({ rank }: { rank: number }) => {
-  if (rank === 1) return <Crown className="w-6 h-6 text-yellow-400" style={{ filter: 'drop-shadow(0 0 5px #facc15)' }} />;
-  if (rank === 2) return <Trophy className="w-5 h-5 text-gray-300" />;
-  if rank === 3) return <Trophy className="w-5 h-5 text-yellow-700" />;
+  if (rank === 1) return <Crown className="w-6 h-6 text-yellow-500" style={{ filter: 'drop-shadow(0 0 5px #f59e0b)' }} />;
+  if (rank === 2) return <Trophy className="w-5 h-5 text-gray-400" />;
+  if (rank === 3) return <Trophy className="w-5 h-5 text-yellow-700" />;
   return <span className="font-bold text-lg">{rank}</span>;
 };
 
 const ChangeIndicator = ({ change }: { change: number }) => {
-  if (change > 0) return <TrendingUp className="w-5 h-5 text-green-400" />;
-  if (change < 0) return <TrendingDown className="w-5 h-5 text-red-400" />;
+  if (change > 0) return <TrendingUp className="w-5 h-5 text-green-500" />;
+  if (change < 0) return <TrendingDown className="w-5 h-5 text-red-500" />;
   return <span className="text-gray-500">-</span>;
 };
 
@@ -49,20 +49,20 @@ const LeaderboardRow = ({ user }: { user: LeaderboardUser }) => {
 
   return (
     <div className={cn(
-      "flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-white/10 hover:border-main-accent border border-transparent rounded-lg cursor-pointer group",
-      isTopThree && 'border-yellow-400/30'
+      "flex items-center gap-4 p-3 glass-pill mb-3 transition-all duration-300 hover:bg-gray-100 hover:border-gray-300 border border-transparent rounded-lg cursor-pointer group",
+      isTopThree && 'border-yellow-500/30'
     )}>
       <div className="w-10 text-center flex items-center justify-center">
         <RankIndicator rank={user.rank} />
       </div>
-      <Image src={avatar?.imageUrl || ''} alt={user.name} width={48} height={48} className="rounded-full border-2 border-main-accent/50 group-hover:border-main-accent transition-colors" />
+      <Image src={avatar?.imageUrl || ''} alt={user.name} width={48} height={48} className="rounded-full border-2 border-gray-300 group-hover:border-main-accent transition-colors" />
       <div className="flex-grow">
-        <p className="font-bold text-white text-lg">{user.name}</p>
-        <p className="text-sm text-green-400" style={{textShadow: '0 0 8px #4ade80'}}>{user.score.toLocaleString()} XP</p>
+        <p className="font-bold text-foreground text-lg">{user.name}</p>
+        <p className="text-sm text-green-600">{user.score.toLocaleString()} XP</p>
       </div>
       <div className="w-12 text-center flex justify-center items-center gap-1">
         <ChangeIndicator change={user.change} />
-        {user.change !== 0 && <span className={cn("text-sm", user.change > 0 ? 'text-green-400' : 'text-red-400')}>{Math.abs(user.change)}</span>}
+        {user.change !== 0 && <span className={cn("text-sm", user.change > 0 ? 'text-green-500' : 'text-red-500')}>{Math.abs(user.change)}</span>}
       </div>
     </div>
   );
@@ -73,11 +73,11 @@ export default function LeaderboardPage() {
     <>
       <header className="glass-card p-6 text-center">
         <div className="flex justify-center items-center gap-4">
-            <Trophy className="w-10 h-10 text-yellow-400" style={{ filter: 'drop-shadow(0 0 10px #facc15)' }}/>
+            <Trophy className="w-10 h-10 text-yellow-500" style={{ filter: 'drop-shadow(0 0 10px #f59e0b)' }}/>
             <h1 className="text-4xl font-bold">Leaderboard</h1>
-            <Trophy className="w-10 h-10 text-yellow-400" style={{ filter: 'drop-shadow(0 0 10px #facc15)' }}/>
+            <Trophy className="w-10 h-10 text-yellow-500" style={{ filter: 'drop-shadow(0 0 10px #f59e0b)' }}/>
         </div>
-        <p className="text-gray-400 text-sm mt-2">See who's dominating the task world.</p>
+        <p className="text-gray-500 text-sm mt-2">See who's dominating the task world.</p>
       </header>
       
       <Tabs defaultValue="weekly" className="w-full">
