@@ -82,9 +82,19 @@ export default function WalletPage() {
       setIsTransactionsLoading(true);
       try {
         const transactionsRef = collection(firestore, 'transactions');
-        const q = query(transactionsRef, where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
+        // Query only by userId to avoid needing a composite index.
+        // We will sort by timestamp on the client-side.
+        const q = query(transactionsRef, where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
         const userTransactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Sort transactions by timestamp descending on the client side
+        userTransactions.sort((a, b) => {
+          const dateA = a.timestamp?.toDate() || 0;
+          const dateB = b.timestamp?.toDate() || 0;
+          return dateB - dateA;
+        });
+
         setTransactions(userTransactions);
       } catch (error) {
         console.error("Error fetching transactions:", error);
