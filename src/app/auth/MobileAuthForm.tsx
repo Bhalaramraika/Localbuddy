@@ -60,7 +60,7 @@ export default function MobileAuthForm() {
   React.useEffect(() => {
     if (auth && recaptchaContainerRef.current && !recaptchaVerifierRef.current) {
       const verifier = new FirebaseRecaptchaVerifier(auth, recaptchaContainerRef.current, {
-        'size': 'normal',
+        'size': 'compact',
         'callback': () => {
           setRecaptchaResolved(true);
         },
@@ -101,7 +101,9 @@ export default function MobileAuthForm() {
       // Reset reCAPTCHA if it fails
       recaptchaVerifierRef.current.render().then(widgetId => {
         // @ts-ignore
-        window.grecaptcha.reset(widgetId);
+        if (window.grecaptcha) {
+            window.grecaptcha.reset(widgetId);
+        }
         setRecaptchaResolved(false);
       });
     } finally {
