@@ -74,32 +74,32 @@ export default function WalletPage() {
   const transactionsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     
-    const baseQuery = query(collection(firestore, 'transactions'), where('userId', '==', user.uid));
-    let finalQuery = query(baseQuery, orderBy('timestamp', 'desc'));
+    return query(collection(firestore, 'transactions'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
 
-    let typeFilter;
-    switch(filter) {
-        case 'Income':
-            typeFilter = ['release', 'add'];
-            finalQuery = query(baseQuery, where('type', 'in', typeFilter), orderBy('timestamp', 'desc'));
-            break;
-        case 'Outcome':
-            typeFilter = ['withdraw'];
-            finalQuery = query(baseQuery, where('type', 'in', typeFilter), orderBy('timestamp', 'desc'));
-            break;
-        case 'Escrow':
-            typeFilter = ['lock'];
-            finalQuery = query(baseQuery, where('type', 'in', typeFilter), orderBy('timestamp', 'desc'));
-            break;
-        default:
-             break; // 'All' uses the base query with just the userId filter
-    }
-
-    return finalQuery;
-
-  }, [firestore, user, filter]);
+  }, [firestore, user]);
 
   const { data: transactions, isLoading: isTransactionsLoading } = useCollection(transactionsQuery);
+
+  const filteredTransactions = React.useMemo(() => {
+    if (!transactions) return [];
+    if (filter === 'All') return transactions;
+    
+    const incomeTypes = ['release', 'add'];
+    const outcomeTypes = ['withdraw'];
+    const escrowTypes = ['lock'];
+    
+    switch(filter) {
+        case 'Income':
+            return transactions.filter(t => incomeTypes.includes(t.type));
+        case 'Outcome':
+            return transactions.filter(t => outcomeTypes.includes(t.type));
+        case 'Escrow':
+            return transactions.filter(t => escrowTypes.includes(t.type));
+        default:
+             return transactions;
+    }
+  }, [transactions, filter]);
+
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -229,7 +229,7 @@ export default function WalletPage() {
             <div className="flex justify-center items-center h-full">
               <Loader className="w-8 h-8 animate-spin text-gray-400" />
             </div>
-          ) : (transactions && transactions.length > 0) ? transactions.map((item: any) => (
+          ) : (filteredTransactions && filteredTransactions.length > 0) ? filteredTransactions.map((item: any) => (
             <TransactionItem
               key={item.id}
               icon={getTransactionIcon(item.type)}
