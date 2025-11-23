@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from "@/components/ui/progress";
 import * as React from 'react';
 import { cn, formatCurrency } from '@/lib/utils';
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy, doc, getDocs } from 'firebase/firestore';
 
 const TransactionItem = ({ icon, title, date, amount, color, type }: { icon: React.ReactNode, title: string, date: string, amount: string, color: string, type: string }) => (
   <div className={cn("flex items-center justify-between glass-pill p-3 my-2 hover:bg-gray-100 transition-all border border-transparent rounded-lg group cursor-pointer")}>
@@ -63,6 +63,8 @@ export default function WalletPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [filter, setFilter] = React.useState('All');
+  const [transactions, setTransactions] = React.useState<any[]>([]);
+  const [isTransactionsLoading, setIsTransactionsLoading] = React.useState(true);
   const filters = ['All', 'Income', 'Outcome', 'Escrow'];
 
   const userDocRef = useMemoFirebase(() => {
@@ -71,14 +73,29 @@ export default function WalletPage() {
   }, [firestore, user]);
   const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
 
-  const transactionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    
-    return query(collection(firestore, 'transactions'), where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
+  React.useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!firestore || !user) {
+        setIsTransactionsLoading(false);
+        return;
+      }
+      setIsTransactionsLoading(true);
+      try {
+        const transactionsRef = collection(firestore, 'transactions');
+        const q = query(transactionsRef, where('userId', '==', user.uid), orderBy('timestamp', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const userTransactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setTransactions(userTransactions);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      } finally {
+        setIsTransactionsLoading(false);
+      }
+    };
 
+    fetchTransactions();
   }, [firestore, user]);
 
-  const { data: transactions, isLoading: isTransactionsLoading } = useCollection(transactionsQuery);
 
   const filteredTransactions = React.useMemo(() => {
     if (!transactions) return [];
