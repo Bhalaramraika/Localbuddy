@@ -66,7 +66,7 @@ const Badges = () => (
         <div className="grid grid-cols-3 gap-4">
             {badges.map(badge => (
                 <div key={badge.name} className="flex flex-col items-center text-center p-2 rounded-lg glass-card">
-                    <div className="p-3 bg-black/20 rounded-full mb-2">
+                    <div className="p-3 bg-black/20 rounded-full mb-2 glass-card">
                         <badge.icon className={`h-8 w-8 ${badge.color}`} />
                     </div>
                     <p className="text-xs font-semibold text-white/80 drop-shadow-sm">{badge.name}</p>
@@ -79,7 +79,7 @@ const Badges = () => (
 
 export default function ProfilePage() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden pt-10">
          <div className="p-4 space-y-6">
             <ProfileHeader />
             <XPProgress />

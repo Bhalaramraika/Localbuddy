@@ -47,7 +47,7 @@ const TransactionHistory = () => (
                 {transactions.map(tx => (
                     <div className="px-2 flex items-center justify-between py-4" key={tx.id}>
                         <div className="flex items-center gap-4">
-                            <div className={cn("p-3 rounded-full bg-white/5", tx.iconColor)}>
+                            <div className={cn("p-3 rounded-full glass-card", tx.iconColor)}>
                                 <WalletIcon className="h-5 w-5" />
                             </div>
                             <div>
@@ -65,8 +65,10 @@ const TransactionHistory = () => (
 
 export default function WalletPage() {
   return (
-    <div className="p-4 space-y-8">
-        <h1 className="text-3xl font-bold text-white pt-4 drop-shadow-lg">Wallet</h1>
+    <div className="p-4 space-y-8 pt-10">
+        <div className="px-2">
+            <h1 className="text-3xl font-bold text-white pt-4 drop-shadow-lg">Wallet</h1>
+        </div>
         <WalletSummary />
         <WalletActions />
         <TransactionHistory />

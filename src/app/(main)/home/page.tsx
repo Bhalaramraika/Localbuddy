@@ -7,7 +7,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 
 const HomeHeader = () => (
-  <div className="flex items-center justify-between p-4 glass-card mx-4 mt-4">
+  <div className="flex items-center justify-between p-4 glass-card mx-4">
     <Avatar className="h-12 w-12 border-2 border-primary">
       <AvatarImage src={PlaceHolderImages.find(img => img.id === "user1")?.imageUrl} alt={"Sarah Williams"} />
       <AvatarFallback>S</AvatarFallback>
@@ -102,7 +102,7 @@ const TaskCard = () => (
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-6 pt-4">
+    <div className="flex flex-col gap-6 pt-10">
       <HomeHeader />
       <Stories />
       <FilterChips />
