@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Progress } from '@/components/ui/progress';
 
 const getImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -225,12 +224,12 @@ export default function ChatPage() {
   }, [messages]);
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-[calc(100vh-150px)] flex flex-col">
       <ChatHeader />
-      <ScrollArea className="flex-grow my-4 -mx-4 glass-card" ref={scrollAreaRef}>
-        <div className="p-4">
+      <ScrollArea className="flex-grow my-4 -mx-4" ref={scrollAreaRef}>
+        <div className="p-4 space-y-6">
             {messages.map((msg, index) => (
-                <div key={index} className="mb-6">
+                <div key={index}>
                     {msg.type === 'text' && <ChatMessage text={<p className="text-sm">{msg.content}</p>} isOutgoing={msg.isOutgoing} time={msg.time} />}
                     {msg.type === 'voice' && <ChatMessage text={<VoiceNote duration={msg.duration} initialProgress={msg.progress} isOutgoing={msg.isOutgoing}/>} isOutgoing={msg.isOutgoing} time={msg.time} />}
                     {msg.type === 'image' && msg.imageUrl && <ChatMessage text={<ImageAttachment imageUrl={msg.imageUrl}/>} isOutgoing={msg.isOutgoing} time={msg.time} />}

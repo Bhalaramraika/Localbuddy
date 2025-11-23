@@ -4,23 +4,19 @@
 import Image from 'next/image';
 import {
   Bell,
-  Home,
-  Wallet,
-  MessageSquare,
-  User,
   Siren,
   Shield,
   Users,
   ChevronRight,
   Plus,
   Zap,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import * as React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { cn, formatCurrency, sleep } from '@/lib/utils';
-import Link from 'next/link';
 
 const getImage = (id: string) =>
   PlaceHolderImages.find((img) => img.id === id);
