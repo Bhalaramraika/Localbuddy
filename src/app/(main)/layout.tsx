@@ -1,9 +1,12 @@
 
 'use client';
-import { Home, Wallet, MessageSquare, User, Trophy } from 'lucide-react';
+import { Home, Wallet, MessageSquare, User as UserIcon, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
+import { useEffect } from 'react';
+import { Loader } from 'lucide-react';
 
 export default function MainAppLayout({
   children,
@@ -11,45 +14,67 @@ export default function MainAppLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
 
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/wallet', icon: Wallet, label: 'Wallet' },
     { href: '/chat', icon: MessageSquare, label: 'Chat' },
     { href: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
-    { href: '/profile', icon: User, label: 'Profile' },
+    { href: '/profile', icon: UserIcon, label: 'Profile' },
   ];
 
-  // We only want to show the main app layout on the main pages
-  const showLayout = navItems.some(item => item.href === pathname);
-  if (!showLayout) {
+  const isAuthPage = pathname.startsWith('/auth');
+
+  useEffect(() => {
+    if (!isUserLoading && !user && !isAuthPage) {
+      router.push('/auth/login');
+    }
+  }, [isUserLoading, user, router, isAuthPage]);
+
+  if (isAuthPage) {
     return <div className="w-full max-w-6xl mx-auto">{children}</div>;
   }
+  
+  if (isUserLoading || (!user && !isAuthPage)) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center">
+        <Loader className="w-12 h-12 animate-spin text-main-accent" />
+        <p className="mt-4 text-lg text-gray-600">Loading your space...</p>
+      </div>
+    );
+  }
+
+  const showNav = navItems.some(item => item.href === pathname);
+
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground pb-28">
       {children}
-      <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
-        <nav className="glass-card flex items-center justify-around p-3 rounded-full">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  'flex flex-col items-center gap-1 transition-colors',
-                  isActive ? 'text-main-accent' : 'text-gray-500 hover:text-main-accent'
-                )}
-              >
-                <div className={cn('p-2 rounded-full transition-all duration-300', isActive ? 'bg-main-accent/20' : '')}>
-                  <item.icon className="w-6 h-6" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--main-accent))' } : {}} />
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-      </footer>
+      {showNav && (
+        <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
+          <nav className="glass-card flex items-center justify-around p-3 rounded-full">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    'flex flex-col items-center gap-1 transition-colors',
+                    isActive ? 'text-main-accent' : 'text-gray-500 hover:text-main-accent'
+                  )}
+                >
+                  <div className={cn('p-2 rounded-full transition-all duration-300', isActive ? 'bg-main-accent/20' : '')}>
+                    <item.icon className="w-6 h-6" style={isActive ? { filter: 'drop-shadow(0 0 5px var(--main-accent))' } : {}} />
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </footer>
+      )}
     </div>
   );
 }
