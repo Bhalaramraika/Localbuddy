@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const WalletSummary = () => (
     <div className="space-y-6">
         <div className="glass-card overflow-hidden relative p-6 green-glow">
-            <div className="flex items-start justify-between">
+             <div className="flex items-start justify-between">
                 <WalletIcon className="h-8 w-8 text-success" />
             </div>
             <p className="text-5xl font-bold font-headline mt-4 text-white">₹2,500</p>

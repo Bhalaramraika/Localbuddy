@@ -65,7 +65,7 @@ const Badges = () => (
         <h3 className="font-semibold mb-4 text-lg text-white">Badges Case</h3>
         <div className="grid grid-cols-3 gap-4">
             {badges.map(badge => (
-                <div key={badge.name} className="flex flex-col items-center text-center p-2 rounded-lg bg-white/5">
+                <div key={badge.name} className="flex flex-col items-center text-center p-2 rounded-lg glass-card">
                     <div className="p-3 bg-black/20 rounded-full mb-2">
                         <badge.icon className={`h-8 w-8 ${badge.color}`} />
                     </div>

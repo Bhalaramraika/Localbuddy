@@ -13,9 +13,9 @@ const HomeHeader = () => (
       <AvatarFallback>S</AvatarFallback>
     </Avatar>
     <div className="flex items-center gap-4">
-      <div className="relative">
+       <div className="relative glass-card h-12 w-12 flex items-center justify-center rounded-full">
         <Bell className="h-7 w-7 text-muted-foreground" />
-        <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse border-2 border-background"></span>
+        <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-destructive animate-pulse border-2 border-background"></span>
       </div>
       <div className="pill-chip glass-card">
         <p className="font-semibold text-sm text-white">Wallet: ₹1,500</p>
@@ -67,8 +67,8 @@ const FilterChips = () => {
                 <div 
                     key={category} 
                     className={cn(
-                        "pill-chip",
-                        index === 0 ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-black" : "glass-card text-white"
+                        "pill-chip glass-card text-white",
+                         index === 0 && "bg-primary/20 border-primary/30"
                     )}
                 >
                     {category}
@@ -84,16 +84,16 @@ const FilterChips = () => {
 
 const TaskCard = () => (
     <div className="glass-card overflow-hidden shadow-lg animate-fade-in-up relative mx-4">
-        <div className="absolute top-4 right-4 pill-chip bg-destructive/80 backdrop-blur-sm text-white text-xs px-3 h-7">Urgent</div>
+        <div className="absolute top-4 right-4 pill-chip glass-card bg-destructive/50 text-white text-xs px-3 h-7">Urgent</div>
       <div className="p-6 flex flex-col items-center text-center">
         <h3 className="font-bold text-2xl text-white mt-4">Need Plumber ASAP</h3>
         <p className="text-5xl font-bold text-success my-4">₹500</p>
         
-        <div className="bg-destructive/20 p-2 rounded-lg text-center mb-6 w-full backdrop-blur-sm">
+        <div className="glass-card bg-destructive/20 p-2 rounded-lg text-center mb-6 w-full">
             <p className="text-xs text-destructive font-semibold">Countdown: 00:02:35:34</p>
         </div>
 
-        <Button size="lg" className="w-full h-14 bg-gradient-to-r from-primary to-blue-500 text-primary-foreground font-bold text-base cyan-glow">
+        <Button size="lg" className="w-full h-14 glass-card bg-primary/20 border-primary/30 text-primary-foreground font-bold text-base cyan-glow">
             Accept Task
         </Button>
       </div>

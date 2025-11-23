@@ -31,6 +31,7 @@ export function BottomNav() {
             >
               <div className={cn(
                   'p-3 rounded-full transition-all relative',
+                  isActive ? 'glass-card bg-primary/10' : ''
               )}>
                   <item.icon className={cn('h-7 w-7 transition-transform', isActive && "scale-110 ")} />
                   {isActive && <div className="absolute inset-0 cyan-glow blur-md -z-10"/>}
