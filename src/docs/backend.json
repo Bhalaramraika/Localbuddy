@@ -38,8 +38,7 @@
         },
         "verificationStatus": {
           "type": "string",
-          "description": "The user's verification status.",
-          "enum": ["pending", "verified", "rejected", "not_started"]
+          "description": "The user's verification status (e.g., pending, verified)."
         },
         "mobileVerified": {
           "type": "boolean",
@@ -261,6 +260,12 @@
         },
         "description": "Stores user profiles. Uses path-based ownership for private user data."
       },
+       "/users/{userId}/notifications/{notificationId}": {
+        "schema": {
+          "$ref": "#/entities/Notification"
+        },
+        "description": "Stores notifications for a specific user. Path-based ownership ensures privacy."
+      },
       "/tasks/{taskId}": {
         "schema": {
           "$ref": "#/entities/Task"
@@ -278,13 +283,9 @@
           "$ref": "#/entities/Transaction"
         },
         "description": "Stores transaction records related to wallet operations. Includes 'userId' and 'taskId' to track user and task associations."
-      },
-      "/users/{userId}/notifications/{notificationId}": {
-        "schema": {
-          "$ref": "#/entities/Notification"
-        },
-        "description": "Stores notifications for a specific user. Path-based ownership ensures privacy."
       }
     }
   }
 }
+
+    

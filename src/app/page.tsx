@@ -21,8 +21,8 @@ import * as React from 'react';
 import { cn, formatCurrency, timeAgo } from '@/lib/utils';
 import { getTaskSuggestions, TaskSuggestionInput } from '@/ai/flows/suggestion-flow';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, updateDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, where, limit, orderBy } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query, where, limit, orderBy, serverTimestamp } from 'firebase/firestore';
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useRouter } from 'next/navigation';
@@ -54,45 +54,22 @@ const TaskCardHeader = ({ title, price, tag, hasImage }: { title: string, price:
     </div>
 );
 
-const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
+const TaskCardButton = ({ task, user, onAccept }: { task: any, user: User | null, onAccept: (taskId: string, posterId: string) => void }) => {
     const [isLoading, setIsLoading] = React.useState(false);
-    const { toast } = useToast();
     const router = useRouter();
-    const firestore = useFirestore();
 
-    const isAccepted = task.status === 'assigned' && task.buddyId === user?.uid;
+    const isAcceptedByMe = task.status === 'assigned' && task.buddyId === user?.uid;
     const isMyTask = task.posterId === user?.uid;
     const isUnavailable = task.status !== 'Open';
     const isAiGenerated = task.posterId === 'ai_generated';
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault(); 
-        if (!user || isAiGenerated || !task.id || !firestore) return;
+        if (!user || isAiGenerated || !task.id) return;
         setIsLoading(true);
-
-        const taskRef = doc(firestore, 'tasks', task.id);
-        
-        try {
-            // Optimistically update UI while non-blocking update happens in the background
-            updateDocumentNonBlocking(taskRef, {
-                status: 'assigned',
-                buddyId: user.uid,
-            });
-
-            toast({
-                title: "Task Accepted!",
-                description: "You can find this task in your chat to coordinate."
-            });
-            router.push(`/chat?taskId=${task.id}`);
-            
-        } catch (error: any) {
-             toast({
-                variant: "destructive",
-                title: "Failed to Accept Task",
-                description: error.message,
-            });
-            setIsLoading(false);
-        }
+        await onAccept(task.id, task.posterId);
+        // We don't set loading to false, as the parent component will handle the re-render.
+        router.push(`/chat?taskId=${task.id}`);
     };
 
     if (isAiGenerated) {
@@ -103,8 +80,8 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
          return <Button disabled className="w-full h-12 text-base font-bold" variant="outline">Your Task</Button>;
     }
     
-    if (isAccepted) {
-        return <Button disabled className="w-full h-12 text-base font-bold bg-green-500 text-white">Task Accepted</Button>
+    if (isAcceptedByMe) {
+        return <Button disabled className="w-full h-12 text-base font-bold bg-green-500 text-white">Task Accepted</Button>;
     }
 
     return (
@@ -120,7 +97,7 @@ const TaskCardButton = ({ task, user }: { task: any, user: User | null }) => {
     );
 };
 
-const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
+const TaskCard = ({ task, user, onAccept }: { task: any, user: User | null, onAccept: (taskId: string, posterId: string) => void }) => {
   const { title, budget, category, reasoning } = task;
   const imageUrl = getImage(`task_${category?.toLowerCase()}`)?.imageUrl;
   
@@ -129,7 +106,7 @@ const TaskCard = ({ task, user }: { task: any, user: User | null }) => {
       {imageUrl && <TaskCardImage imageUrl={imageUrl} title={title} tag={category} />}
       <TaskCardHeader title={title} price={budget} tag={category} hasImage={!!imageUrl} />
       {reasoning && <p className="text-sm text-gray-600 border-l-2 border-gray-300 pl-3">{reasoning}</p>}
-      <TaskCardButton task={task} user={user} />
+      <TaskCardButton task={task} user={user} onAccept={onAccept} />
     </div>
   )
 
@@ -333,12 +310,31 @@ export default function HomePage() {
 
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    const baseQuery = query(collection(firestore, 'tasks'), where('status', '==', 'Open'));
-    if (activeFilter === 'All') {
-        return baseQuery;
+    let baseQuery = collection(firestore, 'tasks');
+    
+    let queries = [];
+    // Query for open tasks
+    queries.push(query(baseQuery, where('status', '==', 'Open')));
+    
+    // Query for tasks assigned to the current user
+    if (user) {
+        queries.push(query(baseQuery, where('buddyId', '==', user.uid)));
     }
-    return query(baseQuery, where('category', '==', activeFilter));
-  }, [firestore, activeFilter]);
+
+    if (activeFilter !== 'All') {
+        queries = queries.map(q => query(q, where('category', '==', activeFilter)));
+    }
+    
+    // For this hook, we can only use one query. So we'll fetch all tasks and filter client-side.
+    // This is not ideal for performance but works for this scenario.
+    // A more complex implementation would involve multiple `useCollection` calls and merging the results.
+    const allTasksQuery = activeFilter === 'All'
+        ? query(collection(firestore, 'tasks'), where('status', 'in', ['Open', 'assigned']))
+        : query(collection(firestore, 'tasks'), where('status', 'in', ['Open', 'assigned']), where('category', '==', activeFilter));
+
+    return allTasksQuery;
+
+  }, [firestore, activeFilter, user]);
 
   const { data: firestoreTasks, isLoading: areTasksLoading } = useCollection(tasksQuery);
   
@@ -351,16 +347,21 @@ export default function HomePage() {
 
 
   React.useEffect(() => {
-      // Keep AI-generated tasks, but replace firestore tasks
-      setTasks(prevTasks => {
-          const aiTasks = prevTasks.filter(t => t.posterId === 'ai_generated');
-          const newFirestoreTasks = firestoreTasks || [];
-          const combined = [...aiTasks, ...newFirestoreTasks];
-          // Remove duplicates
-          const uniqueTasks = Array.from(new Map(combined.map(item => [item.id, item])).values());
-          return uniqueTasks;
-      });
-  }, [firestoreTasks]);
+    if (firestoreTasks && user) {
+        const myAcceptedTasks = firestoreTasks.filter(t => t.buddyId === user.uid);
+        const openTasks = firestoreTasks.filter(t => t.status === 'Open' && t.buddyId !== user.uid);
+        
+        // Keep AI-generated tasks and combine with sorted firestore tasks
+        setTasks(prevTasks => {
+            const aiTasks = prevTasks.filter(t => t.posterId === 'ai_generated');
+            const combined = [...myAcceptedTasks, ...openTasks, ...aiTasks];
+            const uniqueTasks = Array.from(new Map(combined.map(item => [item.id, item])).values());
+            return uniqueTasks;
+        });
+    } else if (firestoreTasks) {
+         setTasks(firestoreTasks);
+    }
+  }, [firestoreTasks, user]);
 
   const advancedListItems = [
       {
@@ -380,6 +381,36 @@ export default function HomePage() {
           href: "/refer"
       }
   ];
+
+    const handleAcceptTask = async (taskId: string, posterId: string) => {
+        if (!user || !firestore) return;
+
+        const taskRef = doc(firestore, 'tasks', taskId);
+        const taskDoc = tasks.find(t => t.id === taskId);
+        
+        // 1. Update task status and add buddyId
+        updateDocumentNonBlocking(taskRef, {
+            status: 'assigned',
+            buddyId: user.uid,
+        });
+
+        // 2. Create a notification for the poster
+        const notificationRef = collection(firestore, `users/${posterId}/notifications`);
+        addDocumentNonBlocking(notificationRef, {
+            userId: posterId,
+            title: "Task Accepted!",
+            message: `${userData?.name || 'A buddy'} has accepted your task: "${taskDoc?.title}"`,
+            type: "TASK_ACCEPTED",
+            taskId: taskId,
+            isRead: false,
+            timestamp: serverTimestamp(),
+        });
+
+        toast({
+            title: "Task Accepted!",
+            description: "You can find this task in your chat to coordinate."
+        });
+    };
 
   const handleGenerateSuggestions = async () => {
     if (!user || !userData) {
@@ -449,7 +480,7 @@ export default function HomePage() {
             </div>
         ) : tasks && tasks.length > 0 ? (
             tasks.map((task, index) => (
-                <TaskCard key={task.id || index} task={task} user={user} />
+                <TaskCard key={task.id || index} task={task} user={user} onAccept={handleAcceptTask} />
             ))
         ) : (
             <div className="col-span-full text-center text-gray-500 py-10 glass-card">
@@ -465,3 +496,5 @@ export default function HomePage() {
     </>
   );
 }
+
+    
