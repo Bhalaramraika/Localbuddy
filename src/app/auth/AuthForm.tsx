@@ -52,15 +52,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
-  React.useEffect(() => {
-    if (!isUserLoading && user) {
-      router.replace('/');
-    }
-  }, [user, isUserLoading, router]);
-
   const handleGoogleSignIn = () => {
+    setIsLoading(true);
     initiateGoogleSignIn(auth);
-    // Non-blocking, user creation will be handled by the auth state change listener.
+    // The redirect is now handled by the MainAppLayout
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -80,7 +75,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           description: 'Authenticating your credentials.',
         });
       }
-    // We don't need to setIsLoading(false) here because the useEffect will trigger a redirect
+    // We don't need to setIsLoading(false) here because the auth state listener will handle the redirect
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -115,6 +110,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     placeholder="you@example.com"
                     {...field}
                     className="glass-card"
+                    disabled={isLoading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -133,6 +129,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     placeholder="••••••••"
                     {...field}
                     className="glass-card"
+                    disabled={isLoading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -153,8 +150,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <span className="bg-white/60 px-2 text-gray-500 backdrop-blur-sm">Or continue with</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full h-12 text-md glass-card border-gray-300 hover:bg-gray-100 hover:text-foreground transition-all transform hover:scale-105" onClick={handleGoogleSignIn}>
-          <GoogleIcon className="mr-3 h-5 w-5" />
+      <Button variant="outline" className="w-full h-12 text-md glass-card border-gray-300 hover:bg-gray-100 hover:text-foreground transition-all transform hover:scale-105" onClick={handleGoogleSignIn} disabled={isLoading}>
+          {isLoading ? <Loader className="mr-3 h-5 w-5 animate-spin" /> : <GoogleIcon className="mr-3 h-5 w-5" />}
           Continue with Google
       </Button>
     </div>
