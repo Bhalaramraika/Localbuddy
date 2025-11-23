@@ -20,11 +20,11 @@ const suggestionPrompt = ai.definePrompt({
     {{#if taskHistory}}
     Task History:
     {{#each taskHistory}}
-    - "{{{title}}}" (Category: {{{category}}}, Completed: {{{completed}}})
+    - "{{{title}}}" (Category: {{{category}}})
     {{/each}}
     {{/if}}
 
-    For each suggestion, provide a catchy title, a relevant category, a brief reasoning for the suggestion, and an estimated earning. The reasoning should be encouraging and align with the cyberpunk theme.
+    For each suggestion, provide a catchy title, a relevant category from this list (Household, Tech, Cleaning, Delivery, Tutoring, Other), a brief reasoning for the suggestion, and an estimated earning. The reasoning should be encouraging and align with the cyberpunk theme. Ensure the output is a valid JSON object matching the provided schema.
     `,
 });
 

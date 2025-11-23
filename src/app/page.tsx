@@ -197,14 +197,16 @@ const MainHeader = ({ userData, isUserLoading }: { userData: any, isUserLoading:
     );
 };
 
-const QuickActionCard = ({ icon, title, bgColor }: { icon: React.ReactNode, title: string, bgColor: string }) => {
+const QuickActionCard = ({ icon, title, bgColor, href }: { icon: React.ReactNode, title: string, bgColor: string, href: string }) => {
     return (
-        <div className="flex-shrink-0 w-36 h-36 flex flex-col items-center justify-center gap-3 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
-            <div className={cn("p-4 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
-                {icon}
+        <Link href={href} key={title}>
+            <div className="flex-shrink-0 w-36 h-36 flex flex-col items-center justify-center gap-3 glass-card cursor-pointer group hover:-translate-y-1 transition-transform duration-300">
+                <div className={cn("p-4 rounded-full transition-all duration-300 group-hover:scale-110", bgColor)}>
+                    {icon}
+                </div>
+                <p className="font-bold text-sm text-center text-foreground">{title}</p>
             </div>
-            <p className="font-bold text-sm text-center text-foreground">{title}</p>
-        </div>
+        </Link>
     );
 };
 
@@ -221,9 +223,7 @@ const QuickActionsSection = () => {
             <h2 className="text-xl font-bold mb-4 px-2">Quick Actions</h2>
             <div className="flex items-center gap-4 overflow-x-auto pb-2 -mx-4 px-4">
                 {actions.map((action) => (
-                    <Link href={action.href} key={action.title}>
-                        <QuickActionCard icon={action.icon} title={action.title} bgColor={action.bgColor} />
-                    </Link>
+                    <QuickActionCard key={action.title} {...action} />
                 ))}
             </div>
         </section>
@@ -294,7 +294,11 @@ export default function HomePage() {
       // Keep AI-generated tasks, but replace firestore tasks
       setTasks(prevTasks => {
           const aiTasks = prevTasks.filter(t => t.posterId === 'ai_generated');
-          return [...aiTasks, ...(firestoreTasks || [])];
+          const newFirestoreTasks = firestoreTasks || [];
+          const combined = [...aiTasks, ...newFirestoreTasks];
+          // Remove duplicates
+          const uniqueTasks = Array.from(new Map(combined.map(item => [item.id, item])).values());
+          return uniqueTasks;
       });
   }, [firestoreTasks]);
 

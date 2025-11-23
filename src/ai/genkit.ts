@@ -1,7 +1,10 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
+import {dev} from 'node:console';
 
+// If you have a GEMINI_API_KEY in your environment, you can omit the apiKey parameter.
+// The .env file is a good place to put your API key.
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins: [googleAI({apiKey: process.env.GEMINI_API_KEY})],
   model: 'googleai/gemini-2.5-flash',
 });
