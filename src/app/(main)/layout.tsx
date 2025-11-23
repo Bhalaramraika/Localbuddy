@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 import { useEffect } from 'react';
 import { Loader } from 'lucide-react';
+import * as React from 'react';
 
 export default function MainAppLayout({
   children,
