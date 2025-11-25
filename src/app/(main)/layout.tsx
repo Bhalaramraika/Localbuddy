@@ -19,7 +19,6 @@ export default function MainAppLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
@@ -46,31 +45,13 @@ export default function MainAppLayout({
 
   const isAuthPage = pathname.startsWith('/auth');
 
-  useEffect(() => {
-    // If auth is still loading, do nothing and wait.
-    if (isUserLoading) {
-      return;
-    }
-
-    // If auth has loaded, and there's no user, and we are NOT on an auth page, redirect to login.
-    if (!user && !isAuthPage) {
-      router.replace('/auth/login');
-    }
-    
-    // If auth has loaded, and there IS a user, and we ARE on an auth page, redirect to home.
-    if (user && isAuthPage) {
-        router.replace('/');
-    }
-
-  }, [isUserLoading, user, router, isAuthPage, pathname]);
-  
   // If we are on an auth page, just render the children (the login/signup form)
   if (isAuthPage) {
     return <>{children}</>;
   }
 
   // If we are on a main app page, but the user is still loading or not yet available, show a loader.
-  if (isUserLoading || !user || isUserDataLoading) {
+  if (isUserLoading || !user) {
     return (
       <div className="w-full h-screen flex flex-col items-center justify-center">
         <Loader className="w-12 h-12 animate-spin text-main-accent" />
@@ -78,9 +59,21 @@ export default function MainAppLayout({
       </div>
     );
   }
-
+  
+  const isUserDataStillLoading = isUserLoading || isUserDataLoading;
+  
   const showNav = mainAppRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route))) && !isProfileSetupOpen;
-  const showProfileDialog = user && !isUserDataLoading && userData && !userData.profileCompleted;
+  const showProfileDialog = !isUserDataStillLoading && userData && !userData.profileCompleted;
+
+  if (isUserDataStillLoading && !isAuthPage) {
+    return (
+      <div className="w-full h-screen flex flex-col items-center justify-center">
+        <Loader className="w-12 h-12 animate-spin text-main-accent" />
+        <p className="mt-4 text-lg text-gray-600">Loading your profile...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col gap-6 text-foreground pb-28">
