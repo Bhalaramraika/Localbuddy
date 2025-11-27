@@ -3,6 +3,9 @@ name: Delete "Local-buddy" Folder
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   delete-folder:
     runs-on: ubuntu-latest
@@ -21,7 +24,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "Delete Local-buddy folder via workflow"
-          git push
+          if git status --porcelain | grep .; then
+            git commit -am "Delete Local-buddy folder via workflow"
+            git push
+          else
+            echo "No changes to commit"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
