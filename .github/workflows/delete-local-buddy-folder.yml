@@ -1,0 +1,27 @@
+name: Delete "Local-buddy" Folder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete-folder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Delete Local-buddy Folder if exists
+        run: |
+          if [ -d "Local-buddy" ]; then
+            git rm -r --cached "Local-buddy"
+            rm -rf "Local-buddy"
+          fi
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "Delete Local-buddy folder via workflow"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
